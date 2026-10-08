@@ -1,0 +1,5 @@
+# Copy to android/key.properties and fill locally. Never share real passwords.
+storePassword=YOUR_LOCAL_PASSWORD
+keyPassword=YOUR_LOCAL_PASSWORD
+keyAlias=upload
+storeFile=/home/abdulaziz/bilga-keys/upload-keystore.jks

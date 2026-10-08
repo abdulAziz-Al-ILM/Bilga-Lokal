@@ -1,0 +1,33 @@
+Bilga 1.1.0+6 — 2026-09-18
+
+BAJARILDI
+- Dart SDK 3.13.3: statik analyze, lib/test — 0 errors, 0 warnings, 0 infos.
+  Flutter tool ishga tushirilmasdan, ommaviy paketlarning lokal nusxalari bilan.
+- tool/check_todo_rules.dart: four pulse rates, boundary times, UTC offsets,
+  completed/overdue/missing deadline filters — PASS.
+- tool/check_schema.py: note v1-v7, todo v1-v5 -> current — PASS.
+- tool/check_catalogs.py: 43 languages x 164 strings — PASS.
+- Google config validator: missing/valid/invalid/secret cases — PASS.
+- Installer: source conflicts, backup, hashes, idempotence, restore conflicts,
+  restoration, injected copy failure rollback, private config untouched — PASS.
+- Seven M4A soundtracks: AAC stereo, 24 seconds, complete decoding — PASS.
+- Drive auth, backup codec/store, note editor, note/todo databases and Android
+  Gradle configuration compared byte-for-byte to uploaded source — unchanged.
+
+BU MUHITDA BAJARILMAGAN
+- flutter test / full widget suite (existing + new tests).
+- Android APK/AAB build.
+- Emulator/real Android audio playback and lifecycle behavior.
+- Play-installed Google authentication and actual Drive round trip.
+
+Sabab: Flutter version command dependency setup requested a cloud internal
+metadata endpoint. Automatic approval review rejected that request; it was
+not retried. Offline Dart analysis and independent checks were performed.
+
+Lokal yakuniy tekshiruv:
+  flutter pub get
+  bash tool/check_free_release.sh
+  flutter run -d emulator-5554 --dart-define-from-file=google_config.json
+
+Play Google sozlamalari: GOOGLE_PLAY_TUZATISH.md
+Media manbalari va audio turi: MEDIA_MANBALARI.md

@@ -1,0 +1,3 @@
+-keep class net.zetetic.** { *; }
+-keep class net.sqlcipher.** { *; }
+-keep class com.write4me.llama_flutter_android.** { *; }
