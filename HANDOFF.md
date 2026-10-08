@@ -5,6 +5,25 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **main**.
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
+## 2026-10-08 — yangi to‘liq ZIP va qat’iy offline qarori
+
+Foydalanuvchi `bilga-full-source.zip` yubordi. Bu safar **to‘liq Flutter source** (2003 ta arxiv fayli, `lib/main.dart`, `android/`, `pubspec.yaml`, test va assets mavjud). Avvalgi `bilga-1.4.0.zip` incremental edi; undan farqini saqlang. Ushbu ZIP hali GitHub repo'ga bulk-import qilinmagan, shuning uchun repo source holatini noto‘g‘ri da’vo qilmang.
+
+**Bilga Core uchun qat’iy qaror:**
+- Faqat **offline/local AI**; cloud AI, online STT va internet search fallback yo‘q.
+- Tarmoqdan yagona maqsadli foydalanish: foydalanuvchi ruxsati bilan Google sign-in/Drive backup va yangi qurilmada restore (billing/Play infratuzilmasi alohida platformaviy masala).
+- Lokal yordamchi Bilga ichida notes, tasks, habits va boshqa o‘z yozuvlari bilan ishlaydi; tezlik va maxfiylik asosiy talab.
+- O‘qib berish TTS bilan va faqat offline ovoz bilan; mavjud emas deb internetga jim ulanish bo‘lmasin.
+- Umumiy AI, boshqa app integratsiyalari va cloud/subscription yordamchi — **kelajakdagi alohida Bilga Agent ilovasi**; Bilga private DB’ga default access berilmaydi.
+
+**Kod auditi topilmalari:**
+- `android/app/src/main/res/layout/agent_widget.xml` ichida `android:text="Bilga Agent"` allaqachon mavjud.
+- `android/app/src/main/AndroidManifest.xml` receiver label `android:label="Bilga Agent"` allaqachon mavjud.
+- Lekin hozirgi widget `com.ilmmizan.bilga.OPEN_AGENT` intent bilan **Core ichidagi** Agent ekranini ochadi: kelajakda alohida Agent app tayyor bo‘lmasdan ushbu widget’ni tashqi appga yo‘naltirmang.
+- `lib/features/agent/agent_page.dart` da `onlineVoice` flag hamda `AgentAction.web`, `call`, `sms` kabi core/offline-only qaroriga zid yoki scope tashqarisidagi oqimlar bor. Bularni test va migratsiya bilan ajratish kerak.
+- `FlutterTts` mavjud, ammo hozirgi `speak()` helper 3500 belgidan keyin kesadi va foydalanuvchi tanlagan notes’ni to‘liq serial/chunk tarzida o‘qish UX’i audit qilinishi kerak.
+- Lokal inference modeli qurilma resurslariga qarab baholansin; offline degani har qanday qurilmada cheksiz erkin LLM suhbatini kafolatlamaydi.
+
 ## 1. Eng muhim joriy mahsulot qarori
 
 ### Bilga Core — shu ilova
