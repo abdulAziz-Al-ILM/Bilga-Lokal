@@ -1,173 +1,304 @@
 # Bilga — loyiha handoff’i
 
-Yangilangan: **2026-10-08**.
-Repo: **abdulAziz-Al-ILM/Bilga-Lokal**. Asosiy branch: **main**.
-Tekshirilgan bazaviy commit: `c165c5651d61173cb96ce31f5c4a58028927dada`.
+Yangilangan: **2026-10-08**  
+Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **main**.
 
-> **Birinchi o‘qiladigan holat:** tekshirilgan commitda faqat 13 baytlik `README.md` (`# Bilga-Lokal`) bor. Flutter ilovasi manbalari bu repoga hali kiritilmagan. Quyidagi mahsulot talablari mavjud implementatsiya degani emas. Kod kelmaguncha “ishlaydi”, “testdan o‘tgan” yoki “release tayyor” degan xulosa chiqarilmasin.
+> Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 1. Hujjatning vazifasi va dalil qoidasi
+## 1. Eng muhim joriy mahsulot qarori
 
-Bu fayl keyingi AI/ishlab chiquvchi uchun joriy holatning yagona boshlang‘ich manbasi. Har katta o‘zgarishda shu o‘zgarish bilan birga yangilansin.
+### Bilga Core — shu ilova
+Bilga Core shaxsiy va maxfiy ma’lumotlar uchun **lokal-first/offline-first** ilova bo‘lib qoladi.
 
-Ma’lumotlar uch turda yoziladi:
-- **Repo faktlari:** bevosita joriy kod, konfiguratsiya yoki CI natijasidan tekshirilgan.
-- **Mahsulot talablari:** loyiha egasi bergan yo‘nalish; bajarilganligi kod bilan tasdiqlanishi kerak.
-- **Tekshirilmagan:** dalil yo‘q; taxmin bilan to‘ldirilmaydi.
+Joriy biznes qarori:
+- ilova bir marta o‘rnatiladi;
+- **30–40 kunlik to‘liq trial** rejalashtiriladi;
+- trial tugagach, taxminan **$7 bir martalik lifetime unlock**;
+- Bilga Core uchun oylik obuna yo‘q;
+- foydalanuvchi unlock qilgach, Core funksiyalaridan foydalanishda davom etadi;
+- bug fix, Android compatibility, security va performance yangilanishlari davom etadi;
+- katta yangi imkoniyatlarni Core ichiga cheksiz qo‘shib borish rejalashtirilmaydi.
 
-Eski chat, ZIP, boshqa repo yoki kompyuterdagi nusxa bu repo bilan teng deb olinmasin. Ayniqsa alohida `abdulAziz-Al-ILM/Bilga` reposi mavjudligi uning mazmuni shu loyihaning so‘nggi nusxasi ekanini anglatmaydi; ushbu handoff uchun u audit qilinmagan.
+**Aniq Play product ID, trialning 30 yoki 40 kun bo‘lishi va hududiy narxlar hali final qilinmagan.**
 
-## 2. Maqsad va positioning — mahsulot talablari
+### Bilga Agent — Bilga Core ichida EMAS
+Avvalgi package’da agent/Start/Turbo kodlari mavjud, lekin **2026-10-08 dagi yangi mahsulot qarori ularni Bilga Core’dan ajratishni talab qiladi**.
 
-Bilga — maxfiylikka asoslangan shaxsiy kundalik yordamchi: yozuvlar, vazifalar, odatlar, hayotiy/ish tajribalari, his-tuyg‘u va shukronalik yozuvlari, kitob yozish hamda qo‘lda yuritiladigan pul hisobi.
+Kelajakdagi **Bilga Agent alohida ilova** bo‘ladi:
+- boshqa ilovalar va xizmatlar bilan integratsiya;
+- voice/STT + intent router;
+- AI kerak bo‘lganda LLM;
+- scheduled/background actions;
+- cloud/server kerak bo‘lsa faqat Agent tomonida;
+- ehtimol oylik subscription.
 
-Asosiy talablar:
-- Kundalik asosiy ishlar lokal/offline bajarilishi, telefon resurslari tejalishi.
-- Maxfiy yozuvlar va biriktirmalarni himoyalash; mutlaq xavfsizlik va’dasi berilmasligi.
-- Notes, to-do, tajriba va boshqa mos yozuvlarga rasm, video, fayl va havola biriktirish; boshqa ilovalardan ulashishni qabul qilish.
-- Kartalar orqali bo‘lim tanlash, moslashuvchan ekranlar, ko‘p tillilik (43 til talabi).
-- Yetti statik muhit va alohida sokin audio; ilova fonida musiqa.
-- Habit tracker bepul bo‘lishi va oddiy bo‘sh sahifadan iborat bo‘lmasligi.
-- Pul bo‘limi faqat foydalanuvchi kiritgan moliyaviy qayd/hisobotlar: **bank kartasi ulash yoki pul o‘tkazish emas**.
-- Server/API orqali suhbat AI’sini hozir qo‘shish kechiktirilgan. Doimiy mikrofon o‘rniga foydalanuvchi boshlaydigan boshqaruv kerak.
-- Telegram/WhatsApp/SMS orqali avtomatik ommaviy tabrik yuborish keyinga qoldirilgan.
+**Privacy chegarasi:** Bilga Agent Bilga Core’ning private database’iga avtomatik kira olmaydi. Alohida app, storage, permission va imkon qadar alohida data boundary saqlanadi. Kelajakda integratsiya kerak bo‘lsa, foydalanuvchi aniq obyektni alohida ulash/eksport orqali ruxsat beradi.
 
-## 3. Hozir ishlaydigan funksiyalar
+Shuning uchun eski quyidagi monetizatsiya qarorlari **superseded**:
+- `bilga_agent_start` $2.49;
+- `bilga_finance` $5;
+- Turbo uchun alohida Bilga ichidagi sotuv.
 
-**Bu repo bo‘yicha tasdiqlangan ilova funksiyasi yo‘q:** bajariladigan ilova kodi mavjud emas. Bu foydalanuvchining lokal nusxasi ishlamaydi degani emas; u nusxa ushbu repoda yo‘q.
+Kodda ular hali uchrashi mumkin; bu joriy mahsulot strategiyasi emas.
 
-Kod yuklangach har bo‘lim uchun quyidagi darajalar ajratilsin: kod mavjud / avtomatik test o‘tdi / Android qurilmada sinaldi / Play orqali sinaldi. UI kartasi mavjudligi funksiyaning to‘liq ishlash dalili emas.
+## 2. 2026-10-08 da olingan source paket
 
-## 4. Monetizatsiya — kelishilgan model, repo implementatsiyasi emas
+Foydalanuvchi **`bilga-1.4.0.zip`** paketini berdi.
 
-| Paket | Mahsulot talabi | Repo/Play tasdig‘i |
-|---|---|---|
-| Start yordamchi | $2.49; oddiy lokal buyruqlar | Billing kodi, product ID va sotuv holati tekshirilmagan |
-| Pul daftari | $5; qo‘lda yuritiladigan hisob/hisobot | Billing kodi, product ID va sotuv holati tekshirilmagan |
-| Habit tracker | Bepul | Kod yo‘q |
-| Turbo lokal AI | Oldin $4.99 taklif qilingan; yengil versiya yo‘nalishidan keyingi joriy holati aniqlanishi kerak | Sotuvda yoki implementatsiya qilingan deb yozilmasin |
+Muhim fakt:
+- bu **to‘liq Flutter source emas**;
+- paketning o‘z README’si bo‘yicha u **Bilga Private 1.3.0 ustiga qo‘yiladigan 1.4.0 incremental update**;
+- manifest: **1.4.0+9**;
+- requirement: **Bilga Private 1.3.0**;
+- package 93 ta entry’dan iborat;
+- unda faqat qo‘shilgan/yangilangan fayllar bor;
+- demak undan yolg‘iz o‘zi reproducible full app repo tiklab bo‘lmaydi.
 
-Bir martalik xarid/obuna turi, qolgan bo‘limlarning paywall holati, hududiy narxlar, purchase restore/refund ishlovi va Play mahsulotlari manba kod hamda Console bilan tekshirilishi kerak. Chatdagi narx Play’da mahsulot yaratilganini anglatmaydi. Sinov rejimi release’da huquqlarni ochib yubormasligi tekshirilsin.
+Shu sabab hozirgi asosiy blocker: **eng so‘nggi to‘liq lokal Bilga loyiha papkasini repoga xavfsiz import qilish**.
 
-## 5. Arxitektura va fayllar xaritasi
+Package audit tafsilotlari: `SOURCE_PACKAGE_1_4_AUDIT.md`.
 
-Tekshirilgan commitdagi to‘liq daraxt: faqat `README.md`; GitHub recursive tree natijasi `truncated: false`.
+## 3. Package’dan tekshirilgan texnik faktlar
 
-| Fayl/papka | Joriy vazifa/holat |
-|---|---|
-| `README.md` | Faqat repo nomi |
-| `HANDOFF.md` | Ushbu handoff va keyingi ishlar uchun yangilanadigan holat |
-| `pubspec.yaml`, `pubspec.lock` | Repoda yo‘q; Flutter/Dart va dependency versiyalari tasdiqlanmagan |
-| `lib/` | Repoda yo‘q; sahifalar, store/service va state management xaritasi tuzib bo‘lmaydi |
-| `android/` | Repoda yo‘q; application ID, SDK, Gradle, Kotlin, signing va native bridge noma’lum |
-| `assets/` | Repoda yo‘q; tarjima, rasm, audio va litsenziyalar audit qilinmagan |
-| `test/`, `integration_test/`, `tool/` | Repoda yo‘q; test va build skriptlari mavjud emas |
-| `.github/workflows/` | Repoda yo‘q |
-| `AGENTS.md` | Tekshirilgan daraxtda yo‘q |
+### Versiya va SDK
+`pubspec.yaml`:
+- app: **Bilga 1.4.0+9**
+- Dart SDK: **^3.13.1**
 
-Kod importidan keyin bu jadval haqiqiy fayl nomlari va ularning javobgarligi bilan almashtirilsin. Hozirgi yo‘q papkalar tavsiya etilgan implementatsiya yoki mavjud arxitektura sifatida talqin qilinmasin.
+### Asosiy dependencies
+Package’da quyidagilar ko‘rinadi:
+- `shared_preferences ^2.5.5`
+- `sqflite ^2.4.3`
+- `sqflite_sqlcipher 3.4.1`
+- `crypto ^3.0.6`
+- `cryptography ^2.8.1`
+- `path_provider ^2.1.5`
+- `archive ^4.0.7`
+- `google_sign_in ^7.2.0`
+- `http ^1.5.0`
+- `file_picker ^10.3.7`
+- `local_auth ^2.3.0`
+- `video_player ^2.10.1`
+- `audio_service ^0.18.18`
+- `just_audio ^0.10.5`
+- `audio_session ^0.2.2`
+- `flutter_tts ^4.2.3`
+- `url_launcher ^6.3.2`
+- `in_app_purchase ^3.2.3`
+- `in_app_purchase_android ^0.4.0`
 
-## 6. Package va servislar
+Dev:
+- `sqflite_common_ffi ^2.3.6`
+- `sqlite3 ^2.9.4`
+- `integration_test`
+- `flutter_lints ^6.0.0`
 
-Flutter/Android loyiha ekanligi mahsulot kontekstidan ma’lum, lekin repoda paket manifesti yo‘q. Shuning uchun dependency nomi/versiyasi, lokal native AI runtime, audio, database, billing yoki kriptografiya kutubxonasi ishlatilmoqda deb tasdiqlab bo‘lmaydi.
+### Lokal shifrlash
+`lib/core/private_database.dart` SQLCipher orqali secure DB ochadi.
+- Android MethodChannel `bilga/vault` dan 64 hex key kutiladi.
+- Plain SQLite DB aniqlansa staged SQLCipher migration qilinadi.
+- `integrity_check` bajariladi.
+- `secure_delete=ON`, `temp_store=MEMORY`.
+- Migrationda source/stage/old fayllar ehtiyotkor almashtiriladi.
 
-Rejalashtirilgan tashqi integratsiyalar: Google akkaunt/Drive zaxirasi va Google Play to‘lovlari. Server AI hozirgi scope emas. Haqiqiy tarmoq oqimlari, analytics/crash SDK mavjudligi va offline xatti-harakat kodi kelgach tekshirilsin.
+Bu kod mavjudligi mutlaq xavfsizlik kafolati emas; full Android key storage implementatsiyasi to‘liq source importidan keyin audit qilinadi.
 
-## 7. Google login / Drive / backup
+### Google Drive
+Package’da `google_sign_in` va Drive `appDataFolder` oqimi bor.
+README bo‘yicha:
+- package: `com.ilmmizan.bilga`;
+- Web OAuth client ID kerak;
+- Android OAuth client SHA-1 debug va Play uchun alohida;
+- Drive API yoqilishi kerak;
+- Play App Signing SHA-1 bilan sinov kerak.
 
-**Joriy repo holati: tekshirilmagan; kod va konfiguratsiya namunasi yo‘q.**
+Backup upload qilingach qayta download qilinib byte-by-byte tekshiriladigan kod mavjud.
 
-Audit quyidagilarni aniqlashi kerak:
-- OAuth client turlari, package ID, debug/release/Play imzolari va ularning mosligi.
-- Sign-in/out, ruxsat rad etilishi, tarmoq uzilishi va akkaunt almashish oqimlari.
-- Drive scope, zaxira joylashuvi/formati, biriktirmalar kirishi yoki kirmasligi.
-- Lokal eksport/tiklash, noto‘g‘ri parol va buzilgan faylni rad etish.
-- Tiklashdagi atomiklik va mavjud ma’lumotlar saqlanishi.
+## 4. 1.4 package’da ko‘rinadigan funksiyalar
 
-Google yoki Play Console holati repo kodining o‘zi bilan tasdiqlanmaydi. Handoff’ga parol, token, client secret yoki signing private key kiritilmasin.
+Package README bo‘yicha quyidagi imkoniyatlar mavjud yoki yangilangan deb ko‘rsatilgan; full source va device auditidan keyin darajalari aniq belgilanadi.
 
-## 8. Security va anti-piracy
+### Notes / To-do
+- papkalar;
+- qidirish;
+- shablonlar;
+- tahrirlar;
+- savat;
+- task deadline va priority;
+- private text fieldlarda keyboard learning/suggestion’ni o‘chirish so‘rovi.
 
-**Repoda implementatsiya yo‘q; amaldagi himoya tasdiqlanmagan.**
+### Habit
+- hafta kunlari;
+- target/miqdor/birlik;
+- trigger, small step, personal reason;
+- partial progress;
+- izoh;
+- pause;
+- 28 kunlik ko‘rinish;
+- oldingi kunni tahrirlash;
+- archive;
+- attachments;
+- schedule-history.
 
-Kod kelgach alohida tekshirilsin:
-- Database/fayl shifrlash, kalit yaratish va himoyalash, backup kriptografiyasi.
-- App lock, ekran himoyasi, loglarda maxfiy matn chiqmasligi.
-- Import/share fayllari chegaralari va vaqtinchalik plaintext fayllar hayot sikli.
-- Ovozning qurilmada yoki tashqarida qayta ishlanishi va ruxsat oqimi.
-- Play xaridi tekshiruvi, kesh huquqlar, offline ishlash, refund/revoke va debug bypass.
-- Server yo‘qligidagi anti-piracy cheklovlari; obfuscation yoki lokal imzo tekshiruvi mutlaq himoya deb taqdim etilmasin.
+### Finance
+- valyutali ledger;
+- kirim/chiqim;
+- qarz/qaytarish;
+- qolgan qarz;
+- oylik budget;
+- report;
+- search;
+- CSV export;
+- bank/karta ulash va pul o‘tkazish yo‘q.
 
-Mavjud foydalanuvchi bazasi yoki kalitini o‘chirish migratsiya/saqlash xatosini tuzatish usuli bo‘lmasin.
+**Joriy mahsulot qaroriga ko‘ra Finance Bilga Core unlock ichida bo‘lishi rejalashtiriladi; eski alohida $5 paywall qarori superseded.**
 
-## 9. Database / schema / migration
+### Experiences / private records
+- voqea;
+- his-tuyg‘u;
+- saboq;
+- keyingi qadam;
+- ish/hayot/hislar/shukronalik/ruhiy hayot/saboq kategoriyalari;
+- qidirish;
+- attachments.
 
-Repoda database kodi va migration fixture yo‘q. **Schema versiyasi noma’lum**; eski chatdagi versiya bu repoga ko‘chirilmadi.
+### Book
+- chapters;
+- reja/qahramonlar;
+- reorder;
+- eski tahrirni tiklash;
+- deleted chapter restore;
+- reader font size;
+- bookmark;
+- TXT/EPUB export.
 
-Kod kelgach: barcha bazalar nomi va versiyasi, jadval/indekslar, upgrade yo‘llari, eski nusxalar bilan moslik, attachment bog‘lanishlari, backup format versiyasi va rollback/recovery tekshirilsin. Migration testlari eski real formatdagi fixture va Unicode ma’lumotlarini saqlashni tekshirsin. Faqat yangi bo‘sh bazani yaratish testi yetarli emas.
+### Attachments/share
+- rasm, video, fayl, havola;
+- boshqa ilovalardan share qabul qilish.
 
-## 10. Build / test holati va ma’lum muammolar
+### Ambience/audio
+- fon audio;
+- 15/30/60/90 daqiqalik sleep timer;
+- volume write optimizatsiyasi;
+- scene image decode limit.
 
-2026-10-08 GitHub tekshiruvi:
-- `main` bazaviy commit yuqorida ko‘rsatilgan.
-- GitHub Actions natijasi: `total_count: 0`.
-- Testlar bu repo uchun ishga tushirilmagan; executable source yo‘q.
-- APK/AAB yig‘ilgani yoki qurilmada ishlagani bu repo uchun tasdiqlanmagan.
-- Handoff tayyorlashda ilova kodi yoki dependency o‘zgartirilmagan.
+### Localization
+Validation log:
+- **43 language × 249 strings**
+- structural catalog check passed;
+- bu lingvistik/native-speaker review degani emas.
 
-**Asosiy blocker:** haqiqiy so‘nggi loyiha manbasi repoga kiritilmagan.
-**Texnik qarz:** reproducible build konfiguratsiyasi, lockfile, testlar, CI, secret exclusion va amaldagi fayllar xaritasi mavjud emas.
-**Tasdiqlangan ilova buglari:** bu commitdan aniqlab bo‘lmaydi. Avvalgi lokal nusxadagi xatolar qayta tekshirilmasdan joriy repo bugi deb belgilanmasin.
+## 5. Eski Agent kodi haqida
 
-## 11. Oxirgi o‘zgarishlar
+Package ichida:
+- `lib/features/agent/agent_access.dart`
+- `lib/features/agent/agent_hub.dart`
+- `lib/features/agent/turbo_engine.dart`
+- `lib/features/agent/turbo_page.dart`
+- `optional/turbo/`
 
-- Repo boshlang‘ich holati o‘qildi: README va yagona `main` branch.
-- Manba va CI yo‘qligi tekshirildi.
-- Ushbu `HANDOFF.md` qo‘shildi. Bu funksional app update yoki oldingi ZIP’larni import qilish emas.
+bor.
 
-## 12. Dizayn qarorlari — mahsulot sababi
+`agent_access.dart` eski Play product ID’larini o‘z ichiga oladi:
+- `bilga_agent_start`
+- `bilga_agent_turbo`
+- `bilga_agent_turbo_upgrade`
+- `bilga_finance`
 
-- **Offline/maxfiylik:** shaxsiy sirlar va kundalik yozuvlar uchun foydalanuvchi nazorati.
-- **Yengillik:** katta model va doimiy fon ishini avtomatik yoqmaslik; real qurilmada o‘lchash.
-- **Qo‘lda moliyaviy qayd:** server/bank integratsiyasiz foydali hisob-kitob.
-- **Bepul odatlar:** kundalik foydalanish uchun bazaviy imkoniyat.
-- **Modulli pullik yordamchi:** mavjud va isbotlangan imkoniyat uchun haq olish; kelajak AI’sini mavjud deb sotmaslik.
-- **Tekshirilgan holatni yozish:** keyingi AI eski va yangi nusxalarni adashtirmasligi.
+Bu kod **legacy/in-transition** deb qaralsin. Bilga Core’ni release qilishdan oldin:
+1. Agent UI/route/billing Bilga Core’dan chiqarilishi;
+2. Finance alohida paywall bo‘lsa olib tashlanishi yoki yangi lifetime Core entitlement’ga moslashtirilishi;
+3. eski purchase receipt’larni yo‘qotib yubormaslik uchun migration/compatibility qarori ishlab chiqilishi;
+4. trial + lifetime unlock uchun yangi billing model yozilishi;
+5. Agent source alohida kelajak repo/app’ga ko‘chirilishi mumkin.
 
-Bular repo ichida bajarilgani tasdiqlangan texnik qarorlar emas; importdan keyin mosligi audit qilinadi.
+## 6. Validation evidence — package ichidagi real log
 
-## 13. Keyingi eng muhim 10 qadam
+`CHECK_RESULTS.txt` quyidagilarni qayd etadi:
 
-1. Egasi ishlatayotgan **eng so‘nggi to‘liq lokal loyiha**ni aniqlash; avval kod va foydalanuvchi ma’lumotlarining zaxirasini saqlash.
-2. Importdan oldin `.gitignore` va fayllar ro‘yxatini tekshirish: keystore, parol/token, lokal config, foydalanuvchi bazasi, build/cache kiritilmasin; kerakli assetlar tashlab ketilmasin.
-3. Tasdiqlangan source’ni shu repoga commit qilish; boshqa repo yoki eski ZIP bilan indamay almashtirmaslik.
-4. `pubspec`, Android konfiguratsiyasi va native kodni o‘qib, haqiqiy versiya/dependency/fayllar xaritasini shu hujjatga yozish.
-5. Database migration, habit va boshqa yozuvlarni saqlash/qayta ochish, backup/restore testlarini tekshirish va bajarish.
-6. Formatter/analyzer/unit/widget test natijalarini commit va buyruq bilan qayd etish; yiqilgan testlarni yashirmasdan tuzatish.
-7. Emulyatorsiz APK yig‘ish yo‘lini tekshirish va real planshetda cold start, RAM, fon musiqa, biriktirma va persistence’ni sinash.
-8. Google sign-in/Drive’ni debug va Play imzoli nusxalarda alohida sinash; konfiguratsiya bilan runtime xatosini ajratish.
-9. Billing/paketlar, sinov bypass’i, privacy/security va tarjimalarni release uchun tekshirish; Play test xarid/tiklashni bajarish.
-10. Takrorlanadigan CI/release yo‘lini o‘rnatish; ochiq buglar, test dalillari va keyingi vazifalar bilan HANDOFF’ni yangilash.
+- standalone Dart analyzer: **No issues found**
+- agent grammar checks: PASS
+- private/finance/encryption checks: **30 PASS**
+- habit checks: **19 PASS**
+- i18n structural: **43 × 249 PASS**
+- note schema migration: **v1 → current ... v10 → current PASS**
+- todo schema migration: **v1 → current ... v5 → current PASS**
+- installer:
+  - preflight PASS
+  - backup creation PASS
+  - checksum PASS
+  - idempotent rerun PASS
+  - unknown user edit rejection PASS
+  - corrupt package rejection PASS
 
-## 14. Komandalar
+Lekin package o‘zi aniq aytadi:
+- Android APK build bu validation workspace’da bajarilmagan;
+- Flutter widget test to‘liq bajarilmagan;
+- Google login real qurilmada tekshirilmagan;
+- Play Billing real Play test accountda tekshirilmagan;
+- Android SQLCipher integration real device’da tekshirilmagan.
 
-### Hozirgi repo holatini olish va tekshirish
+Shuning uchun PASS loglari foydali dalil, lekin “release tayyor” degani emas.
+
+## 7. APK
+
+Foydalanuvchi `app-debug.apk` ham berdi.
+- hajmi taxminan **207 MB**;
+- u debug artifact;
+- uni source repo’ga commit qilmaslik;
+- Play release sifatida ishlatmaslik;
+- package README ham test APK’ni Play Console’ga yuklamaslikni aytadi.
+
+APK qaysi exact source commitdan yig‘ilganini hozir isbotlaydigan reproducible provenance yo‘q. Full source importidan keyin yangi APK o‘sha commitdan qayta yig‘ilib hash/commit bilan bog‘lanadi.
+
+## 8. Maxfiylik va security — joriy yo‘nalish
+
+Bilga Core:
+- foydalanuvchi private notes/tasks/records’ni lokal saqlashi kerak;
+- Agent alohida app bo‘lgani uchun uning Bilga DB’ga default access’i bo‘lmaydi;
+- secret/token/keystore/release signing key repo’ga yozilmaydi;
+- exported TXT/CSV/EPUB plaintext bo‘lishi mumkinligi UX’da ogohlantirilishi kerak;
+- encrypted backup va uning paroli recovery uchun muhim;
+- app uninstall/key loss holati alohida test qilinadi;
+- logs’da private content chiqmasligi audit qilinadi.
+
+Mutlaq xavfsizlik va’dasi berilmasin.
+
+## 9. Hozirgi repo holati
+
+Repo hozircha **to‘liq app source emas**.
+Avvalgi auditda README-only bo‘lgan; HANDOFF qo‘shilgan.
+2026-10-08 da incremental 1.4.0 package o‘rganildi, lekin u to‘liq 1.3.0 bazani o‘z ichiga olmaydi.
+
+Shuning uchun package fayllarini repo root’ga ko‘r-ko‘rona yozish **noto‘g‘ri**: bu yetishmayotgan 1.3.0 fayllarni yo‘q deb ko‘rsatib, “full project” degan noto‘g‘ri holat yaratadi.
+
+## 10. Keyingi eng muhim qadamlar
+
+1. **Eng so‘nggi to‘liq lokal loyiha papkasini** topish: odatda `~/StudioProjects/bilga`.
+2. Undagi source holati 1.4.0 update qo‘llangan holatmi tekshirish.
+3. Source importdan oldin secret scan va `.gitignore`:
+   - keystore;
+   - passwords/tokens;
+   - `google_config.json` ichidagi sensitive material;
+   - user DB/backups;
+   - build/cache;
+   - local.properties.
+4. To‘liq source’ni **Bilga-Lokal private repo**ga commit qilish.
+5. Repo ichida real file map va architecture audit qilish.
+6. Joriy mahsulot qaroriga muvofiq **Bilga Agent’ni Core’dan ajratish**.
+7. Eski per-feature billingni **30–40 day trial + ~$7 lifetime Core unlock** modeliga qayta loyihalash.
+8. Eski xaridor/receipt compatibility siyosatini tanlash.
+9. Analyzer + unit/widget/integration + real Android device test + Play internal test.
+10. Google Sign-in/Drive debug va Play signing bilan sinash.
+11. Backup/restore va encrypted migration’ni real legacy dataset bilan tekshirish.
+12. Release CI va reproducible build.
+13. HANDOFF’ni har katta commit bilan yangilash.
+
+## 11. Full source kelgach ishlatiladigan boshlang‘ich komandalar
 
 ```bash
-git clone https://github.com/abdulAziz-Al-ILM/Bilga-Lokal.git
-cd Bilga-Lokal
+cd ~/StudioProjects/bilga
 git status --short
-git log -1 --oneline
-git ls-tree -r --name-only HEAD
-```
-
-Repo private; o‘z GitHub autentifikatsiyasi kerak. Mavjud loyiha papkasi ustiga clone yoki reset qilinmasin.
-
-### Faqat to‘liq Flutter source import qilingandan keyin
-
-Quyidagilar boshlang‘ich diagnostika komandalaridir, hozirgi README-only commitda bajarilmaydi. Repo ichidagi kelajak `AGENTS.md`, SDK talabi va tekshirilgan build skriptlari avval o‘qilsin.
-
-```bash
 flutter --version
 flutter doctor -v
 flutter pub get
@@ -176,16 +307,28 @@ flutter test --concurrency=1
 flutter devices
 ```
 
-Loyihaga xos preview/billing/Google `dart-define` talablari aniqlanmaguncha yakuniy `flutter run` yoki release buyrug‘i taxmin qilinmasin. Hozir bu repoda `tool/check_start.sh` yoki `tool/build_test_apk.sh` yo‘q.
+Package ichidagi scriptlar full source’da mavjud bo‘lsa:
+```bash
+bash tool/check_start.sh
+bash tool/build_test_apk.sh
+```
 
-## 15. Yangilash tartibi
+Real device integratsiya:
+```bash
+flutter test integration_test/private_device_test.dart -d QURILMA_ID
+```
 
-Har katta o‘zgarishdan keyin:
-1. Tekshirish sanasi va manba commitini yangilash.
-2. Funksiya/fayl/package/schema o‘zgarishlarini real yo‘llarga bog‘lash.
-3. Har test uchun buyruq, muhit, natija va bajarilmagan qismlarni yozish.
-4. Tuzatilgan bugni ochiq ro‘yxatdan chiqarish; yangi risk va TODO’ni qo‘shish.
-5. Narx yoki dizayn qarori o‘zgarsa talab bilan real implementatsiyani ajratish.
-6. Ushbu README-only holatni source importidan so‘ng haqiqiy audit bilan **almashtirish**, ustiga eskirgan tarix yig‘maslik.
+## 12. Handoff yangilash qoidasi
 
-Handoff chat transkripti emas. Secretlar, shaxsiy foydalanuvchi yozuvlari va tasdiqsiz “hammasi ishlaydi” xulosalari bu faylga kiritilmaydi.
+Har katta o‘zgarishda:
+- tekshirilgan commit SHA;
+- real code state;
+- test command + result;
+- ochiq bug/risk;
+- product decision;
+- billing/privacy migration;
+- keyingi 3–10 qadam
+
+yangilansin.
+
+Chatdagi eski qarorlar kod va ushbu hujjatdagi eng yangi mahsulot qaroridan ustun emas.
