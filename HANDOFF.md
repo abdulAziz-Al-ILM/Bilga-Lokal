@@ -7,7 +7,7 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **main**.
 
 ## 2026-10-08 — yangi to‘liq ZIP va qat’iy offline qarori
 
-Foydalanuvchi `bilga-full-source.zip` yubordi. Bu safar **to‘liq Flutter source** (2003 ta arxiv fayli, `lib/main.dart`, `android/`, `pubspec.yaml`, test va assets mavjud). Avvalgi `bilga-1.4.0.zip` incremental edi; undan farqini saqlang. Ushbu ZIP hali GitHub repo'ga bulk-import qilinmagan, shuning uchun repo source holatini noto‘g‘ri da’vo qilmang.
+Foydalanuvchi `bilga-full-source.zip` yubordi. Bu safar **to‘liq Flutter source** (2003 ta arxiv fayli, `lib/main.dart`, `android/`, `pubspec.yaml`, test va assets mavjud). Avvalgi `bilga-1.4.0.zip` incremental edi; undan farqini saqlang. **2026-10-08 da to‘liq manba main branch'ga import qilindi:** `d68111f` (source import), keyingi `667b62a` (unused signing example removal). GitHub `main` HEAD `667b62a2cb26caf07658a932a61acb26063fa577` sifatida tekshirildi. Endi repo to‘liq source'ni o‘z ichiga oladi; lekin build va device test hali tasdiqlanmagan.
 
 **Bilga Core uchun qat’iy qaror:**
 - Faqat **offline/local AI**; cloud AI, online STT va internet search fallback yo‘q.
@@ -17,11 +17,11 @@ Foydalanuvchi `bilga-full-source.zip` yubordi. Bu safar **to‘liq Flutter sourc
 - Umumiy AI, boshqa app integratsiyalari va cloud/subscription yordamchi — **kelajakdagi alohida Bilga Agent ilovasi**; Bilga private DB’ga default access berilmaydi.
 
 **Kod auditi topilmalari:**
-- `android/app/src/main/res/layout/agent_widget.xml` ichida `android:text="Bilga Agent"` allaqachon mavjud.
-- `android/app/src/main/AndroidManifest.xml` receiver label `android:label="Bilga Agent"` allaqachon mavjud.
+- `android/app/src/main/res/layout/agent_widget.xml` ichida `android:text="Bilga Core"` deb yangilangan.
+- `android/app/src/main/AndroidManifest.xml` receiver label `android:label="Bilga Core"` deb yangilangan.
 - Lekin hozirgi widget `com.ilmmizan.bilga.OPEN_AGENT` intent bilan **Core ichidagi** Agent ekranini ochadi: kelajakda alohida Agent app tayyor bo‘lmasdan ushbu widget’ni tashqi appga yo‘naltirmang.
 - `lib/features/agent/agent_page.dart` da `onlineVoice` flag hamda `AgentAction.web`, `call`, `sms` kabi core/offline-only qaroriga zid yoki scope tashqarisidagi oqimlar bor. Bularni test va migratsiya bilan ajratish kerak.
-- `FlutterTts` mavjud, ammo hozirgi `speak()` helper 3500 belgidan keyin kesadi va foydalanuvchi tanlagan notes’ni to‘liq serial/chunk tarzida o‘qish UX’i audit qilinishi kerak.
+- `FlutterTts` mavjud; import qilingan o‘zgarishlarda uzun matnni chunk bilan o‘qish va stop cancellation qayta ko‘rib chiqilgan. Biroq resume/pause, note qidirish va real qurilma tekshiruvi hali yakunlanmagan.
 - Lokal inference modeli qurilma resurslariga qarab baholansin; offline degani har qanday qurilmada cheksiz erkin LLM suhbatini kafolatlamaydi.
 
 ## 1. Eng muhim joriy mahsulot qarori
@@ -285,9 +285,8 @@ Mutlaq xavfsizlik va’dasi berilmasin.
 
 ## 9. Hozirgi repo holati
 
-Repo hozircha **to‘liq app source emas**.
-Avvalgi auditda README-only bo‘lgan; HANDOFF qo‘shilgan.
-2026-10-08 da incremental 1.4.0 package o‘rganildi, lekin u to‘liq 1.3.0 bazani o‘z ichiga olmaydi.
+Repo endi **to‘liq Flutter source import qilingan** (`667b62a`).
+Dastlab README-only edi, keyin HANDOFF qo‘shilgan. 2026-10-08 da full source import qilindi. ZIPdagi 1.4.0 incremental package alohida tarixiy kirish hisoblanadi.
 
 Shuning uchun package fayllarini repo root’ga ko‘r-ko‘rona yozish **noto‘g‘ri**: bu yetishmayotgan 1.3.0 fayllarni yo‘q deb ko‘rsatib, “full project” degan noto‘g‘ri holat yaratadi.
 
