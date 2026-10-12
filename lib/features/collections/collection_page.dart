@@ -1,5 +1,6 @@
+import '../todo/widget/todo_widget_permissions.dart';
+
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
@@ -7,8 +8,17 @@ import '../../core/strings.dart';
 import '../../core/dialogs.dart';
 import '../notes/note_model.dart';
 import '../notes/note_editor_page.dart';
+import '../notes/note_tag_store.dart';
+import '../notes/note_tag_picker.dart';
+import '../notes/note_service.dart';
+import '../notes/widget/notes_widget_bridge.dart';
+import '../notes/notes_changes.dart';
+import '../notes/note_widget_permission_store.dart';
 import '../todo/todo_editor_page.dart';
-import '../todo/todo_status_indicator.dart';
+import '../todo/todo_card_surface.dart';
+import '../todo/todo_changes.dart';
+import '../todo/reminders/todo_bridge.dart';
+import '../todo/reminders/todo_settings_page.dart';
 import '../todo/todo_presentation.dart';
 import 'collection_repository.dart';
 import '../templates/template_catalog.dart';
@@ -19,12 +29,18 @@ class CollectionPage extends StatefulWidget {
   final String? folderId;
   final String? folderName;
   final bool trash;
+  final String? initialTagId;
+  final CollectionRepository? repository;
+  final bool initialSearch;
   const CollectionPage({
     super.key,
     required this.kind,
     this.folderId,
     this.folderName,
     this.trash = false,
+    this.initialTagId,
+    this.repository,
+    this.initialSearch = false,
   });
   @override
   State<CollectionPage> createState() => _CollectionPageState();
@@ -35,15 +51,26 @@ class _CollectionPageState extends State<CollectionPage> {
   CollectionRows? rows;
   bool failed = false, busy = false;
   String query = '', filter = 'all';
+  String? selectedTagId;
+  List<NoteTag> tagLibrary = [];
+  Map<String, bool> widgetPermissions = {};
   late String? name;
   Timer? debounce, timer;
+  StreamSubscription<void>? notesChanges;
   final searchController = TextEditingController();
   @override
   void initState() {
     super.initState();
-    repo = CollectionRepository(widget.kind);
+    repo = widget.repository ?? CollectionRepository(widget.kind);
+    selectedTagId = repo.notes ? widget.initialTagId : null;
     name = widget.folderName;
     load();
+    {
+      notesChanges = (repo.notes ? NotesChanges.events : TodoChanges.events)
+          .listen((_) {
+            if (mounted) unawaited(load());
+          });
+    }
     if (!repo.notes) {
       timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (mounted &&
@@ -60,6 +87,7 @@ class _CollectionPageState extends State<CollectionPage> {
   void dispose() {
     debounce?.cancel();
     timer?.cancel();
+    unawaited(notesChanges?.cancel());
     searchController.dispose();
     super.dispose();
   }
@@ -68,15 +96,30 @@ class _CollectionPageState extends State<CollectionPage> {
   Future<void> load() async {
     final request = ++_request;
     try {
+      final tags = repo.notes
+          ? await NoteTagStore(await repo.database).all()
+          : const <NoteTag>[];
+      if (!mounted || request != _request) return;
+      if (selectedTagId != null &&
+          !tags.any((tag) => tag.id == selectedTagId)) {
+        selectedTagId = null;
+      }
       final result = await repo.load(
         folderId: widget.folderId,
         trash: widget.trash,
         query: query,
         filter: filter,
+        tagId: selectedTagId,
       );
+      final permissions = repo.notes
+          ? await NoteWidgetPermissionStore(await repo.database)
+                .allowed(result.items.map(Note.fromMap).toList())
+          : await TodoWidgetPermissions.allowed(await repo.database);
       if (mounted && request == _request) {
         setState(() {
           rows = result;
+          tagLibrary = tags;
+          widgetPermissions = permissions;
           failed = false;
         });
       }
@@ -121,6 +164,10 @@ class _CollectionPageState extends State<CollectionPage> {
       }
       return;
     }
+    final notesService = repo.notes
+        ? NoteService(database: await repo.database)
+        : null;
+    if (!mounted) return;
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -128,6 +175,7 @@ class _CollectionPageState extends State<CollectionPage> {
             ? NoteEditorPage(
                 note: row == null ? null : Note.fromMap(row),
                 folderId: widget.folderId,
+                service: notesService,
               )
             : TodoEditorPage(todo: row, folderId: widget.folderId),
       ),
@@ -283,33 +331,62 @@ class _CollectionPageState extends State<CollectionPage> {
         );
         break;
       case 'tags':
-        final tags = List<String>.from(
-          jsonDecode(row['tags'] as String? ?? '[]') as List,
-        );
-        final text = await askText(
+        final store = NoteTagStore(await repo.database);
+        final current = await store.forNote(id);
+        if (!mounted) return;
+        final picked = await showNoteTagPicker(
           context,
-          context.tr('tags'),
-          initial: tags.join(', '),
-          allowEmpty: true,
+          store,
+          selected: current.map((t) => t.id).toList(),
         );
-        if (text != null) {
-          await run(
-            () => repo.setField(
-              id,
-              'tags',
-              jsonEncode(
-                text
-                    .split(',')
-                    .map((s) => s.trim())
-                    .where((s) => s.isNotEmpty)
-                    .toSet()
-                    .toList(),
+        if (picked != null) {
+          await run(() async {
+            final db = await repo.database;
+            await db.transaction(
+              (txn) => NoteTagStore.assign(
+                txn,
+                id,
+                ids: picked.map((t) => t.id).toList(),
               ),
-            ),
-          );
+            );
+            NotesChanges.committed();
+          });
+        } else {
+          await load(); // Global rename/delete persists even when selection cancels.
         }
         break;
     }
+  }
+
+  Widget todoSurface(Map<String, Object?> row, Widget child) => repo.notes
+      ? child
+      : TodoCardSurface(
+          color: todoColor(
+            row,
+            DateTime.now(),
+            dark: Theme.of(context).brightness == Brightness.dark,
+          ),
+          child: child,
+        );
+
+  Future<void> allowWidget(Map<String, Object?> row, bool enabled) async {
+    if (enabled &&
+        !await confirm(
+          context,
+          context.tr('widgetPrivacyInfo'),
+          title: context.tr('widgetAllow'),
+        )) {
+      return;
+    }
+    if (!mounted) return;
+    await run(() async {
+      if (repo.notes) {
+        await NoteWidgetPermissionStore(await repo.database)
+            .setAllowed(Note.fromMap(row), enabled);
+      } else {
+        await TodoWidgetPermissions.set(await repo.database, row, enabled);
+      }
+    });
   }
 
   Widget menu(Map<String, Object?> row, bool folder) => PopupMenuButton<String>(
@@ -332,6 +409,38 @@ class _CollectionPageState extends State<CollectionPage> {
         PopupMenuItem(value: key, child: Text(c.tr(key))),
     ],
   );
+  void filterByTag(String id) {
+    debounce?.cancel();
+    searchController.clear();
+    setState(() {
+      selectedTagId = id;
+      query = '';
+      filter = 'all';
+    });
+    load();
+  }
+
+  Future<void> pickTagFilter() async {
+    final store = NoteTagStore(await repo.database);
+    if (!mounted) return;
+    final picked = await showNoteTagPicker(
+      context,
+      store,
+      selected: [?selectedTagId],
+      single: true,
+    );
+    final all = await store.all();
+    if (!mounted) return;
+    setState(() {
+      selectedTagId = picked != null
+          ? (picked.isEmpty ? null : picked.single.id)
+          : all.any((t) => t.id == selectedTagId)
+          ? selectedTagId
+          : null;
+    });
+    await load();
+  }
+
   String dueText(Map<String, Object?> row) {
     final due = DateTime.tryParse(row['due_at'] as String? ?? '');
     if (due == null) return '';
@@ -369,6 +478,45 @@ class _CollectionPageState extends State<CollectionPage> {
               ),
         ),
         actions: [
+          if (!repo.notes && !widget.trash)
+            IconButton(
+              tooltip: context.tr('reminderSettings'),
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TodoSettingsPage()),
+              ),
+            ),
+          if (!repo.notes && !widget.trash && widget.folderId == null)
+            IconButton(
+              tooltip: context.tr('widgetTodo'),
+              icon: const Icon(Icons.widgets_outlined),
+              onPressed: () async {
+                try {
+                  final ok = await TodoBridge.channel.invokeMethod<bool>(
+                    'requestPin',
+                  );
+                  if (ok != true && context.mounted) showError(context);
+                } catch (_) {
+                  if (context.mounted) showError(context);
+                }
+              },
+            ),
+          if (repo.notes && !widget.trash && widget.folderId == null)
+            IconButton(
+              tooltip: context.tr('widgetNotes'),
+              icon: const Icon(Icons.widgets_outlined),
+              onPressed: () async {
+                try {
+                  final ok = await NotesWidgetBridge.channel.invokeMethod<bool>(
+                    'requestPin',
+                  );
+                  if (ok != true && context.mounted) showError(context);
+                } catch (_) {
+                  if (context.mounted) showError(context);
+                }
+              },
+            ),
           if (!widget.trash)
             IconButton(
               tooltip: context.tr('trash'),
@@ -437,6 +585,7 @@ class _CollectionPageState extends State<CollectionPage> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
               controller: searchController,
+              autofocus: repo.notes && widget.initialSearch,
               decoration: InputDecoration(
                 hintText: context.tr('search'),
                 prefixIcon: const Icon(Icons.search),
@@ -454,6 +603,27 @@ class _CollectionPageState extends State<CollectionPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 8),
+                    child: InputChip(
+                      avatar: const Icon(Icons.label_outline, size: 18),
+                      label: Text(
+                        tagLibrary
+                                .where((t) => t.id == selectedTagId)
+                                .firstOrNull
+                                ?.name ??
+                            context.tr('tags'),
+                      ),
+                      selected: selectedTagId != null,
+                      onPressed: busy ? null : pickTagFilter,
+                      onDeleted: selectedTagId == null
+                          ? null
+                          : () {
+                              setState(() => selectedTagId = null);
+                              load();
+                            },
+                    ),
+                  ),
                   for (final key in ['all', 'favorites', 'archive'])
                     Padding(
                       padding: const EdgeInsetsDirectional.only(end: 8),
@@ -523,7 +693,9 @@ class _CollectionPageState extends State<CollectionPage> {
                 ],
               ),
             ),
-          if (!repo.notes && !widget.trash && filter != 'all')
+          if (!widget.trash &&
+              ((!repo.notes && filter != 'all') ||
+                  (repo.notes && selectedTagId != null)))
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Align(
@@ -572,69 +744,122 @@ class _CollectionPageState extends State<CollectionPage> {
                                 : RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
                                     side: BorderSide(
-                                      color: todoIsOverdue(row, now)
-                                          ? scheme.outline
-                                          : todoColor(
-                                              row,
-                                              now,
-                                            ).withValues(alpha: .55),
+                                      color: todoColor(
+                                        row,
+                                        now,
+                                        dark:
+                                            Theme.of(context).brightness ==
+                                            Brightness.dark,
+                                      ),
+                                      width: 1.5,
                                     ),
                                   ),
-                            child: ListTile(
-                              leading: repo.notes
-                                  ? Icon(
-                                      row['is_favorite'] == 1
-                                          ? Icons.star
-                                          : Icons.description_outlined,
-                                      color: scheme.primary,
-                                    )
-                                  : Checkbox(
-                                      value: row['is_done'] == 1,
-                                      activeColor: todoPriorityColors.first,
-                                      onChanged: widget.trash || busy
-                                          ? null
-                                          : (v) => run(
-                                              () => repo.setField(
-                                                row['id'] as String,
-                                                'is_done',
-                                                v == true ? 1 : 0,
+                            child: todoSurface(
+                              row,
+                              ListTile(
+                                leading: repo.notes
+                                    ? Icon(
+                                        row['is_favorite'] == 1
+                                            ? Icons.star
+                                            : Icons.description_outlined,
+                                        color: scheme.primary,
+                                      )
+                                    : Checkbox(
+                                        value: row['is_done'] == 1,
+                                        activeColor: todoPriorityColors.first,
+                                        onChanged: widget.trash || busy
+                                            ? null
+                                            : (v) => run(
+                                                () => repo.setField(
+                                                  row['id'] as String,
+                                                  'is_done',
+                                                  v == true ? 1 : 0,
+                                                ),
                                               ),
-                                            ),
-                                    ),
-                              title: Text(
-                                (row['title'] as String).isEmpty
-                                    ? context.tr('untitled')
-                                    : row['title'] as String,
-                                style: TextStyle(
-                                  decoration: !repo.notes && row['is_done'] == 1
-                                      ? TextDecoration.lineThrough
-                                      : null,
+                                      ),
+                                title: Text(
+                                  (row['title'] as String).isEmpty
+                                      ? context.tr('untitled')
+                                      : row['title'] as String,
+                                  style: TextStyle(
+                                    decoration:
+                                        !repo.notes && row['is_done'] == 1
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  ),
                                 ),
-                              ),
-                              subtitle: repo.notes
-                                  ? Text(
-                                      row['body'] as String,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  : Text(
-                                      '${context.tr(['normal', 'important', 'veryImportant', 'critical'][(row['priority'] as int? ?? 0).clamp(0, 3).toInt()])}'
-                                      '${row['is_done'] == 1 ? '' : '\n${dueText(row)}'}',
-                                    ),
-                              onTap: () => edit(row),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (!repo.notes)
-                                    TodoStatusIndicator(
-                                      key: ValueKey('status-${row['id']}'),
-                                      interval: todoPulseMilliseconds(row, now),
-                                      overdue: todoIsOverdue(row, now),
-                                      completed: row['is_done'] == 1,
-                                      color: todoColor(row, now),
-                                    ),
-                                  menu(row, false),
-                                ],
+                                subtitle: repo.notes
+                                    ? Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            row['body'] as String,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          NoteTagChips(
+                                            names: NoteTagStore.legacyNames(
+                                              row['tags'],
+                                            ),
+                                            ids: NoteTagStore.legacyNames(
+                                              row['tag_ids'],
+                                            ),
+                                            onSelected: widget.trash
+                                                ? null
+                                                : filterByTag,
+                                          ),
+                                          if (!widget.trash)
+                                            SwitchListTile.adaptive(
+                                              key: ValueKey(
+                                                'widget-allow-${row['id']}',
+                                              ),
+                                              contentPadding: EdgeInsets.zero,
+                                              dense: true,
+                                              title: Text(
+                                                context.tr('widgetAllow'),
+                                              ),
+                                              value:
+                                                  widgetPermissions[row['id']] ==
+                                                  true,
+                                              onChanged: busy
+                                                  ? null
+                                                  : (v) => allowWidget(row, v),
+                                            ),
+                                        ],
+                                      )
+                                    : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${context.tr(['normal', 'important', 'veryImportant', 'critical'][(row['priority'] as int? ?? 0).clamp(0, 3).toInt()])}${row['is_done'] == 1 ? '' : '\n${dueText(row)}'}',
+                                          ),
+                                          if (!widget.trash)
+                                            SwitchListTile.adaptive(
+                                              key: ValueKey(
+                                                'widget-allow-${row['id']}',
+                                              ),
+                                              contentPadding: EdgeInsets.zero,
+                                              dense: true,
+                                              title: Text(
+                                                context.tr('widgetAllow'),
+                                              ),
+                                              value:
+                                                  widgetPermissions[row['id']] ==
+                                                  true,
+                                              onChanged: busy
+                                                  ? null
+                                                  : (v) => allowWidget(row, v),
+                                            ),
+                                        ],
+                                      ),
+                                onTap: () => edit(row),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [menu(row, false)],
+                                ),
                               ),
                             ),
                           ),

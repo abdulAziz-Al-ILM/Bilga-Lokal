@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Widget úloh</string>
+    <string name="tw_todos">Robiť</string>
+    <string name="tw_task">Úloha</string>
+    <string name="tw_new">Nová úloha</string>
+    <string name="tw_done">Dokončené</string>
+    <string name="tw_empty">Zatiaľ tu nič nie je</string>
+    <string name="tw_reminders">Pripomienky</string>
+    <string name="tw_limits">Android môže pripomienky oneskoriť alebo skryť panely. Skontrolujte oznámenia, presné budíky a batériu; vyskakovacie oznámenie nie je zaručené.</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Віджет завдань</string>
+    <string name="tw_todos">Зробити</string>
+    <string name="tw_task">Завдання</string>
+    <string name="tw_new">Нове завдання</string>
+    <string name="tw_done">Виконані</string>
+    <string name="tw_empty">Тут ще нічого немає</string>
+    <string name="tw_reminders">Нагадування</string>
+    <string name="tw_limits">Android може затримувати нагадування або приховувати панелі. Перевірте сповіщення, точні будильники й батарею; спливне вікно не гарантується.</string>
+</resources>

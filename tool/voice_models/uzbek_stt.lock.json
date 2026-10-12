@@ -1,0 +1,14 @@
+{
+  "repository": "alphacep/vosk-model-small-streaming-uz",
+  "commit": "e0417cabfbbac4efdc34e7aba367501d126ae79c",
+  "id": "vosk-uz-small",
+  "version": "0.60-e0417cab",
+  "license": "Apache-2.0",
+  "files": [
+    {"upstream": "am-onnx/encoder.onnx", "path": "encoder.onnx", "asset": "vosk-uz-060-encoder.onnx", "bytes": 90994145, "sha256": "40132a29651c3e1d5f9dc025b98e9b7926ce1eefc426c902e2f0427fb0a57728"},
+    {"upstream": "am-onnx/decoder.onnx", "path": "decoder.onnx", "asset": "vosk-uz-060-decoder.onnx", "bytes": 2093080, "sha256": "69f1c6f02bd496f19b4e1d8ac66c6bb69133e99fbf1b500b5f9aec8d3d8eb976"},
+    {"upstream": "am-onnx/joiner.onnx", "path": "joiner.onnx", "asset": "vosk-uz-060-joiner.onnx", "bytes": 1026462, "sha256": "23f7b72b0817f73bcf401d7280962d1919c82f32318d6dcd7d0cec88e14f8357"},
+    {"upstream": "lang/tokens.txt", "path": "tokens.txt", "asset": "vosk-uz-060-tokens.txt", "bytes": 3957, "sha256": "5f5cff3eeadbf4b53c2f84487ff51ece78763dffae6213ee11d5509ab9efb064"},
+    {"upstream": "README.md", "path": "UPSTREAM.md", "asset": "vosk-uz-060-UPSTREAM.md", "bytes": 1284, "sha256": "0668b3775666fbdd7d517e841dad01ca8bde4a25f607240e5abf398fd0c20253"}
+  ]
+}

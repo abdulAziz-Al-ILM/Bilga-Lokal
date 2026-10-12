@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Feladatmodul</string>
+    <string name="tw_todos">Tennivaló</string>
+    <string name="tw_task">Feladat</string>
+    <string name="tw_new">Új feladat</string>
+    <string name="tw_done">Befejezett</string>
+    <string name="tw_empty">Még nincs itt semmi</string>
+    <string name="tw_reminders">Emlékeztetők</string>
+    <string name="tw_limits">Az Android késleltetheti az emlékeztetőket vagy elrejtheti a paneleket. Ellenőrizze az értesítéseket, pontos riasztásokat és az akkumulátort; a felugró értesítés nem garantált.</string>
+</resources>

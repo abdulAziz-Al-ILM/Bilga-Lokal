@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">დავალებების ვიჯეტი</string>
+    <string name="tw_todos">დავალებები</string>
+    <string name="tw_task">დავალება</string>
+    <string name="tw_new">ახალი დავალება</string>
+    <string name="tw_done">დასრულებული</string>
+    <string name="tw_empty">აქ ჯერ არაფერია</string>
+    <string name="tw_reminders">შეხსენებები</string>
+    <string name="tw_limits">Android-მა შეიძლება შეაყოვნოს შეხსენება ან დამალოს პანელი. შეამოწმეთ შეტყობინებების, ზუსტი მაღვიძარისა და ბატარეის პარამეტრები; ამომხტარი შეტყობინება გარანტირებული არ არის.</string>
+</resources>

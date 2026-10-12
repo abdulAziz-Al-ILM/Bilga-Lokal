@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">To-Do widget</string>
+    <string name="tw_todos">To Do</string>
+    <string name="tw_task">Task</string>
+    <string name="tw_new">New task</string>
+    <string name="tw_done">Completed</string>
+    <string name="tw_empty">Nothing here yet</string>
+    <string name="tw_reminders">Reminders</string>
+    <string name="tw_limits">Android may delay reminders or hide floating panels. Check notification, precise alarm and battery settings; heads-up is not guaranteed.</string>
+</resources>

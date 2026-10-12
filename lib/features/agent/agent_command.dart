@@ -1,4 +1,8 @@
+import 'voice/voice_languages.dart';
+
 enum AgentAction {
+  pauseReading,
+  resumeReading,
   note,
   task,
   findNotes,
@@ -25,7 +29,21 @@ class AgentCommand {
 
 /// Offline command grammar. Deliberately never treats retrieved note text as an
 /// instruction and never guesses which record to overwrite.
-AgentCommand parseAgentCommand(String input) {
+AgentCommand parseAgentCommand(
+  String input, {
+  String preferredLanguage = 'en',
+}) {
+  final reading = parseReadingCommand(
+    input,
+    preferredLanguage: preferredLanguage,
+  );
+  if (reading != null && reading.intent != ReadingIntent.read) {
+    return AgentCommand(switch (reading.intent) {
+      ReadingIntent.pause => AgentAction.pauseReading,
+      ReadingIntent.resume => AgentAction.resumeReading,
+      ReadingIntent.read => AgentAction.findNotes,
+    }, reading.argument);
+  }
   final text = input.trim().replaceAll(RegExp('[‘’ʻʼ`´]'), "'");
   final rules = <AgentAction, List<String>>{
     AgentAction.stopMusic: [
@@ -172,6 +190,9 @@ AgentCommand parseAgentCommand(String input) {
         text.substring(0, text.length - entry.key.length).trim(),
       );
     }
+  }
+  if (reading != null) {
+    return AgentCommand(AgentAction.findNotes, reading.argument);
   }
   return AgentCommand(AgentAction.unknown, text);
 }

@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 import 'folder_model.dart';
 import 'note_database.dart';
+import 'notes_changes.dart';
 
 class FolderService {
   final Database? _providedDatabase;
@@ -258,6 +259,7 @@ class FolderService {
         );
       }
     });
+    NotesChanges.committed();
   }
 
   Future<void> restoreFolderTree(Folder folder) async {
@@ -314,6 +316,7 @@ class FolderService {
       // Version 6 has no deletion provenance. Restore its folder only:
       // old deleted children become separately accessible in the trash.
     });
+    NotesChanges.committed();
   }
 
   Future<void> deleteFolderTreeForever(Folder folder) async {
@@ -353,6 +356,7 @@ class FolderService {
         await txn.delete('folders', where: 'id = ?', whereArgs: [folderId]);
       }
     });
+    NotesChanges.committed();
   }
 
   Future<bool> isFolderEmpty(String folderId) async {

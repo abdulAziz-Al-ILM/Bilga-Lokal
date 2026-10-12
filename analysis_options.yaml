@@ -18,6 +18,10 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    # Archived Turbo sources and an independent plugin/example package are not
+    # dependencies of the Bilga app. Analyze them in their own package context.
+    - optional/**
+    - vendor/**
 
 linter:
   # The lint rules applied to this project can be customized in the

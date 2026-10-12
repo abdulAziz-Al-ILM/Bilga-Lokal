@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">أداة المهام</string>
+    <string name="tw_todos">القيام</string>
+    <string name="tw_task">المهمة</string>
+    <string name="tw_new">مهمة جديدة</string>
+    <string name="tw_done">المكتملة</string>
+    <string name="tw_empty">لا شيء هنا بعد</string>
+    <string name="tw_reminders">التذكيرات</string>
+    <string name="tw_limits">قد يؤخر Android التذكيرات أو يخفي اللوحات. تحقق من إعدادات الإشعارات والمنبّه الدقيق والبطارية؛ لا يُضمن الظهور المنبثق.</string>
+</resources>

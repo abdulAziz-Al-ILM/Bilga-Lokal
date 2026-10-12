@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/settings.dart';
@@ -16,7 +15,13 @@ import '../collections/collection_repository.dart';
 import '../habits/habit_store.dart';
 import '../ambience/ambient_audio.dart';
 import 'agent_access.dart';
+import 'purchase_panel.dart';
 import 'agent_command.dart';
+import 'voice/model_store.dart';
+import 'voice/offline_voice.dart';
+import 'voice/reading_controller.dart';
+import 'voice/voice_languages.dart';
+import 'voice/model_panel.dart';
 
 class AgentPage extends StatefulWidget {
   const AgentPage({super.key});
@@ -25,9 +30,10 @@ class AgentPage extends StatefulWidget {
 }
 
 class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
-  static const voice = MethodChannel('bilga/voice');
   final input = TextEditingController();
-  final tts = FlutterTts();
+  OfflineVoice? _voice;
+  ReadingController? _reading;
+  bool _installingModels = false;
   final access = AgentAccess.instance;
   final notes = NoteService();
   final tasks = TodoService();
@@ -45,11 +51,8 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    language = switch (AppSettings.instance.language) {
-      'uz' => 'uz-UZ',
-      'ru' => 'ru-RU',
-      _ => 'en-US',
-    };
+    language = voiceLanguages[AppSettings.instance.language]?.locale ?? 'en-US';
+    unawaited(_initializeVoice());
     WidgetsBinding.instance.addObserver(this);
     unawaited(access.init());
   }
@@ -57,9 +60,11 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    unawaited(voice.invokeMethod<void>('cancel').catchError((Object _) {}));
+    unawaited(_voice?.cancelListening().catchError((Object _) {}));
+    _reading?.removeListener(_readingChanged);
+    _reading?.dispose();
+    _voice?.store.cancel();
     _speechEpoch++;
-    unawaited(tts.stop());
     unawaited(AmbientAudio.instance?.duck(false));
     input.dispose();
     super.dispose();
@@ -70,134 +75,212 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
     _foreground = state == AppLifecycleState.resumed;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      unawaited(voice.invokeMethod<void>('cancel').catchError((Object _) {}));
-      _speechEpoch++;
-    unawaited(tts.stop());
+      unawaited(_voice?.cancelListening().catchError((Object _) {}));
+      unawaited(_reading?.pause());
       unawaited(AmbientAudio.instance?.duck(false));
     }
   }
 
-  void say(String text) {
+  void say(String text, {bool aloud = true}) {
     if (!mounted) return;
     setState(() {
       messages.add(text);
       if (messages.length > 30) messages.removeAt(0);
     });
-    if (readAloud && _foreground) unawaited(speak(text));
+    if (aloud && readAloud && _foreground) unawaited(speak(text));
   }
 
-  Future<void> speak(String text) async {
+  Future<void> _initializeVoice() async {
     try {
-      await tts.stop();
-      final available = await tts.isLanguageAvailable(language);
-      if (available != true && available != 1) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                startText(
-                  'Bu tilning ovozi telefonda o‘rnatilmagan.',
-                  'This voice is not installed on your phone.',
-                  'Этот голос не установлен на телефоне.',
-                ),
-              ),
-            ),
-          );
-        }
+      final store = await VoiceModelStore.open();
+      if (!mounted) {
+        store.dispose();
         return;
       }
-      final voices = (await tts.getVoices as List)
-          .whereType<Map>()
-          .where(
-            (v) =>
-                '${v['locale']}'
-                    .replaceAll('_', '-')
-                    .startsWith(language.split('-').first) &&
-                v['network_required'] == false,
-          )
-          .toList();
-      if (voices.isEmpty) throw StateError('offline_voice');
-      await tts.setVoice({
-        'name': '${voices.first['name']}',
-        'locale': '${voices.first['locale']}',
-      });
-      await tts.awaitSpeakCompletion(true);
-      await AmbientAudio.instance?.duck(true);
-      final epoch = ++_speechEpoch;
-      // Chunking avoids TTS engines truncating long private notes.
-      final chunks = RegExp(r'[\s\S]{1,2800}').allMatches(text);
-      for (final match in chunks) {
-        if (epoch != _speechEpoch || !_foreground || !mounted) break;
-        await tts.speak(match.group(0)!);
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Voice unavailable')));
-      }
-    } finally {
-      await AmbientAudio.instance?.duck(false);
-    }
-  }
-
-  Future<void> listen() async {
-    if (!access.allowed || busy) return;
-    if (listening) {
-      await voice.invokeMethod<void>('cancel');
-      return;
-    }
-    setState(() => listening = true);
-    try {
-      _speechEpoch++;
-      await tts.stop();
-      await AmbientAudio.instance?.duck(true);
-      final text = await voice.invokeMethod<String>('listen', {
-        'language': language,
-        'online': false,
-      });
-      if (mounted && text != null && text.trim().isNotEmpty) {
-        input.text = text;
-        say(
-          startText(
-            'Buyruq tayyor. Tekshirib, bajarish tugmasini bosing.',
-            'Command ready. Review it and tap Run.',
-            'Команда готова. Проверьте и нажмите Выполнить.',
-          ),
-        );
-      }
-    } on PlatformException catch (e) {
-      say(switch (e.code) {
-        'permission' => startText(
-          'Mikrofon ruxsati kerak. Sozlamalardan yoqing.',
-          'Microphone permission is required. Enable it in Settings.',
-          'Разрешите доступ к микрофону в настройках.',
-        ),
-        'offline_unavailable' => startText(
-          'Lokal ovoz tanish mavjud emas. Matn yozing yoki onlayn ovozni yoqing.',
-          'On-device speech is unavailable. Type or enable online speech.',
-          'Локальное распознавание недоступно. Введите текст или включите онлайн-режим.',
-        ),
-        'cancelled' => startText(
-          'Tinglash to‘xtatildi.',
-          'Listening stopped.',
-          'Прослушивание остановлено.',
-        ),
-        _ => startText(
-          'Ovoz tanilmadi. Til modelini tekshiring yoki matn yozing.',
-          'Speech was not recognized. Check the language model or type instead.',
-          'Речь не распознана. Проверьте языковую модель или введите текст.',
-        ),
+      final service = OfflineVoice(store);
+      setState(() {
+        _voice = service;
+        _reading = ReadingController(service)..addListener(_readingChanged);
       });
     } catch (_) {
       say(
         startText(
-          'Ovoz xizmati mavjud emas.',
-          'Voice service unavailable.',
-          'Голосовой сервис недоступен.',
+          'Offline ovozni tayyorlab bo‘lmadi.',
+          'Could not initialize offline speech.',
+          'Не удалось подготовить офлайн-речь.',
+        ),
+        aloud: false,
+      );
+    }
+  }
+
+  void _readingChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> pauseReading() async {
+    await _reading?.pause();
+    await AmbientAudio.instance?.duck(false);
+  }
+
+  Future<void> resumeReading() async {
+    if (!_foreground || !access.allowed || listening) return;
+    if (_reading?.active == true) await AmbientAudio.instance?.duck(true);
+    await _reading?.resume();
+  }
+
+  Future<void> speak(String text) async {
+    final reader = _reading;
+    if (reader == null || !_foreground || !access.allowed) return;
+    final epoch = ++_speechEpoch;
+    await AmbientAudio.instance?.duck(true);
+    await reader.read(text, language);
+    if (epoch != _speechEpoch) return;
+    await AmbientAudio.instance?.duck(false);
+    if (reader.error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            startText(
+              '${reader.error}: offline TTS ovozi mavjud emas yoki ishlamadi. Modelni tekshiring. Matn saqlangan.',
+              '${reader.error}: offline TTS is unavailable or failed. Check the model. Your text is preserved.',
+              '${reader.error}: офлайн-голос недоступен или не работает. Проверьте модель. Текст сохранён.',
+            ),
+          ),
         ),
       );
+    }
+  }
+
+  Future<void> chooseVoiceLanguage(String value) async {
+    await pauseReading();
+    if (!mounted) return;
+    setState(() => language = value);
+    final service = _voice;
+    if (service == null || !service.store.source.configured) return;
+    final consent = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          startText(
+            'Offline modellarni olish',
+            'Get offline models',
+            'Загрузить офлайн-модели',
+          ),
+        ),
+        content: Text(
+          startText(
+            'Tanlangan til uchun yetishmayotgan modellar ishonchli katalogdan avtomatik yuklansinmi? Internet faqat model olishga ishlatiladi. Yozuv va ovoz yuborilmaydi.',
+            'Automatically download missing models for this language from the trusted catalog? Internet is used only to acquire models. Notes and audio are never sent.',
+            'Автоматически загрузить недостающие модели языка из доверенного каталога? Интернет нужен только для моделей. Заметки и голос не отправляются.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(startText('Bekor qilish', 'Cancel', 'Отмена')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(startText('Yuklash', 'Download', 'Загрузить')),
+          ),
+        ],
+      ),
+    );
+    if (consent != true || !mounted || !_foreground) return;
+    setState(() => _installingModels = true);
+    try {
+      final missing = await service.downloadMissingModels(value);
+      for (final kind in missing) {
+        say(
+          '${kind.toUpperCase()}: ${startText("bu til uchun mos offline model mavjud emas", "no compatible offline model for this language", "нет совместимой офлайн-модели языка")}',
+          aloud: false,
+        );
+      }
+    } on DownloadCancelled {
+      say(
+        startText(
+          'Yuklash bekor qilindi. Keyin davom ettirish mumkin.',
+          'Download cancelled. You can resume later.',
+          'Загрузка отменена. Можно продолжить позже.',
+        ),
+        aloud: false,
+      );
+    } catch (_) {
+      say(
+        startText(
+          'Model yuklash yoki tekshirish bajarilmadi. Qayta urinib ko‘ring.',
+          'Model download or verification failed. Try again.',
+          'Ошибка загрузки или проверки модели.',
+        ),
+        aloud: false,
+      );
     } finally {
-      await AmbientAudio.instance?.duck(false);
+      service.invalidateCapabilities();
+      if (mounted) setState(() => _installingModels = false);
+    }
+  }
+
+  Future<void> listen() async {
+    final service = _voice;
+    if (!access.allowed || busy || service == null) return;
+    if (listening) {
+      await service.cancelListening();
+      return;
+    }
+    setState(() => listening = true);
+    try {
+      await pauseReading();
+      await AmbientAudio.instance?.duck(true);
+      final text = await service.listen(language);
+      if (mounted && _foreground && text != null && text.trim().isNotEmpty) {
+        final command = parseAgentCommand(text, preferredLanguage: language);
+        if (command.action == AgentAction.pauseReading) {
+          await pauseReading();
+        } else if (command.action == AgentAction.resumeReading) {
+          // Recognition has ended; resume before leaving this method.
+          setState(() => listening = false);
+          await resumeReading();
+        } else {
+          input.text = text;
+          say(
+            startText(
+              'Buyruq tayyor. Tekshirib, bajarish tugmasini bosing.',
+              'Command ready. Review it and tap Run.',
+              'Команда готова. Проверьте и нажмите Выполнить.',
+            ),
+            aloud: false,
+          );
+        }
+      }
+    } on PlatformException catch (e) {
+      say(
+        e.code == 'permission'
+            ? startText(
+                'Mikrofon ruxsati kerak. Sozlamalardan yoqing.',
+                'Microphone permission is required. Enable it in Settings.',
+                'Разрешите доступ к микрофону в настройках.',
+              )
+            : startText(
+                'Bu tilning offline STT modeli mavjud emas yoki ovoz tanilmadi. Modelni tekshiring yoki matn va tugmalardan foydalaning.',
+                'Offline STT is unavailable for this language or speech was not recognized. Check the model or use text and buttons.',
+                'Офлайн-STT языка недоступно или речь не распознана. Проверьте модель или используйте текст и кнопки.',
+              ),
+        aloud: false,
+      );
+    } catch (_) {
+      say(
+        startText(
+          'Offline ovoz xizmati ishlamadi.',
+          'Offline voice service failed.',
+          'Ошибка офлайн-речи.',
+        ),
+        aloud: false,
+      );
+    } finally {
+      await AmbientAudio.instance?.duck(
+        _reading?.active == true && _reading?.paused == false,
+      );
       if (mounted) setState(() => listening = false);
     }
   }
@@ -310,10 +393,14 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
     if (raw.trim().isEmpty) return;
     setState(() => busy = true);
     input.clear();
-    final command = parseAgentCommand(raw);
+    final command = parseAgentCommand(raw, preferredLanguage: language);
     final query = command.argument.toLowerCase();
     try {
       switch (command.action) {
+        case AgentAction.pauseReading:
+          await pauseReading();
+        case AgentAction.resumeReading:
+          await resumeReading();
         case AgentAction.note:
           final split = command.argument.split('|');
           final title = split.first.trim().isEmpty
@@ -389,7 +476,9 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
           );
           if (note == null) break;
           if (command.action == AgentAction.findNotes) {
-            say('${note.title}\n\n${note.body}');
+            final text = '${note.title}\n\n${note.body}';
+            say(text, aloud: false);
+            unawaited(speak(text));
           } else {
             final body = await editText(note.title, note.body, multiline: true);
             if (body != null && mounted && _foreground && access.allowed) {
@@ -528,40 +617,14 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
           }
         case AgentAction.web:
         case AgentAction.unknown:
-          final question = command.argument.isEmpty
-              ? await editText(
-                  startText(
-                    'Nimani qidiramiz?',
-                    'What shall we search?',
-                    'Что искать?',
-                  ),
-                  '',
-                )
-              : command.argument;
-          if (question != null &&
-              await confirm(
-                startText(
-                  'Internetda qidirish',
-                  'Search the web',
-                  'Поиск в интернете',
-                ),
-                startText(
-                  'Bu so‘rov brauzerdagi qidiruv xizmatiga yuboriladi:\n$question',
-                  'This query will be sent to the search engine in your browser:\n$question',
-                  'Этот запрос будет отправлен поисковику в браузере:\n$question',
-                ),
-              )) {
-            await launch(
-              Uri.https('www.google.com', '/search', {'q': question}),
-            );
-            say(
-              startText(
-                'Qidiruv brauzerda ochildi.',
-                'Search opened in your browser.',
-                'Поиск открыт в браузере.',
-              ),
-            );
-          }
+          say(
+            startText(
+              'Buyruq tanilmadi. Bilga Core faqat lokal buyruqlarni bajaradi.',
+              'Command not recognized. Bilga Core handles local commands only.',
+              'Команда не распознана. Bilga Core выполняет только локальные команды.',
+            ),
+            aloud: false,
+          );
         case AgentAction.call:
         case AgentAction.sms:
           final parts = command.argument.split('|');
@@ -709,15 +772,6 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
           startText('odatlarim', 'my habits', 'мои привычки'),
         ),
         (
-          Icons.public,
-          startText('Internet qidiruvi', 'Web search', 'Поиск в интернете'),
-          startText(
-            'internetdan qidir: ',
-            'search web: ',
-            'найди в интернете: ',
-          ),
-        ),
-        (
           Icons.call,
           startText('Qo‘ng‘iroq', 'Call', 'Звонок'),
           startText("qo'ng'iroq qil: ", 'call: ', 'позвони: '),
@@ -744,12 +798,19 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
                 'Stop reading',
                 'Остановить чтение',
               ),
-              onPressed: () async {
-                _speechEpoch++;
-                await tts.stop();
-                await AmbientAudio.instance?.duck(false);
-              },
+              onPressed: pauseReading,
               icon: const Icon(Icons.volume_off),
+            ),
+            IconButton(
+              tooltip: startText(
+                'Davom et',
+                'Resume reading',
+                'Продолжить чтение',
+              ),
+              onPressed: _reading?.paused == true && !listening
+                  ? resumeReading
+                  : null,
+              icon: const Icon(Icons.play_arrow),
             ),
           ],
         ),
@@ -772,87 +833,17 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
                   const SizedBox(height: 8),
                   Text(
                     startText(
-                      'Lokal buyruqlar yordamchisi: yozuv, vazifa, odat va musiqa. Internet qidiruvi brauzerda ochiladi.',
-                      'Local command assistant for notes, tasks, habits and music. Web searches open in your browser.',
-                      'Локальный помощник для заметок, задач, привычек и музыки. Интернет-поиск открывается в браузере.',
+                      'Offline yordamchi: yozuv, vazifa, odat va musiqa. O‘qish vaqtida mikrofonni bosing, so‘ng “to‘xta” yoki “davom et” deng.',
+                      'Offline assistant for notes, tasks, habits and music. While reading, tap the microphone, then say “stop” or “resume”.',
+                      'Офлайн-помощник для заметок, задач, привычек и музыки. При чтении нажмите микрофон и скажите «стоп» или «продолжай».',
                     ),
                   ),
                   const SizedBox(height: 16),
                   if (!access.allowed)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Start • ${access.product?.price ?? context.tr('xUnavailable')}',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            Text(
-                              startText(
-                                'Bir martalik xarid. Quyidagi agent amallarini ochadi. Notes, to-do va odatlar bepul qoladi.',
-                                'One-time purchase unlocks the agent tools below. Notes, tasks and habits remain free.',
-                                'Разовая покупка открывает функции помощника ниже. Заметки, задачи и привычки остаются бесплатными.',
-                              ),
-                            ),
-                            if (access.product == null ||
-                                AgentAccess.licenseKey.isEmpty)
-                              Text(
-                                startText(
-                                  'Xarid hozir mavjud emas.',
-                                  'Purchase currently unavailable.',
-                                  'Покупка пока недоступна.',
-                                ),
-                              ),
-                            const SizedBox(height: 10),
-                            Wrap(
-                              spacing: 8,
-                              children: [
-                                FilledButton(
-                                  onPressed:
-                                      access.pending ||
-                                          access.product == null ||
-                                          AgentAccess.licenseKey.isEmpty
-                                      ? null
-                                      : access.buy,
-                                  child: Text(
-                                    access.pending
-                                        ? startText(
-                                            'Kutilmoqda…',
-                                            'Pending…',
-                                            'Ожидание…',
-                                          )
-                                        : startText(
-                                            'Start paketini olish',
-                                            'Get Start',
-                                            'Купить Start',
-                                          ),
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: access.loading
-                                      ? null
-                                      : access.restore,
-                                  child: Text(
-                                    startText(
-                                      'Xaridni tiklash',
-                                      'Restore purchases',
-                                      'Восстановить покупку',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if (AgentAccess.preview)
-                    const Text('Developer preview • No payment'),
+                    const PurchasePanel(product: AgentAccess.core),
                   if (access.error != null)
                     Text(
-                      access.error!,
+                      purchaseError(access.error!),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -883,18 +874,34 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
                         'Язык голоса',
                       ),
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'uz-UZ',
-                        child: Text('O‘zbekcha'),
-                      ),
-                      DropdownMenuItem(value: 'en-US', child: Text('English')),
-                      DropdownMenuItem(value: 'ru-RU', child: Text('Русский')),
+                    items: [
+                      for (final entry in languages.entries)
+                        DropdownMenuItem(
+                          value: voiceLanguages[entry.key]!.locale,
+                          child: Text(entry.value),
+                        ),
                     ],
-                    onChanged: listening || busy
+                    onChanged: listening || busy || _installingModels
                         ? null
-                        : (value) => setState(() => language = value!),
+                        : (value) {
+                            if (value != null) {
+                              unawaited(chooseVoiceLanguage(value));
+                            }
+                          },
                   ),
+                  if (_voice != null)
+                    VoiceModelPanel(
+                      key: ValueKey('models-$language-$_installingModels'),
+                      voice: _voice!,
+                      language: language,
+                      onChanged: () {
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                  if (_reading?.active == true)
+                    Text(
+                      '${_reading!.paused ? startText("To‘xtatilgan", "Paused", "Приостановлено") : startText("O‘qilmoqda", "Reading", "Чтение")} · ${_reading!.index + 1}/${_reading!.chunks.length}',
+                    ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(

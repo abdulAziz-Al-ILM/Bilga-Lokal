@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">কাজের উইজেট</string>
+    <string name="tw_todos">করতে</string>
+    <string name="tw_task">টাস্ক</string>
+    <string name="tw_new">নতুন টাস্ক</string>
+    <string name="tw_done">সম্পন্ন</string>
+    <string name="tw_empty">এখানে এখনও কিছুই নেই</string>
+    <string name="tw_reminders">অনুস্মারক</string>
+    <string name="tw_limits">Android অনুস্মারক দেরি করতে বা প্যানেল লুকাতে পারে। বিজ্ঞপ্তি, নির্ভুল অ্যালার্ম ও ব্যাটারি সেটিংস দেখুন; পপ-আপ নিশ্চিত নয়।</string>
+</resources>

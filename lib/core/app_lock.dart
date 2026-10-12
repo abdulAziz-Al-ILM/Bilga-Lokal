@@ -4,6 +4,16 @@ import 'package:local_auth/local_auth.dart';
 import 'settings.dart';
 import 'strings.dart';
 
+class AppLockScope extends InheritedWidget {
+  final bool locked;
+  const AppLockScope({super.key, required this.locked, required super.child});
+  static bool isLocked(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AppLockScope>()?.locked ??
+      false;
+  @override
+  bool updateShouldNotify(AppLockScope oldWidget) => oldWidget.locked != locked;
+}
+
 class AppLock extends StatefulWidget {
   final Widget child;
   const AppLock({super.key, required this.child});
@@ -53,30 +63,33 @@ class _AppLockState extends State<AppLock> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      ExcludeSemantics(
-        excluding: locked,
-        child: TickerMode(
-          enabled: !locked,
-          child: Offstage(offstage: locked, child: widget.child),
+  Widget build(BuildContext context) => AppLockScope(
+    locked: locked,
+    child: Stack(
+      children: [
+        ExcludeSemantics(
+          excluding: locked,
+          child: TickerMode(
+            enabled: !locked,
+            child: Offstage(offstage: locked, child: widget.child),
+          ),
         ),
-      ),
-      if (locked)
-        Positioned.fill(
-          child: Material(
-            color: Theme.of(context).colorScheme.surface,
-            child: SafeArea(
-              child: Center(
-                child: FilledButton.icon(
-                  onPressed: checking ? null : unlock,
-                  icon: const Icon(Icons.lock_outline),
-                  label: Text(context.tr('unlock')),
+        if (locked)
+          Positioned.fill(
+            child: Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: SafeArea(
+                child: Center(
+                  child: FilledButton.icon(
+                    onPressed: checking ? null : unlock,
+                    icon: const Icon(Icons.lock_outline),
+                    label: Text(context.tr('unlock')),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-    ],
+      ],
+    ),
   );
 }

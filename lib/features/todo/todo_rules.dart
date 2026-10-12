@@ -1,5 +1,5 @@
 DateTime? todoDue(Map<String, Object?> row) =>
-    DateTime.tryParse(row['due_at'] as String? ?? '');
+    DateTime.tryParse(row['due_at'] as String? ?? '')?.toLocal();
 
 bool todoIsOverdue(Map<String, Object?> row, DateTime now) {
   final due = todoDue(row);
@@ -30,4 +30,23 @@ bool matchesTodoFilter(Map<String, Object?> row, String filter, DateTime now) {
     return due.difference(now) < limit;
   }
   return true;
+}
+
+enum TodoTimeState { neutral, completed, green, yellow, red, overdue }
+
+TodoTimeState todoTimeState(Map<String, Object?> row, DateTime now) {
+  if (row['is_done'] == 1) return TodoTimeState.completed;
+  final due = todoDue(row);
+  if (due == null) return TodoTimeState.neutral;
+  if (!due.isAfter(now)) return TodoTimeState.overdue;
+  final local = now.toLocal();
+  // Calendar dates, not elapsed 24-hour blocks: DST days can have 23/25 hours.
+  final days = DateTime.utc(
+    due.year,
+    due.month,
+    due.day,
+  ).difference(DateTime.utc(local.year, local.month, local.day)).inDays;
+  if (days >= 3) return TodoTimeState.green;
+  if (days == 2) return TodoTimeState.yellow;
+  return TodoTimeState.red;
 }

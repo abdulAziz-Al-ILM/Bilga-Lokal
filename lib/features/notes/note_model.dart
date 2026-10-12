@@ -11,6 +11,8 @@ class Note {
   final bool isFavorite;
   final bool isArchived;
   final List<String> tags;
+  // Null means a legacy caller supplied names; hydrated notes carry stable IDs.
+  final List<String>? tagIds;
 
   const Note({
     required this.id,
@@ -23,6 +25,7 @@ class Note {
     this.isFavorite = false,
     this.isArchived = false,
     this.tags = const [],
+    this.tagIds,
   });
 
   Map<String, dynamic> toMap() {
@@ -54,6 +57,9 @@ class Note {
       tags: List<String>.from(
         jsonDecode(map['tags'] as String? ?? '[]') as List,
       ),
+      tagIds: map['tag_ids'] == null
+          ? null
+          : List<String>.from(jsonDecode(map['tag_ids'] as String) as List),
     );
   }
 
@@ -68,6 +74,7 @@ class Note {
     bool? isFavorite,
     bool? isArchived,
     List<String>? tags,
+    Object? tagIds = _noChange,
   }) {
     return Note(
       id: id ?? this.id,
@@ -82,6 +89,9 @@ class Note {
       isFavorite: isFavorite ?? this.isFavorite,
       isArchived: isArchived ?? this.isArchived,
       tags: tags ?? this.tags,
+      tagIds: identical(tagIds, _noChange)
+          ? (tags == null ? this.tagIds : null)
+          : tagIds as List<String>?,
     );
   }
 }

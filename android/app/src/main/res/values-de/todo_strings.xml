@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Aufgaben-Widget</string>
+    <string name="tw_todos">Zu erledigen</string>
+    <string name="tw_task">Aufgabe</string>
+    <string name="tw_new">Neue Aufgabe</string>
+    <string name="tw_done">Erledigt</string>
+    <string name="tw_empty">Hier ist noch nichts</string>
+    <string name="tw_reminders">Erinnerungen</string>
+    <string name="tw_limits">Android kann Erinnerungen verzögern oder Fenster verbergen. Prüfen Sie Benachrichtigungen, genaue Alarme und Akku; Einblendungen sind nicht garantiert.</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Uppgiftswidget</string>
+    <string name="tw_todos">Att göra</string>
+    <string name="tw_task">Uppgift</string>
+    <string name="tw_new">Ny uppgift</string>
+    <string name="tw_done">Klara</string>
+    <string name="tw_empty">Inget här ännu</string>
+    <string name="tw_reminders">Påminnelser</string>
+    <string name="tw_limits">Android kan försena påminnelser eller dölja paneler. Kontrollera aviseringar, exakta alarm och batteri; popup-aviseringar garanteras inte.</string>
+</resources>

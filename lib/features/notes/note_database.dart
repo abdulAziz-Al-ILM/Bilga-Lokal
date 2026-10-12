@@ -1,4 +1,6 @@
 import '../../core/private_database.dart';
+import 'note_tag_store.dart';
+import 'note_widget_permission_store.dart';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -26,9 +28,10 @@ class NoteDatabase {
     return PrivateDatabase.open(
       path,
       secure: secure,
-      version: 11,
+      version: 13,
 
       onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
         await db.rawQuery('PRAGMA journal_mode = DELETE');
         await db.execute('PRAGMA synchronous = FULL');
       },
@@ -75,6 +78,8 @@ class NoteDatabase {
             trash_batch TEXT
           )
           ''');
+        await NoteTagStore.createSchema(db);
+        await NoteWidgetPermissionStore.createSchema(db);
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
@@ -148,6 +153,13 @@ class NoteDatabase {
           await db.execute(
             "ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'",
           );
+        }
+        if (oldVersion < 12) {
+          await NoteTagStore.createSchema(db);
+          await NoteTagStore.migrateLegacy(db);
+        }
+        if (oldVersion < 13) {
+          await NoteWidgetPermissionStore.createSchema(db);
         }
       },
     );

@@ -1,4 +1,6 @@
 import '../../core/private_database.dart';
+import 'reminders/todo_reminder_store.dart';
+import 'widget/todo_widget_permissions.dart';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -25,10 +27,11 @@ class TodoDatabase {
     return PrivateDatabase.open(
       path,
       secure: secure,
-      version: 6,
+      version: 8,
       onConfigure: (db) async {
         await db.rawQuery('PRAGMA journal_mode = DELETE');
         await db.execute('PRAGMA synchronous = FULL');
+        await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: (db, version) async {
         await db.execute('''
@@ -59,6 +62,8 @@ class TodoDatabase {
             trash_batch TEXT
           )
         ''');
+        await TodoReminderStore.createSchema(db);
+        await TodoWidgetPermissions.createSchema(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -113,6 +118,8 @@ class TodoDatabase {
             'ALTER TABLE todo_folders ADD COLUMN trash_batch TEXT',
           );
         }
+        if (oldVersion < 7) await TodoReminderStore.createSchema(db);
+        if (oldVersion < 8) await TodoWidgetPermissions.createSchema(db);
       },
     );
   }

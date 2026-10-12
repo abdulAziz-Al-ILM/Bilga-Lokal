@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">วิดเจ็ตงาน</string>
+    <string name="tw_todos">สิ่งที่ต้องทำ</string>
+    <string name="tw_task">งาน</string>
+    <string name="tw_new">งานใหม่</string>
+    <string name="tw_done">เสร็จแล้ว</string>
+    <string name="tw_empty">ยังไม่มีสิ่งใดที่นี่</string>
+    <string name="tw_reminders">การเตือน</string>
+    <string name="tw_limits">Android อาจเลื่อนการเตือนหรือซ่อนแผงลอย ตรวจสอบการแจ้งเตือน นาฬิกาปลุกที่แม่นยำ และแบตเตอรี่ ไม่รับประกันป๊อปอัป</string>
+</resources>

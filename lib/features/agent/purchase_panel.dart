@@ -1,34 +1,56 @@
 import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
+import '../../core/start_strings.dart';
 import 'agent_access.dart';
 
 class PurchasePanel extends StatelessWidget {
   final String product;
   final bool canBuy;
-  const PurchasePanel({super.key, required this.product, this.canBuy = true});
+  final AgentAccess? access;
+  const PurchasePanel({
+    super.key,
+    required this.product,
+    this.canBuy = true,
+    this.access,
+  });
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: AgentAccess.instance,
+    animation: access ?? AgentAccess.instance,
     builder: (c, _) {
-      final a = AgentAccess.instance;
-      final id =
-          product == AgentAccess.turbo &&
-              a.owned.contains(AgentAccess.productId)
-          ? AgentAccess.upgrade
-          : product;
+      final a = access ?? AgentAccess.instance;
+      const id = AgentAccess.core;
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(c.tr('xPaid'), style: Theme.of(c).textTheme.titleLarge),
+              Text(
+                startText(
+                  'Umrbod Bilga Core',
+                  'Lifetime Bilga Core',
+                  'Bilga Core навсегда',
+                ),
+                style: Theme.of(c).textTheme.titleLarge,
+              ),
               const SizedBox(height: 12),
               Text(c.tr('xPurchaseInfo')),
-              if (a.error != null) Text(a.error!),
+              if (!a.canPurchase)
+                Text(
+                  startText(
+                    'Xavfsiz Google Play xaridi bu build’da hali sozlanmagan. Sinov davomida ilovadan foydalanishingiz mumkin.',
+                    'Secure Google Play purchase is not configured in this build. You can use the app during your trial.',
+                    'Безопасная покупка Google Play в этой сборке ещё не настроена. Пробный доступ работает.',
+                  ),
+                ),
+              if (a.error != null) Text(purchaseError(a.error!)),
               FilledButton(
-                onPressed: !canBuy || a.pending || a.products[id] == null
+                onPressed:
+                    !canBuy ||
+                        !a.canPurchase ||
+                        a.pending ||
+                        a.products[id] == null
                     ? null
                     : () => a.buy(id),
                 child: Text(a.products[id]?.price ?? c.tr('xUnavailable')),
@@ -44,6 +66,30 @@ class PurchasePanel extends StatelessWidget {
     },
   );
 }
+
+String purchaseError(String error) => error == 'revoked'
+    ? startText(
+        'Google Play xarid bekor qilinganini tasdiqladi. Ma’lumotlaringiz saqlangan.',
+        'Google Play confirmed this purchase was revoked. Your data is preserved.',
+        'Google Play подтвердил отмену покупки. Ваши данные сохранены.',
+      )
+    : error == 'verification'
+    ? startText(
+        'Xaridni xavfsiz tasdiqlab bo‘lmadi. Keyinroq “Xaridni tiklash”ni bosing. Faol sinov davom etadi.',
+        'Purchase could not be securely verified. Try Restore purchases later. An active trial continues.',
+        'Не удалось безопасно проверить покупку. Повторите восстановление позже. Пробный доступ продолжается.',
+      )
+    : error == 'cancelled'
+    ? startText(
+        'Xarid bekor qilindi.',
+        'Purchase cancelled.',
+        'Покупка отменена.',
+      )
+    : startText(
+        'Google Play hozir javob bermayapti. Keyinroq qayta urinib ko‘ring. Faol sinov va tasdiqlangan huquqlar saqlanadi.',
+        'Google Play is temporarily unavailable. Try again later. Your active trial and verified access are preserved.',
+        'Google Play временно недоступен. Повторите позже. Пробный срок и подтверждённый доступ сохраняются.',
+      );
 
 Future<bool> paid(BuildContext c, String id) async {
   final a = AgentAccess.instance;
