@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Self-targeted UI probe: never restarts Bilga or disturbs its reminders. -->
+    <instrumentation android:name="com.ilmmizan.bilga.WidgetUiProbe"
+        android:targetPackage="com.ilmmizan.bilga.test"/>
+</manifest>
