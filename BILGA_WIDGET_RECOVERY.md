@@ -75,6 +75,22 @@ GitHub checkpoint policy is in `AGENTS.md`. No merge/release/public repository.
   Android test assertion failure. Cause is unproven; do not declare hardware fixed
   from earlier passing runs. Do not repeatedly rebuild or change Java/Gradle
   versions to conceal the failure. Crash log remains local and is not committed.
+- Repeat due overlay appeared above Calculator at **18:41:29**. User confirmed
+  readable/acceptable design and also pressed a button during automation. The
+  resulting 18:51 reminder/app opening cannot establish which path automation
+  exercised. Do not label this an overlay action pass.
+- Actual Notes widget: synthetic tag filter + approved preview showed title,
+  two body lines and RecoveryTest. Background-process close/reopen retained its
+  ON consent. Revocation immediately removed the row; read-only native check
+  reported app-owned snapshots empty. Other existing grants were preserved.
+- Actual widget Done stayed in the launcher. Read-only SQL inspection confirmed
+  synthetic task done=1, reminder=null, original deadline unchanged, mirror
+  blocked=false. Notes/Todo handoff flows left one Bilga Recent Apps task.
+- Follow-up **untested WIP**: notification Done/Snooze now use immutable native
+  broadcasts; Snooze expands a private notification with five presets. Overlay
+  custom time now uses bounded secure native date/time pickers instead of Flutter
+  handoff. New native assertions cover notification broadcast type and custom
+  reminder/deadline separation. Previous 37 native passes do not cover this change.
 
 ## Remaining verification / limits
 

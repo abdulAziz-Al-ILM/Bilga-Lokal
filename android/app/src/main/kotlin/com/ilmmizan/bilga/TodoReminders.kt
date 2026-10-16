@@ -100,7 +100,7 @@ internal object TodoReminders {
         c.getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
         return id
     }
-    fun notification(c: Context,root: JSONObject,task: JSONObject, ongoing: Boolean=false): Notification {
+    fun notification(c: Context,root: JSONObject,task: JSONObject, ongoing: Boolean=false,snoozeMenu: Boolean=false): Notification {
         val id=task.getString("id"); val r=task.getJSONObject("reminder")
         val generic=label(root,"reminderMessage")
         val text=if(!private(c,root) && settings(root).optBoolean("showTitles")) task.optString("title").ifBlank { generic } else generic
@@ -110,8 +110,23 @@ internal object TodoReminders {
             .setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(public).setCategory(Notification.CATEGORY_REMINDER)
             .setOnlyAlertOnce(true).setAutoCancel(true).setOngoing(ongoing)
             .setContentIntent(TodoHandoff.pending(c,"open",id))
-            .addAction(Notification.Action.Builder(null,label(root,"reminderDone"),TodoHandoff.pending(c,"done",id)).build())
-            .addAction(Notification.Action.Builder(null,label(root,"reminderSnooze"),TodoHandoff.pending(c,"snooze",id)).build())
+            .addAction(Notification.Action.Builder(null,label(root,"reminderDone"),TodoNativeActions.pending(c,-1,task,"done")).build())
+            .addAction(Notification.Action.Builder(null,label(root,"reminderSnooze"),TodoNativeActions.pending(c,-1,task,"reminderMenu")).build())
+            .apply {
+                if(snoozeMenu) {
+                    val choices=android.widget.RemoteViews(c.packageName,R.layout.todo_widget_snooze)
+                    choices.setInt(R.id.todo_snooze_root,"setBackgroundColor",WidgetTheme.background(c))
+                    for((view,pair) in listOf(R.id.todo_snooze5 to (5 to "snooze5"),R.id.todo_snooze10 to (10 to "snooze10"),R.id.todo_snooze30 to (30 to "snooze30"),R.id.todo_snooze60 to (60 to "snooze60"),R.id.todo_snoozeTomorrow to (-1 to "tomorrow"))) {
+                        choices.setTextViewText(view,label(root,pair.second))
+                        choices.setTextColor(view,WidgetTheme.foreground(c))
+                        choices.setOnClickPendingIntent(view,TodoNativeActions.pending(c,-1,task,"snooze",pair.first))
+                    }
+                    setStyle(Notification.DecoratedCustomViewStyle())
+                    setCustomBigContentView(choices)
+                    setCustomHeadsUpContentView(choices)
+                    setSilent(true)
+                }
+            }
             .setDeleteIntent(PendingIntent.getBroadcast(c,0,Intent(c,TodoReceiver::class.java).setAction(ACTION)
                 .setData(Uri.parse("bilga-todo://dismiss/${Uri.encode(id)}/${r.optString("nonce")}"))
                 .putExtra("todo_id",id).putExtra("nonce",r.optString("nonce")),PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)).build()

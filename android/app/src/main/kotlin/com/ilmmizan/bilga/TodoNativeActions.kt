@@ -92,6 +92,12 @@ internal object TodoNativeActions {
         if(token.isEmpty() || token!=task.optString("actionToken")) return false
         val op=intent.getStringExtra("operation") ?: return false
         if(widget==-1 && (task.optJSONObject("reminder")?.optBoolean("fired")!=true || !TodoTime.dueNow(JSONObject(task.toString()).apply { getJSONObject("reminder").put("fired",false) },System.currentTimeMillis()))) return false
+        if(op=="reminderMenu") {
+            if(widget!=-1) return false
+            // Expand the existing notification; never launch a Flutter Activity.
+            c.getSystemService(NotificationManager::class.java).notify(id,901,TodoReminders.notification(c,root,task,snoozeMenu=true))
+            return true
+        }
         if(op=="menu") {
             val config=root.optJSONObject("widgets")?.optJSONObject(widget.toString()) ?: JSONObject().also {
                 val widgets=root.optJSONObject("widgets") ?: JSONObject().also { root.put("widgets",it) }
@@ -100,7 +106,13 @@ internal object TodoNativeActions {
             config.put("snoozeTask",if(config.optString("snoozeTask")==id) "" else id)
             TodoStore.write(c,root);TodoWidget.refresh(c);return true
         }
-        val at=if(op=="snooze") TodoTime.snooze(intent.getIntExtra("minutes",0)) else null
+        val at=if(op=="snooze") {
+            val custom=intent.getStringExtra("at")
+            if(custom!=null) {
+                if(widget!=-1 || (TodoTime.instant(custom) ?: 0)<=System.currentTimeMillis()) return false
+                custom
+            } else TodoTime.snooze(intent.getIntExtra("minutes",0))
+        } else null
         // A crash between SQL commit and cache publication hides this task until
         // app sync. It must never generate a stale reminder after completion.
         root.put("blockedTask",id).put("sqlEpoch",root.optLong("sqlEpoch")+1);TodoStore.write(c,root)

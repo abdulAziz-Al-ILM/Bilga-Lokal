@@ -22,12 +22,14 @@ class TodoOverlayService: Service() {
     private var speech: TextToSpeech?=null
     private var tone: ToneGenerator?=null
     private var taskId=""
+    private var picker: Dialog?=null
     private var generation=0
     private val stop=Runnable { stopSelf() }
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?,flags: Int,startId: Int): Int {
         // A second due task replaces the single panel and its pending speech.
         val currentGeneration=++generation
+        picker?.dismiss();picker=null
         handler.removeCallbacksAndMessages(null)
         speech?.stop(); speech?.shutdown(); speech=null
         tone?.release(); tone=null
@@ -74,7 +76,7 @@ class TodoOverlayService: Service() {
                     },LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1f))
                     box.addView(line)
                 }
-                box.addView(button(TodoReminders.label(root,"snoozeCustom")) { TodoHandoff.open(this,"snooze",taskId); stopSelf() })
+                box.addView(button(TodoReminders.label(root,"snoozeCustom")) { chooseTime(task) })
                 val scroll=ScrollView(this).apply { isFillViewport=false; addView(box) }
                 box.measure(View.MeasureSpec.makeMeasureSpec(minOf(resources.displayMetrics.widthPixels-dp(24),dp(480)),View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED))
                 val metrics=resources.displayMetrics
@@ -113,9 +115,34 @@ class TodoOverlayService: Service() {
         return START_NOT_STICKY
     }
     private fun dp(v: Int)=(v*resources.displayMetrics.density).toInt()
+    private fun chooseTime(task: org.json.JSONObject) {
+        if(!Settings.canDrawOverlays(this) || TodoReminders.locked(this)) return
+        picker?.dismiss()
+        // A bounded, secure native picker stays above the current app. It uses
+        // the same capability/SQL transaction as the preset buttons.
+        handler.removeCallbacks(stop);handler.postDelayed(stop,120000)
+        val theme=if(Color.luminance(WidgetTheme.background(this))<.5) android.R.style.Theme_DeviceDefault_Dialog_Alert else android.R.style.Theme_DeviceDefault_Light_Dialog_Alert
+        val themed=ContextThemeWrapper(this,theme)
+        val selectedId=task.getString("id")
+        val now=java.time.ZonedDateTime.now()
+        fun show(dialog: AlertDialog) {
+            picker=dialog
+            dialog.window?.apply { setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY); addFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+            dialog.setOnCancelListener { picker=null;handler.removeCallbacks(stop);handler.postDelayed(stop,45000) }
+            dialog.show()
+            for(which in listOf(AlertDialog.BUTTON_POSITIVE,AlertDialog.BUTTON_NEGATIVE)) dialog.getButton(which)?.let { it.filterTouchesWhenObscured=true;WidgetTheme.button(this,it,which==AlertDialog.BUTTON_POSITIVE) }
+        }
+        show(DatePickerDialog(themed,{ _,year,month,day ->
+            show(TimePickerDialog(themed,{ _,hour,minute ->
+                picker=null
+                val at=java.time.LocalDate.of(year,month+1,day).atTime(hour,minute).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime().toString()
+                TodoNativeActions.receive(this,Intent().putExtra("id",selectedId).putExtra("token",task.optString("actionToken")).putExtra("widget",-1).putExtra("operation","snooze").putExtra("at",at)) { stopSelf() }
+            },now.hour,now.minute,android.text.format.DateFormat.is24HourFormat(this)))
+        },now.year,now.monthValue-1,now.dayOfMonth))
+    }
     private fun beep() { try { tone?.release(); tone=ToneGenerator(AudioManager.STREAM_NOTIFICATION,65); tone?.startTone(ToneGenerator.TONE_PROP_BEEP,250) } catch (_: Exception) {} }
     private fun removePanel() { panel?.let { try { getSystemService(WindowManager::class.java).removeView(it) } catch (_: Exception) {} }; panel=null }
     override fun onTimeout(startId: Int) { stopSelf() }
     override fun onTimeout(startId: Int,fgsType: Int) { stopSelf() }
-    override fun onDestroy() { generation++; handler.removeCallbacksAndMessages(null); removePanel(); speech?.stop(); speech?.shutdown(); tone?.release(); stopForeground(STOP_FOREGROUND_REMOVE); super.onDestroy() }
+    override fun onDestroy() { generation++; handler.removeCallbacksAndMessages(null); picker?.dismiss();picker=null;removePanel(); speech?.stop(); speech?.shutdown(); tone?.release(); stopForeground(STOP_FOREGROUND_REMOVE); super.onDestroy() }
 }

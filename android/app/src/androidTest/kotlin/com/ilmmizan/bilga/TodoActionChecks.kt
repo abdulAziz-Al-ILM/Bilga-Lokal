@@ -31,7 +31,9 @@ internal object TodoActionChecks {
    val snoozed=TodoNativeActions.commit(db,task,"snooze",at)
    verify(db.rawQuery("SELECT due_at,updated_at FROM todos",emptyArray<String>()).use { it.moveToFirst();it.getString(0)=="2030-01-01T10:00:00" && it.getString(1)=="old" })
    verify(db.rawQuery("SELECT remind_at,revision FROM todo_reminders",emptyArray<String>()).use { it.moveToFirst();it.getString(0)==at && it.getString(1)==snoozed.getJSONObject("reminder").getString("revision") })
-   val done=TodoNativeActions.commit(db,snoozed,"done",null)
+   val custom=TodoNativeActions.commit(db,snoozed,"snooze","2031-01-02T11:20:00+05:00")
+   verify(db.rawQuery("SELECT t.due_at,r.remind_at FROM todos t JOIN todo_reminders r ON r.todo_id=t.id",emptyArray<String>()).use { it.moveToFirst();it.getString(0)=="2030-01-01T10:00:00" && it.getString(1)=="2031-01-02T11:20:00+05:00" })
+   val done=TodoNativeActions.commit(db,custom,"done",null)
    verify(done.optBoolean("done") && !done.has("reminder") && done.optString("actionToken")!=snoozed.optString("actionToken"))
    verify(db.rawQuery("SELECT COUNT(*) FROM todo_reminders",emptyArray<String>()).use { it.moveToFirst();it.getInt(0)==0 })
    verify(runCatching { TodoNativeActions.commit(db,task,"done",null) }.isFailure)
@@ -84,6 +86,12 @@ internal object TodoActionChecks {
   verify(a!=b && a!=d && (Build.VERSION.SDK_INT<31 || a.isImmutable))
   a.cancel();b.cancel();d.cancel();prefs.edit().clear().commit()
   verify(!c.packageManager.getReceiverInfo(ComponentName(c,TodoActionReceiver::class.java),0).exported)
+  val reminderTask=JSONObject().put("id","synthetic-notification").put("actionToken","synthetic-token")
+   .put("reminder",JSONObject().put("nonce","synthetic-nonce"))
+  val notification=TodoReminders.notification(c,JSONObject(),reminderTask,snoozeMenu=true)
+  verify(notification.actions.size==2 && notification.actions.all { Build.VERSION.SDK_INT<31 || (it.actionIntent.isBroadcast && it.actionIntent.isImmutable) })
+  verify(notification.bigContentView!=null && notification.headsUpContentView!=null && notification.publicVersion!=null)
+  notification.actions.forEach { it.actionIntent.cancel() }
   return n
  }
 }
