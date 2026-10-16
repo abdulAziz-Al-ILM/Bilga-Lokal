@@ -91,6 +91,7 @@ internal object TodoActionChecks {
   val notification=TodoReminders.notification(c,JSONObject(),reminderTask,snoozeMenu=true)
   verify(notification.actions.size==2 && notification.actions.all { Build.VERSION.SDK_INT<31 || (it.actionIntent.isBroadcast && it.actionIntent.isImmutable) })
   verify(notification.bigContentView!=null && notification.headsUpContentView!=null && notification.publicVersion!=null)
+  verify(Build.VERSION.SDK_INT<31 || (notification.contentIntent.isBroadcast && notification.contentIntent.isImmutable))
   notification.actions.forEach { it.actionIntent.cancel() }
   return n
  }

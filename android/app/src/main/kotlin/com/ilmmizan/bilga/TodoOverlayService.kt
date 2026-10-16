@@ -43,7 +43,7 @@ class TodoOverlayService: Service() {
             check(System.currentTimeMillis()>=at && System.currentTimeMillis()-at<120000)
             val notification=Notification.Builder(this,TodoReminders.channel(this,false)).setSmallIcon(R.drawable.todo_notification)
                 .setContentTitle("Bilga").setContentText(TodoReminders.label(root,"reminderMessage"))
-                .setContentIntent(TodoHandoff.pending(this,"open",taskId)).setOnlyAlertOnce(true).build()
+                .setContentIntent(TodoNativeActions.pending(this,-1,task,"reminderMenu")).setOnlyAlertOnce(true).build()
             if(Build.VERSION.SDK_INT>=34) startForeground(902,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE)
             else startForeground(902,notification)
             removePanel(); speech?.shutdown(); speech=null

@@ -108,8 +108,8 @@ internal object TodoReminders {
         return Notification.Builder(c,channel(c,audible(c,root)))
             .setSmallIcon(R.drawable.todo_notification).setContentTitle("Bilga · ${label(root,"todos")}").setContentText(text)
             .setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(public).setCategory(Notification.CATEGORY_REMINDER)
-            .setOnlyAlertOnce(true).setAutoCancel(true).setOngoing(ongoing)
-            .setContentIntent(TodoHandoff.pending(c,"open",id))
+            .setOnlyAlertOnce(true).setAutoCancel(false).setOngoing(ongoing)
+            .setContentIntent(TodoNativeActions.pending(c,-1,task,"reminderMenu"))
             .addAction(Notification.Action.Builder(null,label(root,"reminderDone"),TodoNativeActions.pending(c,-1,task,"done")).build())
             .addAction(Notification.Action.Builder(null,label(root,"reminderSnooze"),TodoNativeActions.pending(c,-1,task,"reminderMenu")).build())
             .apply {
@@ -124,7 +124,6 @@ internal object TodoReminders {
                     setStyle(Notification.DecoratedCustomViewStyle())
                     setCustomBigContentView(choices)
                     setCustomHeadsUpContentView(choices)
-                    setSilent(true)
                 }
             }
             .setDeleteIntent(PendingIntent.getBroadcast(c,0,Intent(c,TodoReceiver::class.java).setAction(ACTION)
