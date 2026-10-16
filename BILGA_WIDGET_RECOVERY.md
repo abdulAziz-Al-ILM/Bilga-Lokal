@@ -86,16 +86,26 @@ GitHub checkpoint policy is in `AGENTS.md`. No merge/release/public repository.
 - Actual widget Done stayed in the launcher. Read-only SQL inspection confirmed
   synthetic task done=1, reminder=null, original deadline unchanged, mirror
   blocked=false. Notes/Todo handoff flows left one Bilga Recent Apps task.
-- Follow-up **untested WIP**: notification Done/Snooze now use immutable native
+- Follow-up WIP: notification Done/Snooze/content taps now use immutable native
   broadcasts; Snooze expands a private notification with five presets. Overlay
   custom time now uses bounded secure native date/time pickers instead of Flutter
   handoff. New native assertions cover notification broadcast type and custom
-  reminder/deadline separation. Previous 37 native passes do not cover this change.
+  reminder/deadline separation. **41 native tests PASS** cover this code; actual
+  custom picker/notification interaction is still being verified on the tablet.
+- Final native test-APK build passed with a fresh single-use daemon. Final Flutter
+  debug APK passed in **15.3s**, CRC/v2 signature verified, SHA256
+  `c7f58ba4fd2f7379db76ac49a9a421505e9d615e2d81b971fa8bf0019104aac8`.
+  install-r preserved both SQLCipher database hashes before first app startup.
+- Core widget public background sampled only in device memory: Ocean/dark
+  `ff101418`, Amethyst/light `fffff7ff`, restored Amethyst/dark `ff151218`.
+  Original preference enums were checked after restoration. No screenshot files
+  or user-screen images were exported. Current overlay text/background contrast
+  is 14.34:1 and primary button contrast 7.67:1.
 
 ## Remaining verification / limits
 
-Finish real overlay + Done, Notes preview/tags/reopen/revoke, theme and Recents flows;
-final APK/native checks and final source checkpoint. Do not mark these as passed early.
+Finish the new native custom-picker/notification paths and final source checkpoint.
+Do not mark those real flows as passed early.
 Launcher-retained snapshots cannot be erased reliably. App-owned cache invalidation
 and secure defaults remain mandatory. Android notification/overlay/battery policies
 and user lock settings are respected; other OEM/API versions have not been runtime

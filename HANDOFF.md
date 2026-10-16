@@ -5,21 +5,46 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-16 — Recovery davom etmoqda (WIP)
+## 2026-10-16 — Recovery tekshiruvi (WIP)
 
 Foydalanuvchi apparat muammosi hal bo‘lganini bildirdi. Recovery bazasi:
 `67d6990646c36a70b8f21b11a21ca5c843e51fa8`, private WIP branch; main o‘zgarmaydi.
 GitHub zaxiralash tartibi `AGENTS.md`da. Eski RAM xatolari davridagi test/build
 natijalari joriy reliz tasdig‘i emas. Notes/To-Do/overlay/Core widget theme va
-Recent Apps tekshiruvi davom etmoqda; Core mikrofon funksiyasi o‘zgartirilmaydi.
+Recent Apps tekshiruvi `BILGA_WIDGET_RECOVERY.md`da qayd etiladi. Core mikrofon
+funksiyasi o‘zgartirilmagan.
 
 Recovery kodida Todo DB8 device-local per-task widget consent, native SQLCipher
 Done/Snooze, sqlEpoch stale publish himoyasi, auto-on new-task reminder, widget
 countdown, 7 palitra/sistem theme bridge va overlay contrast mavjud. Bularning
-joriy native build va qurilma natijalari hali yakunlanmagan. Notes DB13 saqlanadi.
+joriy qurilma natijalari quyida. Notes DB13 saqlanadi.
 Notes konfiguratsiyasi key vaqtincha yopiq bo‘lganda o‘chirilmasin yoki defaults
 bilan almashtirilmasin. Main singleTask/default affinity, yordamchi handoff'lar
 Recents'dan excluded, Main'ga NEW_TASK/CLEAR_TOP/SINGLE_TOP bilan yo‘naltiriladi.
+
+Joriy tekshiruv: full Flutter **223 PASS**, keyingi Notes regression **42 PASS**,
+7 palitra/light-dark-system theme focused regression **PASS**, oxirgi analyze
+**No issues, 23.8s**. Blackview Tab16 API31 native Todo **41 PASS** (notification
+broadcast/content tap va custom snooze deadline separation bilan), Notes **13 PASS**.
+Oxirgi Flutter debug APK **PASS, 15.3s**, CRC/v2 signature PASS, SHA256
+`c7f58ba4fd2f7379db76ac49a9a421505e9d615e2d81b971fa8bf0019104aac8`.
+Install-r oldin/keyin Notes/Todo shifrlangan DB hash'lari aynan saqlangan.
+
+Qurilmada Notes title/body/tags preview, restart'da ON consent saqlanishi,
+revoke'da row yo‘qolishi va app cache empty tekshirildi. Boshqa eski grantlar saqlandi.
+To-Do widget Done launcher ichida bajarildi; SQL done=1/reminder=null va original
+deadline o‘zgarmadi. Widget inline Snooze ham native ishladi. Overlay Calculator
+ustida chiqdi; foydalanuvchi dizayn o‘qilishini tasdiqladi. Uning aniqlashtirishiga
+ko‘ra eski custom-time/notification-body yo‘li ilovaga olib kirgan. Endi native
+date/time dialog va notification inline presets tayyor; yakuniy real oqim tekshiruvi
+davom etmoqda. Notes/Todo handoff'dan keyin Recents'da bitta Bilga task kuzatildi.
+Core real public background Ocean/dark, Amethyst/light, Amethyst/dark ranglariga
+mos yangilandi; foydalanuvchining asl Amethyst/dark tanlovi qaytarildi.
+
+Muhit: 18:34:09 da eski Gradle daemon OpenJDK G1 marking SIGSEGV bilan quladi.
+Sabab isbotlanmagan; RAM tuzalganini build natijasidan xulosa qilmang. Yangi native
+kodning fresh single-use daemon buildlari keyin muvaffaqiyatli o‘tdi. SDK/JDK/Gradle
+versiyalari va GC konfiguratsiyasi o‘zgartirilmadi; crash log lokal/ignored saqlanadi.
 
 ## 2026-10-12 — To-Do vaqt holati, reminder, overlay va vidjet
 
