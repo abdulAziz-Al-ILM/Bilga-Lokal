@@ -7,6 +7,32 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 ## 2026-10-16 — Recovery tekshiruvi (WIP)
 
+**19:22 — yangi host SIGSEGV sabab tekshiruv to‘xtadi.** Dart 3.13.1 compiler
+birinchi test yuklanishida `ScavengerVisitor::VisitPointers / ProcessPromotedList`
+ichida SEGV_MAPERR bilan quladi. Bu test assertion xatosi emas; yangi regressiyalar
+o‘tmadi. Ketma-ket pipeline'dagi analyze/native build/APK bosqichlari boshlanmadi.
+Faqat shu pipeline shell/Dart child to‘xtatildi; boshqa jarayonlar o‘zgartirilmadi.
+Oldingi Java G1 SIGSEGV bilan birga host xotira barqarorligi yana noaniq; RAM
+muammosi qaytgan deb qat’iy xulosa qilinmaydi. Tests/build'ni cheksiz takrorlamang.
+
+Oxirgi source checkpoint `99216b24a1f88c318e6070a5240d6716f041f20c` private WIP'da
+push/remote SHA bilan tasdiqlangan. Undagi cached-engine Notes/Todo ready-handshake
+va ikki regression **hali tekshirilmagan, planshetga o‘rnatilmagan**. SQL'dagi yangi
+sinov reminder native mirror/alarm'ga cold-start'da o‘tmagani kuzatildi; binding
+tayyorligida refresh yetishmasligi haqidagi tuzatish gipotezasi tekshirilishi kerak.
+
+Oxirgi muvaffaqiyatli yig‘ilgan/o‘rnatilgan APK source `7d7f72f`, Flutter build15.1s,
+CRC/signature va ikkala DB hash preservation PASS, SHA256
+`bd6847c8d3ad5b7c5a7884839cf7a4a3f261330bce574db388d17181e9f88730`.
+Undagi native custom date/time oynalari Calculator ustida, Main ochilmasdan
+ko‘rindi, lekin tanlangan vaqt SQL'ga saqlanmadi. Sabab bo‘yicha static-only debug
+diagnostika tayyor; to‘liq real custom-save va notification action hali PASS emas.
+Quyidagi oldingi PASS natijalarni oxirgi 99216b2 kodi uchun tasdiq deb olmang.
+
+To‘xtashdan oldin yagona UI-created recovery vazifasi vidjet Done orqali yakunlandi:
+SQL done=1/reminder=null, deadline23:59 o‘zgarmadi, mirror blocked=false, overlay0.
+Sinov Notes consent OFF; eski foydalanuvchi grantlari/yozuvlari o‘zgartirilmadi.
+
 Foydalanuvchi apparat muammosi hal bo‘lganini bildirdi. Recovery bazasi:
 `67d6990646c36a70b8f21b11a21ca5c843e51fa8`, private WIP branch; main o‘zgarmaydi.
 GitHub zaxiralash tartibi `AGENTS.md`da. Eski RAM xatolari davridagi test/build

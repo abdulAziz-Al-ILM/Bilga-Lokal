@@ -4,6 +4,34 @@ Branch: `wip/todo-widget-recovery`; private `abdulAziz-Al-ILM/Bilga-Lokal`.
 Recovery base: `67d6990646c36a70b8f21b11a21ca5c843e51fa8`.
 GitHub checkpoint policy is in `AGENTS.md`. No merge/release/public repository.
 
+## Current stop state — 19:22, 2026-10-16
+
+The latest channel-ready regressions could not start: Dart 3.13.1 compiler crashed
+with SEGV_MAPERR in ScavengerVisitor pointer scanning/promoted-list processing.
+The earlier Java G1 crash and this independent runtime crash leave host stability
+unresolved; neither proves a specific hardware fault. The exact recovery pipeline
+and its Flutter child were stopped. No further analyze/native build/APK stages ran.
+
+Source checkpoint `99216b24a1f88c318e6070a5240d6716f041f20c` was backed up and
+verified on private WIP. Its Notes/Todo native-channel-ready refresh and two new
+regressions are **UNVERIFIED and not installed**. A real future fixture reminder in
+SQL failed to reach the native alarm after cold startup; missing cached-engine
+channel readiness is the current hypothesis, not a proven final fix.
+
+Last successful installed APK: source 7d7f72f, build15.1s, CRC/signature PASS,
+SHA256 `bd6847c8d3ad5b7c5a7884839cf7a4a3f261330bce574db388d17181e9f88730`.
+Both database hashes were unchanged across install-r before app startup.
+Native DatePicker and TimePicker appeared above Calculator without opening Main;
+the custom choice did not persist. New static-only debug reasons do not expose
+IDs, user text, timestamps or keys. Custom-save/notification real flows remain open.
+
+The unique UI-created synthetic task was completed through the widget before
+stopping: SQL done=1/reminder=null, original23:59 deadline unchanged, mirror not
+blocked, overlay services0. Notes synthetic consent is OFF. Existing user data and
+grants were preserved. The guarded 30–120-second future-fixture setup exists only
+in the test APK and never forges a due event or modifies unrelated tasks.
+Earlier passing results below describe the checkpoints actually tested.
+
 ## Changes
 
 - Todo database v8 adds device-local per-task title consent; portable backup v7
@@ -104,7 +132,8 @@ GitHub checkpoint policy is in `AGENTS.md`. No merge/release/public repository.
 
 ## Remaining verification / limits
 
-Finish the new native custom-picker/notification paths and final source checkpoint.
+Verify host stability before resuming heavy commands, then test the unverified
+channel-ready refresh and finish native custom-save/notification paths.
 Do not mark those real flows as passed early.
 Launcher-retained snapshots cannot be erased reliably. App-owned cache invalidation
 and secure defaults remain mandatory. Android notification/overlay/battery policies
