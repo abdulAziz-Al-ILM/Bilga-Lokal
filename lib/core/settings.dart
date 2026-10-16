@@ -46,6 +46,11 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> load() async {
+    // audio_service may start Dart before MainActivity binds native channels.
+    const MethodChannel('bilga/widget_theme')
+        .setMethodCallHandler((call) async {
+          if (call.method == 'refresh') await _widgetTheme();
+        });
     if (!_observing) {
       WidgetsBinding.instance.addObserver(this);
       _observing = true;

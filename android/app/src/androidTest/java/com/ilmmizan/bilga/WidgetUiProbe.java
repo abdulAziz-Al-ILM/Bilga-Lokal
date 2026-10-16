@@ -20,7 +20,32 @@ public final class WidgetUiProbe extends Instrumentation {
    "Maxfiy: matnsiz","Tasdiqlangan matn va teglar","5 daq","10 daq","30 daq","60 daq","Yorug‘","Qorong‘i","Telefon sozlamasi","Yopish",
    "Profil","Rang mavzusi","Tashqi ko‘rinish","Och","To‘q","Tizim","Saqlashga ruxsat"};
     private final StringBuilder output = new StringBuilder();
-    @Override public void onCreate(Bundle arguments) { super.onCreate(arguments); start(); }
+    private String requested;
+    @Override public void onCreate(Bundle arguments) { requested=arguments==null ? null : arguments.getString("fixtureAction"); super.onCreate(arguments); start(); }
+    private AccessibilityNodeInfo find(AccessibilityNodeInfo node,String id,String text) {
+        if(node==null) return null;
+        Rect b=new Rect();node.getBoundsInScreen(b);
+        if(!b.isEmpty() && node.isVisibleToUser() && (id==null || id.equals(node.getViewIdResourceName())) &&
+            (text==null || String.valueOf(node.getText()).contains(text))) return node;
+        for(int i=0;i<node.getChildCount();i++) { AccessibilityNodeInfo found=find(node.getChild(i),id,text);if(found!=null)return found; }
+        return null;
+    }
+    private void fixtureAction() {
+        if(!"snooze5".equals(requested) && !"done".equals(requested)) throw new IllegalArgumentException("Unsupported fixture action");
+        AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();
+        AccessibilityNodeInfo title=find(root,"com.ilmmizan.bilga:id/todo_widget_row_title","Bilga Recovery 20261016");
+        if(title==null) throw new IllegalStateException("Visible synthetic fixture required");
+        AccessibilityNodeInfo row=title.getParent().getParent();
+        AccessibilityNodeInfo button=find(row,"com.ilmmizan.bilga:id/todo_widget_row_"+("done".equals(requested) ? "done" : "snooze"),null);
+        if(button==null || !button.performAction(AccessibilityNodeInfo.ACTION_CLICK)) throw new IllegalStateException("Fixture button unavailable");
+        if("snooze5".equals(requested)) {
+            AccessibilityNodeInfo choice=null;
+            for(int i=0;i<20 && choice==null;i++) { android.os.SystemClock.sleep(100);choice=find(getUiAutomation().getRootInActiveWindow(),"com.ilmmizan.bilga:id/todo_snooze5",null); }
+            if(choice==null || !choice.performAction(AccessibilityNodeInfo.ACTION_CLICK)) throw new IllegalStateException("Inline preset unavailable");
+        }
+        android.os.SystemClock.sleep(1500);
+        output.append("Synthetic widget action delivered: ").append(requested).append('\n');
+    }
     private void walk(AccessibilityNodeInfo node) {
         String text=String.valueOf(node.getText())+"\n"+String.valueOf(node.getContentDescription());
         Rect bounds=new Rect(); node.getBoundsInScreen(bounds);
@@ -38,10 +63,17 @@ public final class WidgetUiProbe extends Instrumentation {
         getUiAutomation().setServiceInfo(info);
         android.os.SystemClock.sleep(100); // Service-info updates invalidate the initial root cache.
         AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();
-        for(int attempt=0;root==null && attempt<20;attempt++) {
+        for(int attempt=0;attempt<20;attempt++) {
+            output.setLength(0);
+            if(root!=null) walk(root);
+            if(output.length()>0) break;
             android.os.SystemClock.sleep(100); root=getUiAutomation().getRootInActiveWindow();
         }
-        if(root!=null) walk(root); else output.append("No accessible active window\n");
+        if(requested!=null) {
+            try { fixtureAction(); }
+            catch(Exception e) { output.append("Fixture action FAILED: ").append(e.getClass().getSimpleName()).append('\n'); }
+        }
+        if(output.length()==0) output.append("No matching active controls\n");
         Bundle result=new Bundle(); result.putString("stream",output.toString()); finish(root==null ? Activity.RESULT_CANCELED : Activity.RESULT_OK,result);
     }
 }

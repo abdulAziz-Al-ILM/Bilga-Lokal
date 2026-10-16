@@ -40,10 +40,7 @@ internal object TodoReminders {
         val manager=c.getSystemService(AlarmManager::class.java)
         if (root==null) { manager.cancel(alarm(c)); return }
         val now=System.currentTimeMillis()
-        val pending=if (settings(root).optBoolean("enabled",true)) tasks(root).mapNotNull {
-            val r=it.optJSONObject("reminder")
-            if (it.optBoolean("done") || r==null || r.optBoolean("fired")) null else TodoTime.instant(r.optString("at"))
-        } else emptyList()
+        val pending=pendingTimes(root)
         val widget=TodoWidget.ids(c).isNotEmpty()
         val transitions=if(widget) tasks(root).filter { !it.optBoolean("done") }.mapNotNull { TodoTime.instant(it.optString("due"))?.takeIf { d -> d>now } } else emptyList()
         val midnight=Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -55,6 +52,13 @@ internal object TodoReminders {
             else manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,at,alarm(c))
         } catch (_: SecurityException) { manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,at,alarm(c)) }
     }
+    internal fun pendingTimes(root:JSONObject):List<Long> =
+        if(!settings(root).optBoolean("enabled",true)) emptyList() else tasks(root).filter {
+            it.optString("id")!=root.optString("blockedTask")
+        }.mapNotNull {
+            val r=it.optJSONObject("reminder")
+            if(it.optBoolean("done") || r==null || r.optBoolean("fired")) null else TodoTime.instant(r.optString("at"))
+        }
     fun event(root: JSONObject,task: JSONObject,kind: String) {
         val reminder=task.getJSONObject("reminder")
         val events=root.optJSONObject("events") ?: JSONObject().also { root.put("events",it) }

@@ -50,6 +50,20 @@ void main() {
           );
         }
       }
+      settings.palette = 'ruby';
+      settings.mode = ThemeMode.light;
+      TestWidgetsFlutterBinding.instance.channelBuffers.push(
+        channel.name,
+        const StandardMethodCodec().encodeMethodCall(
+          const MethodCall('refresh'),
+        ),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        sent.last['accent'],
+        bilgaTheme('ruby', Brightness.light).colorScheme.primary.toARGB32(),
+      );
       settings.mode = ThemeMode.system;
       final dispatcher = TestWidgetsFlutterBinding.instance.platformDispatcher;
       dispatcher.platformBrightnessTestValue = Brightness.light;

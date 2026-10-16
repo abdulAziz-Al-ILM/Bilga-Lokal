@@ -103,7 +103,7 @@ internal object TodoNativeActions {
         val at=if(op=="snooze") TodoTime.snooze(intent.getIntExtra("minutes",0)) else null
         // A crash between SQL commit and cache publication hides this task until
         // app sync. It must never generate a stale reminder after completion.
-        root.put("blockedTask",id);TodoStore.write(c,root)
+        root.put("blockedTask",id).put("sqlEpoch",root.optLong("sqlEpoch")+1);TodoStore.write(c,root)
         try {
             val next=open(c).use { db -> commit(db,task,op,at) }
             val tasks=root.getJSONArray("tasks")
@@ -120,6 +120,8 @@ internal object TodoNativeActions {
         } catch (_:Exception) {
             // Keep blockedTask: transaction outcome may be uncertain. Fresh app
             // SQL sync recovers it; no plaintext/optimistic state or destructive repair.
+            TodoWidget.refresh(c);TodoReminders.schedule(c)
+            Handler(Looper.getMainLooper()).post { TodoReminders.bridge?.changed() }
             false
         }
     }

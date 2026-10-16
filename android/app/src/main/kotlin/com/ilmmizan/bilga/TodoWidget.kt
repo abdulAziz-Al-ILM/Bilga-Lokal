@@ -76,6 +76,7 @@ class TodoWidget: AppWidgetProvider() {
                 views.setOnClickPendingIntent(R.id.todo_widget_title,TodoHandoff.pending(c,"list",widget=id))
                 views.setTextViewText(R.id.todo_widget_progress,"${tasks.count { it.optBoolean("done") }}/${tasks.size} · ${label("reminderDone",R.string.tw_done)}")
                 views.setTextColor(R.id.todo_widget_progress,foreground)
+                views.setViewVisibility(R.id.todo_widget_progress,View.VISIBLE)
                 views.setTextColor(R.id.todo_widget_add,foreground); views.setTextColor(R.id.todo_widget_settings,foreground)
                 views.setOnClickPendingIntent(R.id.todo_widget_add,TodoHandoff.pending(c,"create",widget=id))
                 views.setContentDescription(R.id.todo_widget_add,label("newTask",R.string.tw_new))

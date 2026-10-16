@@ -11,14 +11,42 @@ import org.json.JSONArray
 
 /** Device tests use reserved synthetic cache IDs, never notes/model/user files. */
 class NotesWidgetChecks : Instrumentation() {
+    private var fixtureTodo = false
     private var verifyTodo = false
     private var verifyEmpty = false
     override fun onCreate(arguments: Bundle?) {
+        fixtureTodo = arguments?.getString("fixtureTodo") == "true"
         verifyTodo = arguments?.getString("todoChecks") == "true"
         verifyEmpty = arguments?.getString("verifyEmptySnapshots") == "true"
         super.onCreate(arguments); start()
     }
     override fun onStart() {
+        if(fixtureTodo) {
+            val report=StringBuilder()
+            var inspected=true
+            try {
+                val root=TodoStore.read(targetContext) ?: error("no_mirror")
+                val task=TodoReminders.tasks(root).single { it.optString("title").contains("Bilga Recovery 20261016") }
+                report.append("Synthetic mirror: due=").append(task.optString("due")).append(" reminder=").append(task.optJSONObject("reminder")?.optString("at"))
+                    .append(" fired=").append(task.optJSONObject("reminder")?.optBoolean("fired"))
+                    .append(" blocked=").append(root.optString("blockedTask")==task.optString("id"))
+                    .append(" permitted=").append(TodoNativeActions.permitted(targetContext,root)).append('\n')
+                // Only the exact fixture created through the UI; never export IDs,
+                // tokens, keys, other rows, user content or full cache contents.
+                if(TodoNativeActions.permitted(targetContext,root)) TodoNativeActions.open(targetContext).use { db ->
+                    db.rawQuery("SELECT t.due_at,t.is_done,r.remind_at,r.fired FROM todos t LEFT JOIN todo_reminders r ON r.todo_id=t.id WHERE instr(t.title,?)>0 AND t.is_deleted=0",arrayOf("Bilga Recovery 20261016")).use { row ->
+                        check(row.count==1 && row.moveToFirst())
+                        report.append("Synthetic SQL: due=").append(row.getString(0)).append(" done=").append(row.getInt(1))
+                            .append(" reminder=").append(row.getString(2)).append(" fired=").append(row.getInt(3)).append('\n')
+                    }
+                }
+            } catch(e:Throwable) {
+                inspected=false
+                report.append("Fixture inspection failed: ").append(e.javaClass.simpleName)
+                    .append(" at ").append(e.stackTrace.firstOrNull()?.let { "${it.fileName}:${it.lineNumber}" }).append('\n')
+            }
+            finish(if(inspected) Activity.RESULT_OK else Activity.RESULT_CANCELED,Bundle().apply { putString("stream",report.toString()) });return
+        }
         if(verifyTodo) {
             val (ok,report)=TodoChecks.run(targetContext)
             finish(if(ok) Activity.RESULT_OK else Activity.RESULT_CANCELED,Bundle().apply { putString("stream",report) })

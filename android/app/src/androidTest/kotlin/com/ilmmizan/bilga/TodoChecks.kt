@@ -39,6 +39,8 @@ internal object TodoChecks {
             checkCase(!root.getJSONObject("events").toString().contains("title") && reminder.getBoolean("fired"))
             val selected=TodoWidget.selected(listOf(task("a","2026-10-12T22:00:00"),task("b","2026-10-13T10:00:00"),task("c","2026-10-11T10:00:00",true)),"upcoming",now,zone)
             checkCase(selected.map { it.getString("id") }==listOf("a","b") && TodoWidget.selected(selected,"overdue",now,zone).size==1)
+            val blocked=JSONObject().put("tasks",JSONArray().put(JSONObject(a.toString()).apply { getJSONObject("reminder").put("fired",false) }))
+            checkCase(TodoReminders.pendingTimes(blocked).size==1 && TodoReminders.pendingTimes(blocked.put("blockedTask","synthetic-a")).isEmpty())
             val secret="synthetic-encryption-sentinel-9381"
             TodoStore.write(c,JSONObject().put("test",secret),"synthetic")
             val bytes=TodoStore.file(c,"synthetic").readFully()

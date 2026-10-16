@@ -25,7 +25,8 @@ internal object WidgetTheme {
         button.setPadding(12,12,12,12)
     }
     fun bind(c:Context,messenger:BinaryMessenger) {
-        MethodChannel(messenger,"bilga/widget_theme").setMethodCallHandler { call,result ->
+        val channel=MethodChannel(messenger,"bilga/widget_theme")
+        channel.setMethodCallHandler { call,result ->
             if(call.method!="publish") {result.notImplemented();return@setMethodCallHandler}
             try {
                 val editor=c.getSharedPreferences("bilga-widget-theme",Context.MODE_PRIVATE).edit()
@@ -37,5 +38,7 @@ internal object WidgetTheme {
                 result.success(null)
             } catch(_:Exception) { result.error("widget_theme","Widget theme unavailable",null) }
         }
+        // Refresh from an already-running Dart/settings instance too.
+        channel.invokeMethod("refresh",null)
     }
 }
