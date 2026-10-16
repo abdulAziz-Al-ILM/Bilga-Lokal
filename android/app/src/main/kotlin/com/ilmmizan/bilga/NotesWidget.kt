@@ -68,6 +68,11 @@ class NotesWidget : AppWidgetProvider() {
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
+        internal fun previewLines(width:Int,height:Int,scale:Float):Int {
+            if(width<160) return 0
+            val available=(height-60)/scale.coerceAtLeast(1f)
+            return if(available>=100) 3 else if(available>=80) 2 else 0
+        }
         fun render(context: Context, id: Int) {
             if (!owns(context, id)) return
             val manager = AppWidgetManager.getInstance(context)
@@ -94,8 +99,11 @@ class NotesWidget : AppWidgetProvider() {
             views.removeAllViews(R.id.notes_widget_rows)
             val hidden = locked || ui.getBoolean("forceHidden", true)
             val rows = visibleRows(value, ui.getLong("permissionEpoch", 0), hidden)
-            val detailed = width >= 160 && height >= 130
-            val capacity = ((height - 60) / (if (detailed && value?.optString("privacy") == "preview") (110*context.resources.configuration.fontScale).toInt() else 44)).coerceIn(1, 6)
+            val scale=context.resources.configuration.fontScale.coerceAtLeast(1f)
+            val lines=previewLines(width,height,scale)
+            val detailed=lines>0
+            val rowHeight=if(detailed && value?.optString("privacy")=="preview") 48+16*lines else 44
+            val capacity=((height-60)/(rowHeight*scale).toInt()).coerceIn(1,6)
             for (index in 0 until minOf(rows.length(), capacity)) {
                 val row = rows.optJSONObject(index) ?: continue
                 val noteId = row.optString("id")
@@ -103,6 +111,7 @@ class NotesWidget : AppWidgetProvider() {
                 val item = RemoteViews(context.packageName, R.layout.notes_widget_row)
                 item.setTextViewText(R.id.notes_widget_note_title, row.optString("title").take(160))
                 item.setTextViewText(R.id.notes_widget_note_body, row.optString("body").take(240))
+                item.setInt(R.id.notes_widget_note_body,"setMaxLines",lines.coerceAtLeast(1))
                 item.setTextViewText(R.id.notes_widget_note_tags, row.optString("tags").take(160))
                 for (view in listOf(R.id.notes_widget_note_title, R.id.notes_widget_note_body, R.id.notes_widget_note_tags)) item.setTextColor(view, color)
                 item.setViewVisibility(R.id.notes_widget_note_body, if (detailed && value?.optString("privacy") == "preview" && row.optString("body").isNotEmpty()) View.VISIBLE else View.GONE)

@@ -39,6 +39,7 @@ class NotesWidgetChecks : Instrumentation() {
         val context = targetContext
         var failure: String? = null
         try {
+            check(NotesWidget.previewLines(200,140,1f)==2 && NotesWidget.previewLines(200,180,1f)==3 && NotesWidget.previewLines(200,140,2f)==0)
             val secret = "synthetic-widget-cache-sentinel-9381"
             val value = NotesWidget.defaults(first).put("test", secret)
             check(value.getString("privacy") == "hidden")
@@ -87,6 +88,6 @@ class NotesWidgetChecks : Instrumentation() {
             NotesWidgetStore.delete(context, first); NotesWidgetStore.delete(context, second)
         }
         finish(if (failure == null) Activity.RESULT_OK else Activity.RESULT_CANCELED,
-            Bundle().apply { putString("stream", if (failure == null) "Notes widget native checks: 12 PASS (safe default, encryption, readback, ID binding, tampering, PendingIntent isolation, immutable intents, provider metadata, permission epoch, snapshot clearing)\n" else "Notes widget native checks FAILED: $failure\n") })
+            Bundle().apply { putString("stream", if (failure == null) "Notes widget native checks: 13 PASS (safe default, encryption, readback, ID binding, tampering, PendingIntent isolation, immutable intents, provider metadata, permission epoch, snapshot clearing)\n" else "Notes widget native checks FAILED: $failure\n") })
     }
 }

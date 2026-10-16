@@ -36,8 +36,12 @@ public final class WidgetUiProbe extends Instrumentation {
         AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();
         info.flags |= AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
         getUiAutomation().setServiceInfo(info);
+        android.os.SystemClock.sleep(100); // Service-info updates invalidate the initial root cache.
         AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();
+        for(int attempt=0;root==null && attempt<20;attempt++) {
+            android.os.SystemClock.sleep(100); root=getUiAutomation().getRootInActiveWindow();
+        }
         if(root!=null) walk(root); else output.append("No accessible active window\n");
-        Bundle result=new Bundle(); result.putString("stream",output.toString()); finish(Activity.RESULT_OK,result);
+        Bundle result=new Bundle(); result.putString("stream",output.toString()); finish(root==null ? Activity.RESULT_CANCELED : Activity.RESULT_OK,result);
     }
 }
