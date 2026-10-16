@@ -73,3 +73,4 @@ GoogleService-Info.plist
 build/
 .dart_tool/
 .gradle/
+/android/.kotlin/

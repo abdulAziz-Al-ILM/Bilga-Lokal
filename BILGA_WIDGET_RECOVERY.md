@@ -29,7 +29,7 @@ GitHub checkpoint policy is in `AGENTS.md`. No merge/release/public repository.
 - MainActivity has one singleTask/default-affinity app task. Both handoff activities
   are excluded from Recents and open Main with NEW_TASK/CLEAR_TOP/SINGLE_TOP.
 
-## Evidence so far (final checks still pending)
+## Evidence so far (device checks still pending)
 
 - Flutter analyze: no issues (27s); full Flutter suite: **223 PASS, 4m35s**.
   A later cached-engine theme refresh change requires its focused regression check.
@@ -54,6 +54,27 @@ GitHub checkpoint policy is in `AGENTS.md`. No merge/release/public repository.
   geometry, without idle waits or restarting Bilga. Standard uiautomator dump waits
   for idle and is unsuitable for a live per-second Chronometer. Test-only fixture
   actions require a visible synthetic task; production APK contains no UI probe.
+
+### Later checks, 2026-10-16
+
+- Cached-engine theme regression: PASS (all seven palettes, light/dark and system
+  brightness); analyze then passed with no issues.
+- Native production changes: Todo **37 PASS**, Notes **13 PASS** on Tab16. The
+  306bdae APK passed ZIP/signature checks and install-r preserved both DB hashes
+  before first startup.
+- Actual due overlay appeared over foreground Calculator at **18:17:27** with
+  APPLICATION_OVERLAY frame `[180,1438][1020,1937]`, visible/on-screen. User missed
+  the visual check; the first automated overlay action did not pass. Display is
+  confirmed, button execution/readability are not yet confirmed.
+- A UI-created Notes fixture exposed a tag-selection/save race. Confirmed picker
+  selections now update the editor before another asynchronous store read.
+- After that change: analyze **no issues, 23.8s**; Notes tags/widget regressions
+  **42 PASS, 1m19s**; debug APK build **PASS, 52.0s**.
+- The subsequent test-APK assembly FAILED: host OpenJDK 21.0.12.1 SIGSEGV in
+  `G1 Conc#0`, `libjvm.so` object-array marking, at **18:34:09**. This is not an
+  Android test assertion failure. Cause is unproven; do not declare hardware fixed
+  from earlier passing runs. Do not repeatedly rebuild or change Java/Gradle
+  versions to conceal the failure. Crash log remains local and is not committed.
 
 ## Remaining verification / limits
 
