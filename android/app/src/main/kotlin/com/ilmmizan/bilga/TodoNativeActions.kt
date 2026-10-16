@@ -16,6 +16,11 @@ import java.util.concurrent.Executors
 internal object TodoNativeActions {
     const val ACTION="com.ilmmizan.bilga.TODO_NATIVE_ACTION"
     private val executor=Executors.newSingleThreadExecutor()
+    private fun refused(c:Context,reason:String):Boolean {
+        if(c.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE!=0)
+            android.util.Log.d("BilgaTodoAction",reason) // Static reason only: no IDs, text, timestamps or keys.
+        return false
+    }
     internal fun permitted(c:Context,root:JSONObject):Boolean {
         val prefs=c.getSharedPreferences("FlutterSharedPreferences",Context.MODE_PRIVATE)
         val wall=System.currentTimeMillis(); val issued=root.optLong("actionWall")
@@ -83,15 +88,15 @@ internal object TodoNativeActions {
     }
     @Synchronized fun perform(c:Context,intent:Intent):Boolean = synchronized(TodoReminders) {
         val root=TodoStore.read(c) ?: return false
-        if(!permitted(c,root)) return false
+        if(!permitted(c,root)) return refused(c,"access_unavailable")
         val id=intent.getStringExtra("id") ?: return false
         val widget=intent.getIntExtra("widget",-1)
         if(widget!=-1 && !TodoWidget.ids(c).contains(widget)) return false
         val task=TodoReminders.tasks(root).firstOrNull { it.optString("id")==id && !it.optBoolean("done") } ?: return false
         val token=intent.getStringExtra("token") ?: return false
-        if(token.isEmpty() || token!=task.optString("actionToken")) return false
+        if(token.isEmpty() || token!=task.optString("actionToken")) return refused(c,"stale_capability")
         val op=intent.getStringExtra("operation") ?: return false
-        if(widget==-1 && (task.optJSONObject("reminder")?.optBoolean("fired")!=true || !TodoTime.dueNow(JSONObject(task.toString()).apply { getJSONObject("reminder").put("fired",false) },System.currentTimeMillis()))) return false
+        if(widget==-1 && (task.optJSONObject("reminder")?.optBoolean("fired")!=true || !TodoTime.dueNow(JSONObject(task.toString()).apply { getJSONObject("reminder").put("fired",false) },System.currentTimeMillis()))) return refused(c,"reminder_not_due")
         if(op=="reminderMenu") {
             if(widget!=-1) return false
             // Expand the existing notification; never launch a Flutter Activity.
@@ -109,7 +114,7 @@ internal object TodoNativeActions {
         val at=if(op=="snooze") {
             val custom=intent.getStringExtra("at")
             if(custom!=null) {
-                if(widget!=-1 || (TodoTime.instant(custom) ?: 0)<=System.currentTimeMillis()) return false
+                if(widget!=-1 || (TodoTime.instant(custom) ?: 0)<=System.currentTimeMillis()) return refused(c,"custom_time_not_future")
                 custom
             } else TodoTime.snooze(intent.getIntExtra("minutes",0))
         } else null

@@ -14,10 +14,12 @@ class NotesWidgetChecks : Instrumentation() {
     private var fixtureTodo = false
     private var verifyTodo = false
     private var verifyEmpty = false
+    private var fixtureSeconds: Int? = null
     override fun onCreate(arguments: Bundle?) {
         fixtureTodo = arguments?.getString("fixtureTodo") == "true"
         verifyTodo = arguments?.getString("todoChecks") == "true"
         verifyEmpty = arguments?.getString("verifyEmptySnapshots") == "true"
+        fixtureSeconds = arguments?.getString("fixtureReminderSeconds")?.toInt()
         super.onCreate(arguments); start()
     }
     override fun onStart() {
@@ -27,6 +29,22 @@ class NotesWidgetChecks : Instrumentation() {
             try {
                 val root=TodoStore.read(targetContext) ?: error("no_mirror")
                 val task=TodoReminders.tasks(root).single { it.optString("title").contains("Bilga Recovery 20261016") }
+                fixtureSeconds?.let { seconds ->
+                    // Test setup only, absent from production APK. One unique
+                    // UI-created synthetic task, unlocked/current access lease,
+                    // existing encrypted DB/key and version-checked SQL transaction.
+                    // Seed a real future alarm; never fake a due event or touch
+                    // unrelated tasks. Caller opens Main to sync/schedule normally.
+                    check(seconds in 30..120 && TodoNativeActions.permitted(targetContext,root))
+                    TodoNativeActions.open(targetContext).use { db ->
+                        db.rawQuery("SELECT id FROM todos WHERE instr(title,?)>0 AND is_deleted=0 AND is_done=0",arrayOf("Bilga Recovery 20261016")).use { row ->
+                            check(row.count==1 && row.moveToFirst() && row.getString(0)==task.getString("id"))
+                        }
+                        val at=java.time.OffsetDateTime.now().plusSeconds(seconds.toLong()).toString()
+                        TodoNativeActions.commit(db,task,"snooze",at)
+                        report.append("Synthetic reminder setup: ").append(at).append('\n')
+                    }
+                }
                 report.append("Synthetic mirror: due=").append(task.optString("due")).append(" reminder=").append(task.optJSONObject("reminder")?.optString("at"))
                     .append(" fired=").append(task.optJSONObject("reminder")?.optBoolean("fired"))
                     .append(" blocked=").append(root.optString("blockedTask")==task.optString("id"))
