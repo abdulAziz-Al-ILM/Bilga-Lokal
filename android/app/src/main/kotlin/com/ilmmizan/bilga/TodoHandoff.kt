@@ -12,7 +12,7 @@ class TodoHandoff: Activity() {
         val widget=intent.getIntExtra("appWidgetId",-1)
         if(intent.action==android.appwidget.AppWidgetManager.ACTION_APPWIDGET_CONFIGURE && !TodoWidget.ids(this).contains(widget)) { finish(); return }
         val next=Intent(this,MainActivity::class.java).setAction(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("todo_action",if(intent.action==android.appwidget.AppWidgetManager.ACTION_APPWIDGET_CONFIGURE) "configure" else intent.getStringExtra("todo_action"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("todo_action",if(intent.action==android.appwidget.AppWidgetManager.ACTION_APPWIDGET_CONFIGURE) "configure" else intent.getStringExtra("todo_action"))
             .putExtra("todo_id",intent.getStringExtra("todo_id")).putExtra("todo_widget",widget)
         if(next.getStringExtra("todo_action")=="configure") {
             setResult(RESULT_CANCELED)

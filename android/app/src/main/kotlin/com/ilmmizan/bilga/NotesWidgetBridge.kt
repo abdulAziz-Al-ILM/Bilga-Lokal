@@ -29,7 +29,7 @@ class NotesWidgetBridge(private val activity: Activity, messenger: BinaryMesseng
                     "configs" -> {
                         val ids = NotesWidget.ids(activity).toMutableSet()
                         result.success(ids.map { id ->
-                            val v = NotesWidgetStore.read(activity, id) ?: NotesWidget.defaults(id)
+                            val v = NotesWidgetStore.readableOrNew(activity, id)
                             mapOf("id" to id, "source" to v.optString("source", "recent"), "privacy" to v.optString("privacy", "hidden"),
                                 "revision" to v.optString("revision", ""),
                                 "permissionEpoch" to activity.getSharedPreferences("notes-widget-ui", Context.MODE_PRIVATE).getLong("permissionEpoch", 0),
@@ -61,7 +61,7 @@ class NotesWidgetBridge(private val activity: Activity, messenger: BinaryMesseng
                         for (item in call.argument<List<Map<String, Any>>>("widgets") ?: emptyList()) {
                             val id = (item["id"] as? Number)?.toInt() ?: continue
                             if (!NotesWidget.owns(activity, id)) continue
-                            val config = NotesWidgetStore.read(activity, id) ?: NotesWidget.defaults(id)
+                            val config = NotesWidgetStore.readableOrNew(activity, id)
                             if (config.optString("revision", "") != (item["revision"] as? String ?: "")) continue
                             val epoch = activity.getSharedPreferences("notes-widget-ui", Context.MODE_PRIVATE).getLong("permissionEpoch", 0)
                             if ((item["permissionEpoch"] as? Number)?.toLong() != epoch) continue

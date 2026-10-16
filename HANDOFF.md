@@ -1,9 +1,25 @@
 # Bilga — loyiha handoff’i
 
-Yangilangan: **2026-10-12**
-Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **main**.
+Yangilangan: **2026-10-16**
+Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-recovery**.
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
+
+## 2026-10-16 — Recovery davom etmoqda (WIP)
+
+Foydalanuvchi apparat muammosi hal bo‘lganini bildirdi. Recovery bazasi:
+`67d6990646c36a70b8f21b11a21ca5c843e51fa8`, private WIP branch; main o‘zgarmaydi.
+GitHub zaxiralash tartibi `AGENTS.md`da. Eski RAM xatolari davridagi test/build
+natijalari joriy reliz tasdig‘i emas. Notes/To-Do/overlay/Core widget theme va
+Recent Apps tekshiruvi davom etmoqda; Core mikrofon funksiyasi o‘zgartirilmaydi.
+
+Recovery kodida Todo DB8 device-local per-task widget consent, native SQLCipher
+Done/Snooze, sqlEpoch stale publish himoyasi, auto-on new-task reminder, widget
+countdown, 7 palitra/sistem theme bridge va overlay contrast mavjud. Bularning
+joriy native build va qurilma natijalari hali yakunlanmagan. Notes DB13 saqlanadi.
+Notes konfiguratsiyasi key vaqtincha yopiq bo‘lganda o‘chirilmasin yoki defaults
+bilan almashtirilmasin. Main singleTask/default affinity, yordamchi handoff'lar
+Recents'dan excluded, Main'ga NEW_TASK/CLEAR_TOP/SINGLE_TOP bilan yo‘naltiriladi.
 
 ## 2026-10-12 — To-Do vaqt holati, reminder, overlay va vidjet
 

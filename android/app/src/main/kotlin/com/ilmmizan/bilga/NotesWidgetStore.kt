@@ -36,6 +36,13 @@ internal object NotesWidgetStore {
         }
         return store.getKey(ALIAS, null) as SecretKey
     }
+    internal fun readableOrNew(context: Context, id: Int): JSONObject {
+        val value=read(context,id)
+        // Never replace an existing encrypted configuration when its key is
+        // temporarily unavailable (lock/reboot). Retry after unlock instead.
+        if(value==null && file(context,id).baseFile.exists()) error("widget_cache_unavailable")
+        return value ?: NotesWidget.defaults(id)
+    }
     @Synchronized fun read(context: Context, id: Int): JSONObject? = try {
         val input = file(context, id)
         if (!input.baseFile.exists() || input.baseFile.length() > 1_048_576) null else {
