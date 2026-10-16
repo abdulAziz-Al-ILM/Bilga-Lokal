@@ -85,10 +85,12 @@ class _NoteEditorPageState extends State<NoteEditorPage>
         store,
         selected: currentIds,
       );
-      final all = await store.all();
-      if (!mounted) return;
+      // Apply a confirmed selection before another Save/Back can close the
+      // editor. IDs are validated/canonicalized by the transactional tag store.
       final selected =
-          picked ?? all.where((t) => currentIds.contains(t.id)).toList();
+          picked ??
+          (await store.all()).where((t) => currentIds.contains(t.id)).toList();
+      if (!mounted) return;
       setState(() {
         _tagIds = selected.map((t) => t.id).toList();
         _tagNames = selected.map((t) => t.name).toList();
