@@ -126,6 +126,7 @@ class NotesWidgetBridge(private val activity: Activity, messenger: BinaryMesseng
         }
         if (notify) channel.invokeMethod("launch", null)
     }
+    fun ready() { channel.invokeMethod("refresh", null) }
     fun close() { channel.setMethodCallHandler(null) }
     private fun array(value: JSONArray?): List<String> = if (value == null) emptyList() else (0 until value.length()).map { value.getString(it) }
     private fun objectMap(value: JSONObject?): Map<String, String> = value?.keys()?.asSequence()?.associateWith { value.getString(it) } ?: emptyMap()

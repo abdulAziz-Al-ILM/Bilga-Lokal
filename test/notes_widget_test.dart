@@ -494,6 +494,26 @@ void main() {
         find.byType(NoteEditorPage, skipOffstage: false),
         findsNWidgets(3),
       );
+      // Rebinding an Activity to a cached engine must retry sync and consume the
+      // still-queued intent even when there is no new lifecycle resume event.
+      final reads = calls.where((call) => call.method == 'configs').length;
+      launch = {'id': 10, 'action': 'create'};
+      tester.binding.channelBuffers.push(
+        NotesWidgetBridge.channel.name,
+        const StandardMethodCodec().encodeMethodCall(
+          const MethodCall('refresh'),
+        ),
+        (_) {},
+      );
+      await tester.pumpAndSettle();
+      expect(
+        calls.where((call) => call.method == 'configs').length,
+        greaterThan(reads),
+      );
+      expect(
+        find.byType(NoteEditorPage, skipOffstage: false),
+        findsNWidgets(4),
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();
       locked.dispose();

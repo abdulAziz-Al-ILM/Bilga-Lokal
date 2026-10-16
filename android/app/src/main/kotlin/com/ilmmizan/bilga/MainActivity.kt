@@ -80,6 +80,11 @@ open class MainActivity : AudioServiceFragmentActivity() {
                 result.success(null)
             } else result.notImplemented()
         }
+        // Cached audio-service engines may have attempted their first sync before
+        // these Activity channels (including Vault) existed. Retry only after all
+        // handlers are installed; cold Dart still performs its normal first sync.
+        notesWidget?.ready()
+        todoBridge?.ready()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

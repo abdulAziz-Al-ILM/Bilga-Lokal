@@ -168,6 +168,7 @@ class TodoBridge(private val activity: Activity,messenger: BinaryMessenger) {
     }
     fun due(id: String) { channel.invokeMethod("due",id) }
     fun changed() { channel.invokeMethod("changed",null) }
+    fun ready() { changed(); channel.invokeMethod("launch",null) }
     fun close() { if(TodoReminders.bridge===this) TodoReminders.bridge=null; channel.setMethodCallHandler(null) }
     private fun map(value: JSONObject): Map<String,Any?> = value.keys().asSequence().associateWith { key ->
         when(val v=value.get(key)) { JSONObject.NULL -> null; is JSONObject -> map(v); else -> v }

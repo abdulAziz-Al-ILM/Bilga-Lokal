@@ -292,6 +292,44 @@ void main() {
     },
   );
   testWidgets(
+    'Cached-engine channel rebind retries SQL sync and consumes queued creation',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AppLockScope(
+            locked: false,
+            child: TodoHost(
+              database: () async => db,
+              child: const Scaffold(body: Text('Home')),
+            ),
+          ),
+        ),
+      );
+      await settleIo(tester);
+      calls.clear();
+      tester.binding.channelBuffers.push(
+        TodoBridge.channel.name,
+        const StandardMethodCodec().encodeMethodCall(
+          const MethodCall('changed'),
+        ),
+        (_) {},
+      );
+      await settleIo(tester);
+      expect(calls.any((call) => call.method == 'publish'), isTrue);
+      launch = {'action': 'create', 'widgetId': 7};
+      tester.binding.channelBuffers.push(
+        TodoBridge.channel.name,
+        const StandardMethodCodec().encodeMethodCall(
+          const MethodCall('launch'),
+        ),
+        (_) {},
+      );
+      await settleIo(tester);
+      expect(find.byType(TodoEditorPage), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+  testWidgets(
     'Widget completion waits behind AppLock and then requires explicit confirmation',
     (tester) async {
       launch = {'action': 'done', 'id': 'a', 'widgetId': 7};

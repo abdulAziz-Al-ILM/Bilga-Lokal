@@ -47,6 +47,10 @@ class _NotesWidgetHostState extends State<NotesWidgetHost>
     AgentAccess.instance.addListener(changed);
     NotesWidgetBridge.channel.setMethodCallHandler((call) async {
       if (call.method == 'launch') await consume();
+      if (call.method == 'refresh') {
+        await sync.refresh();
+        await consume();
+      }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => consume());
   }
