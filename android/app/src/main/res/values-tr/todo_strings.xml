@@ -5,6 +5,7 @@
     <string name="tw_task">Görev</string>
     <string name="tw_new">Yeni görev</string>
     <string name="tw_done">Tamamlanan</string>
+    <string name="tw_snooze">Ertele</string>
     <string name="tw_empty">Burada henüz bir şey yok</string>
     <string name="tw_reminders">Hatırlatmalar</string>
     <string name="tw_limits">Android hatırlatmaları geciktirebilir veya panelleri gizleyebilir. Bildirim, tam alarm ve pil ayarlarını kontrol edin; açılır bildirim garanti edilmez.</string>

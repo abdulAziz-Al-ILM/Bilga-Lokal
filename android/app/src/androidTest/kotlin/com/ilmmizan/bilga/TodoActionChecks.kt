@@ -17,6 +17,10 @@ internal object TodoActionChecks {
   val db=SQLiteDatabase.openDatabase(File(directory,"synthetic-action.db").path,"synthetic-only-9381".toByteArray(),null,
    SQLiteDatabase.OPEN_READWRITE or SQLiteDatabase.CREATE_IF_NECESSARY,net.zetetic.database.DatabaseErrorHandler { _,error -> throw error },null)
   db.use {
+   db.version=8
+   TodoNativeActions.configure(db)
+   verify(db.rawQuery("PRAGMA busy_timeout",emptyArray<String>()).use { it.moveToFirst();it.getInt(0)==2000 } &&
+    db.rawQuery("PRAGMA secure_delete",emptyArray<String>()).use { it.moveToFirst();it.getInt(0)==1 })
    db.execSQL("CREATE TABLE todos(id TEXT PRIMARY KEY,title TEXT,updated_at TEXT,is_done INTEGER DEFAULT 0,is_deleted INTEGER DEFAULT 0,folder_id TEXT,due_at TEXT,completed_at TEXT)")
    db.execSQL("CREATE TABLE todo_folders(id TEXT,parent_id TEXT,is_deleted INTEGER DEFAULT 0)")
    db.execSQL("CREATE TABLE todo_reminders(todo_id TEXT PRIMARY KEY,enabled INTEGER,remind_at TEXT,revision TEXT,fired INTEGER)")
@@ -65,6 +69,12 @@ internal object TodoActionChecks {
    val button=android.widget.Button(themeContext)
    WidgetTheme.button(themeContext,button)
    verify(button.currentTextColor==foreground && button.backgroundTintList==null && button.minHeight>=(48*c.resources.displayMetrics.density).toInt())
+  }
+  val main=c.packageManager.getActivityInfo(ComponentName(c,MainActivity::class.java),0)
+  verify(main.launchMode==android.content.pm.ActivityInfo.LAUNCH_SINGLE_TASK && !main.taskAffinity.isNullOrEmpty())
+  for(activity in listOf(TodoHandoff::class.java,NotesWidgetConfigureActivity::class.java)) {
+   val info=c.packageManager.getActivityInfo(ComponentName(c,activity),0)
+   verify(info.taskAffinity.isNullOrEmpty() && info.flags and android.content.pm.ActivityInfo.FLAG_EXCLUDE_FROM_RECENTS!=0)
   }
   val task=JSONObject().put("id","synthetic-a").put("actionToken","token-1")
   val a=TodoNativeActions.pending(c,2147483003,task,"done")

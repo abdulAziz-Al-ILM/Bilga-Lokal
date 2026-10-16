@@ -5,6 +5,7 @@
     <string name="tw_task">Tâche</string>
     <string name="tw_new">Nouvelle tâche</string>
     <string name="tw_done">Terminées</string>
+    <string name="tw_snooze">Reporter</string>
     <string name="tw_empty">Rien ici pour l\'instant</string>
     <string name="tw_reminders">Rappels</string>
     <string name="tw_limits">Android peut retarder les rappels ou masquer les panneaux. Vérifiez notifications, alarmes précises et batterie ; l’affichage flottant n’est pas garanti.</string>

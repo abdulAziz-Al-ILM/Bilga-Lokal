@@ -5,6 +5,7 @@
     <string name="tw_task">Тапшырма</string>
     <string name="tw_new">Жаңы тапшырма</string>
     <string name="tw_done">Аткарылган</string>
+    <string name="tw_snooze">Кийинкиге жылдыру</string>
     <string name="tw_empty">Азырынча эч нерсе жок</string>
     <string name="tw_reminders">Эскертмелер</string>
     <string name="tw_limits">Android эскертмени кечиктирип же панелди жашырышы мүмкүн. Билдирме, так ойготкуч жана батарея жөндөөлөрүн текшериңиз; калкыма билдирме кепилденбейт.</string>

@@ -20,7 +20,7 @@ internal object TodoNativeActions {
         val prefs=c.getSharedPreferences("FlutterSharedPreferences",Context.MODE_PRIVATE)
         val wall=System.currentTimeMillis(); val issued=root.optLong("actionWall")
         val duration=root.optLong("actionUntil")-issued
-        return !TodoReminders.private(c,root) && !prefs.getBoolean("flutter.bilga.appLock",true) &&
+        return !TodoReminders.private(c,root) && !prefs.getBoolean("flutter.bilga.appLock",false) &&
             issued>0 && wall>=issued-300000 && wall<root.optLong("actionUntil") &&
             root.optInt("actionBoot",-1)==Settings.Global.getInt(c.contentResolver,Settings.Global.BOOT_COUNT,-2) &&
             SystemClock.elapsedRealtime()-root.optLong("actionElapsed") in 0 until duration
@@ -40,12 +40,21 @@ internal object TodoNativeActions {
         try {
             System.loadLibrary("sqlcipher")
             // Explicit corruption handler: never delete/recreate a user's database.
-            return SQLiteDatabase.openDatabase(path.path,key,null,SQLiteDatabase.OPEN_READWRITE,
-                net.zetetic.database.DatabaseErrorHandler { _, error -> throw error },null).apply {
-                if(version!=8) { close();error("unsupported_schema") }; execSQL("PRAGMA busy_timeout=2000");execSQL("PRAGMA foreign_keys=ON")
-                rawQuery("PRAGMA secure_delete=ON",emptyArray<String>()).close()
-            }
+            val db=SQLiteDatabase.openDatabase(path.path,key,null,SQLiteDatabase.OPEN_READWRITE,
+                net.zetetic.database.DatabaseErrorHandler { _, error -> throw error },null)
+            try {
+                configure(db)
+                return db
+            } catch(e:Throwable) { db.close();throw e }
         } finally { key.fill(0) }
+    }
+    internal fun configure(db:SQLiteDatabase) {
+        check(db.version==8) { "unsupported_schema" }
+        // Result-bearing PRAGMAs require a read, not execSQL or an unopened cursor.
+        db.rawQuery("PRAGMA busy_timeout=2000",emptyArray<String>()).use { check(it.moveToFirst()) }
+        db.execSQL("PRAGMA foreign_keys=ON")
+        db.execSQL("PRAGMA synchronous=FULL")
+        db.rawQuery("PRAGMA secure_delete=ON",emptyArray<String>()).use { check(it.moveToFirst()) }
     }
     internal fun commit(db:SQLiteDatabase,task:JSONObject,operation:String,at:String?):JSONObject {
         val id=task.getString("id");val updated=task.getString("version")

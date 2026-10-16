@@ -5,6 +5,7 @@
     <string name="tw_task">Task</string>
     <string name="tw_new">New task</string>
     <string name="tw_done">Completed</string>
+    <string name="tw_snooze">Snooze</string>
     <string name="tw_empty">Nothing here yet</string>
     <string name="tw_reminders">Reminders</string>
     <string name="tw_limits">Android may delay reminders or hide floating panels. Check notification, precise alarm and battery settings; heads-up is not guaranteed.</string>

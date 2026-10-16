@@ -5,6 +5,7 @@
     <string name="tw_task">Zadanie</string>
     <string name="tw_new">Nowe zadanie</string>
     <string name="tw_done">Ukończone</string>
+    <string name="tw_snooze">Odłóż</string>
     <string name="tw_empty">Jeszcze nic tu nie ma</string>
     <string name="tw_reminders">Przypomnienia</string>
     <string name="tw_limits">Android może opóźniać przypomnienia lub ukrywać panele. Sprawdź powiadomienia, dokładne alarmy i baterię; wyskakujące powiadomienie nie jest gwarantowane.</string>

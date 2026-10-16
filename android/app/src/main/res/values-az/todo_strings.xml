@@ -5,6 +5,7 @@
     <string name="tw_task">Tapşırıq</string>
     <string name="tw_new">Yeni tapşırıq</string>
     <string name="tw_done">Tamamlanmış</string>
+    <string name="tw_snooze">Təxirə sal</string>
     <string name="tw_empty">Hələ heç nə yoxdur</string>
     <string name="tw_reminders">Xatırlatmalar</string>
     <string name="tw_limits">Android xatırlatmanı gecikdirə və paneli gizlədə bilər. Bildiriş, dəqiq alarm və batareya ayarlarını yoxlayın; açılan bildirişə zəmanət yoxdur.</string>

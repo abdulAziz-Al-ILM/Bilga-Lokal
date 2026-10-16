@@ -5,6 +5,7 @@
     <string name="tw_task">tarea</string>
     <string name="tw_new">nueva tarea</string>
     <string name="tw_done">Completadas</string>
+    <string name="tw_snooze">Posponer</string>
     <string name="tw_empty">Nada aquí todavía</string>
     <string name="tw_reminders">Recordatorios</string>
     <string name="tw_limits">Android puede retrasar recordatorios u ocultar paneles. Revise notificaciones, alarmas exactas y batería; no se garantiza la ventana emergente.</string>

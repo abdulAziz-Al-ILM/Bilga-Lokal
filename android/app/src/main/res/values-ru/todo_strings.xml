@@ -5,6 +5,7 @@
     <string name="tw_task">Задача</string>
     <string name="tw_new">Новое задание</string>
     <string name="tw_done">Выполнено</string>
+    <string name="tw_snooze">Отложить</string>
     <string name="tw_empty">Здесь пока ничего</string>
     <string name="tw_reminders">Напоминания</string>
     <string name="tw_limits">Android может задержать напоминания или скрыть панели. Проверьте уведомления, точные будильники и батарею; всплытие не гарантируется.</string>

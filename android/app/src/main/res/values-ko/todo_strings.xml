@@ -5,6 +5,7 @@
     <string name="tw_task">작업</string>
     <string name="tw_new">새로운 태스크</string>
     <string name="tw_done">완료됨</string>
+    <string name="tw_snooze">다시 알림</string>
     <string name="tw_empty">아직 아무것도 없습니다</string>
     <string name="tw_reminders">알림</string>
     <string name="tw_limits">Android가 알림을 지연하거나 패널을 숨길 수 있습니다. 알림, 정확한 알람 및 배터리 설정을 확인하세요. 팝업 표시는 보장되지 않습니다.</string>

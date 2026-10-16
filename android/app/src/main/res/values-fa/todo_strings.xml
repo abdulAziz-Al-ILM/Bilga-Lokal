@@ -5,6 +5,7 @@
     <string name="tw_task">وظیفه</string>
     <string name="tw_new">کار جدید</string>
     <string name="tw_done">انجام‌شده</string>
+    <string name="tw_snooze">تعویق</string>
     <string name="tw_empty">هنوز چیزی اینجا نیست</string>
     <string name="tw_reminders">یادآورها</string>
     <string name="tw_limits">Android ممکن است یادآورها را به تأخیر بیندازد یا پنل را پنهان کند. تنظیمات اعلان، هشدار دقیق و باتری را بررسی کنید؛ نمایش شناور تضمین نمی‌شود.</string>

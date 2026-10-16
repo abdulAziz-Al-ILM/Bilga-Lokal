@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate only native To-Do resource labels from the app's 43 JSON catalogs."""
 import json,pathlib,html
-mapping={'widget':'widgetTodo','todos':'todos','task':'task','new':'newTask','done':'reminderDone','empty':'empty','reminders':'reminderSettings','limits':'reminderLimits'}
+mapping={'widget':'widgetTodo','todos':'todos','task':'task','new':'newTask','done':'reminderDone','snooze':'reminderSnooze','empty':'empty','reminders':'reminderSettings','limits':'reminderLimits'}
 for p in pathlib.Path('assets/i18n').glob('*.json'):
  data=json.loads(p.read_text())
  directories=[f"values-{'iw' if p.stem=='he' else p.stem}"]+(['values'] if p.stem=='en' else [])

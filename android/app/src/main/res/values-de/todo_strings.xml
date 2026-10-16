@@ -5,6 +5,7 @@
     <string name="tw_task">Aufgabe</string>
     <string name="tw_new">Neue Aufgabe</string>
     <string name="tw_done">Erledigt</string>
+    <string name="tw_snooze">Später erinnern</string>
     <string name="tw_empty">Hier ist noch nichts</string>
     <string name="tw_reminders">Erinnerungen</string>
     <string name="tw_limits">Android kann Erinnerungen verzögern oder Fenster verbergen. Prüfen Sie Benachrichtigungen, genaue Alarme und Akku; Einblendungen sind nicht garantiert.</string>

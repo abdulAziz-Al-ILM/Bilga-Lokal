@@ -5,6 +5,7 @@
     <string name="tw_task">Oppgave</string>
     <string name="tw_new">Ny oppgave</string>
     <string name="tw_done">Fullført</string>
+    <string name="tw_snooze">Utsett</string>
     <string name="tw_empty">Ingenting her ennå</string>
     <string name="tw_reminders">Påminnelser</string>
     <string name="tw_limits">Android kan forsinke påminnelser eller skjule paneler. Sjekk varsler, nøyaktige alarmer og batteri; popup-varsler garanteres ikke.</string>

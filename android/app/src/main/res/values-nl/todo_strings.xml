@@ -5,6 +5,7 @@
     <string name="tw_task">Taak</string>
     <string name="tw_new">Nieuwe taak</string>
     <string name="tw_done">Voltooid</string>
+    <string name="tw_snooze">Uitstellen</string>
     <string name="tw_empty">Hier nog niets</string>
     <string name="tw_reminders">Herinneringen</string>
     <string name="tw_limits">Android kan herinneringen vertragen of panelen verbergen. Controleer meldingen, exacte alarmen en batterij; pop-ups zijn niet gegarandeerd.</string>

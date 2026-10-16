@@ -5,6 +5,7 @@
     <string name="tw_task">งาน</string>
     <string name="tw_new">งานใหม่</string>
     <string name="tw_done">เสร็จแล้ว</string>
+    <string name="tw_snooze">เลื่อนการเตือน</string>
     <string name="tw_empty">ยังไม่มีสิ่งใดที่นี่</string>
     <string name="tw_reminders">การเตือน</string>
     <string name="tw_limits">Android อาจเลื่อนการเตือนหรือซ่อนแผงลอย ตรวจสอบการแจ้งเตือน นาฬิกาปลุกที่แม่นยำ และแบตเตอรี่ ไม่รับประกันป๊อปอัป</string>

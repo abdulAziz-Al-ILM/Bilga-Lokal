@@ -5,6 +5,7 @@
     <string name="tw_task">Compito</string>
     <string name="tw_new">Nuovo compito</string>
     <string name="tw_done">Completate</string>
+    <string name="tw_snooze">Posticipa</string>
     <string name="tw_empty">Qui ancora niente</string>
     <string name="tw_reminders">Promemoria</string>
     <string name="tw_limits">Android può ritardare promemoria o nascondere pannelli. Controlla notifiche, sveglie esatte e batteria; la comparsa del popup non è garantita.</string>

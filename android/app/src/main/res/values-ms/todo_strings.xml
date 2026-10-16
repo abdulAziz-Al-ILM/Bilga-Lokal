@@ -5,6 +5,7 @@
     <string name="tw_task">Tugasan</string>
     <string name="tw_new">Tugas baru</string>
     <string name="tw_done">Selesai</string>
+    <string name="tw_snooze">Tangguh</string>
     <string name="tw_empty">Tiada apa-apa lagi di sini</string>
     <string name="tw_reminders">Peringatan</string>
     <string name="tw_limits">Android mungkin melambatkan peringatan atau menyembunyikan panel. Semak pemberitahuan, penggera tepat dan bateri; paparan timbul tidak dijamin.</string>

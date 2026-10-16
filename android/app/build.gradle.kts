@@ -73,6 +73,7 @@ flutter {
 dependencies {
     // Same SQLCipher artifact already used by sqflite_sqlcipher; no second engine.
     implementation("net.zetetic:sqlcipher-android:4.10.0@aar")
+    implementation("androidx.sqlite:sqlite:2.5.2") // Same version as sqflite_sqlcipher.
 }
 
 // Debug builds stay available; release must never fall back to a debug key.

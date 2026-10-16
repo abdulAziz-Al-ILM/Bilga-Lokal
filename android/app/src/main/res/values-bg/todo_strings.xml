@@ -5,6 +5,7 @@
     <string name="tw_task">Задача</string>
     <string name="tw_new">Нова задача</string>
     <string name="tw_done">Завършени</string>
+    <string name="tw_snooze">Отлагане</string>
     <string name="tw_empty">Тук още няма нищо</string>
     <string name="tw_reminders">Напомняния</string>
     <string name="tw_limits">Android може да забави напомнянията или да скрие панелите. Проверете известията, точните аларми и батерията; изскачащо известие не е гарантирано.</string>

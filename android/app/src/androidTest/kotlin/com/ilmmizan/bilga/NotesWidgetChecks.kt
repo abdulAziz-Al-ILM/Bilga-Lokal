@@ -53,6 +53,8 @@ class NotesWidgetChecks : Instrumentation() {
             bytes[bytes.lastIndex] = (bytes.last().toInt() xor 1).toByte()
             file.writeBytes(bytes)
             check(NotesWidgetStore.read(context, first) == null) // Tampering fails closed.
+            check(runCatching { NotesWidgetStore.readableOrNew(context,first) }.isFailure)
+            check(file.exists()) // An unavailable/corrupt cache is never silently reset.
             val a = NotesWidget.pending(context, first, "open", "synthetic-one")
             val b = NotesWidget.pending(context, first, "open", "synthetic-two")
             val c = NotesWidget.pending(context, second, "open", "synthetic-one")
@@ -85,6 +87,6 @@ class NotesWidgetChecks : Instrumentation() {
             NotesWidgetStore.delete(context, first); NotesWidgetStore.delete(context, second)
         }
         finish(if (failure == null) Activity.RESULT_OK else Activity.RESULT_CANCELED,
-            Bundle().apply { putString("stream", if (failure == null) "Notes widget native checks: 11 PASS (safe default, encryption, readback, ID binding, tampering, PendingIntent isolation, immutable intents, provider metadata, permission epoch, snapshot clearing)\n" else "Notes widget native checks FAILED: $failure\n") })
+            Bundle().apply { putString("stream", if (failure == null) "Notes widget native checks: 12 PASS (safe default, encryption, readback, ID binding, tampering, PendingIntent isolation, immutable intents, provider metadata, permission epoch, snapshot clearing)\n" else "Notes widget native checks FAILED: $failure\n") })
     }
 }

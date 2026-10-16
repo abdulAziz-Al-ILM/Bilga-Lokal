@@ -5,6 +5,7 @@
     <string name="tw_task">Tarefa</string>
     <string name="tw_new">Nova tarefa</string>
     <string name="tw_done">Concluídas</string>
+    <string name="tw_snooze">Adiar</string>
     <string name="tw_empty">Nada aqui ainda</string>
     <string name="tw_reminders">Lembretes</string>
     <string name="tw_limits">O Android pode atrasar lembretes ou ocultar painéis. Verifique notificações, alarmes exatos e bateria; a exibição flutuante não é garantida.</string>

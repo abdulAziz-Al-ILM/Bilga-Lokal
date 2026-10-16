@@ -55,7 +55,7 @@ class _TodoWidgetConfigPageState extends State<TodoWidgetConfigPage> {
         });
       }
     } catch (_) {
-      if (context.mounted) showError(context);
+      if (mounted) showError(context);
     }
   }
 

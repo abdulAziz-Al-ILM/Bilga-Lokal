@@ -5,6 +5,7 @@
     <string name="tw_task">Sarcină</string>
     <string name="tw_new">Sarcină nouă</string>
     <string name="tw_done">Finalizate</string>
+    <string name="tw_snooze">Amână</string>
     <string name="tw_empty">Nimic aici încă</string>
     <string name="tw_reminders">Mementouri</string>
     <string name="tw_limits">Android poate întârzia mementourile sau ascunde panourile. Verificați notificările, alarmele exacte și bateria; afișarea pop-up nu este garantată.</string>

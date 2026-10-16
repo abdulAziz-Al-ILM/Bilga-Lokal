@@ -5,6 +5,7 @@
     <string name="tw_task">Εργασία</string>
     <string name="tw_new">Νέα εργασία</string>
     <string name="tw_done">Ολοκληρωμένα</string>
+    <string name="tw_snooze">Αναβολή</string>
     <string name="tw_empty">Τίποτα εδώ ακόμα</string>
     <string name="tw_reminders">Υπενθυμίσεις</string>
     <string name="tw_limits">Το Android μπορεί να καθυστερεί υπενθυμίσεις ή να κρύβει πίνακες. Ελέγξτε ειδοποιήσεις, ακριβή ξυπνητήρια και μπαταρία· η αναδυόμενη ειδοποίηση δεν είναι εγγυημένη.</string>
