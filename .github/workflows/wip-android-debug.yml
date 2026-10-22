@@ -30,6 +30,7 @@ jobs:
       FLUTTER_SUPPRESS_ANALYTICS: 'true'
       DART_SUPPRESS_ANALYTICS: 'true'
       FLUTTER_REVISION: 6655482ec06e547f90abf8ae7590466f4415978d
+      BILGA_CI_NDK: 28.2.13676358
       GRADLE_OPTS: -Dorg.gradle.daemon=false
 
     steps:
@@ -69,10 +70,27 @@ jobs:
           sudo apt-get install --yes --no-install-recommends libsqlite3-0 libglu1-mesa
           bilga_sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           test -x "$bilga_sdkmanager"
+          # The first hosted build exhausted disk while stripping native libs.
+          # Remove only unused, SDK-managed NDKs on this disposable hosted VM.
+          # Never execute this cleanup against a developer/self-hosted SDK.
+          test "$GITHUB_ACTIONS" = true
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          test "$(realpath "$ANDROID_HOME")" = /usr/local/lib/android/sdk
+          test ! -L "$ANDROID_HOME/ndk"
+          df -h "$GITHUB_WORKSPACE"
+          for bilga_ndk_dir in "$ANDROID_HOME"/ndk/*; do
+            [[ -d "$bilga_ndk_dir" && ! -L "$bilga_ndk_dir" ]] || continue
+            bilga_ndk_version="${bilga_ndk_dir##*/}"
+            [[ "$bilga_ndk_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+            [[ "$bilga_ndk_version" != "$BILGA_CI_NDK" ]] || continue
+            [[ -f "$bilga_ndk_dir/source.properties" ]] || continue
+            echo "Removing unused hosted-runner NDK package: $bilga_ndk_version"
+            "$bilga_sdkmanager" --sdk_root="$ANDROID_HOME" --uninstall "ndk;$bilga_ndk_version"
+          done
           "$bilga_sdkmanager" --licenses < <(yes) > /dev/null
           "$bilga_sdkmanager" \
             'platform-tools' 'platforms;android-34' 'platforms;android-36' \
-            'build-tools;36.0.0' 'ndk;28.2.13676358'
+            'build-tools;36.0.0' "ndk;$BILGA_CI_NDK"
           df -h "$GITHUB_WORKSPACE"
 
       - name: Resolve locked Flutter dependencies
@@ -147,3 +165,4 @@ jobs:
             fi
             printf 'Debug build only. No device or native instrumentation tests were run.\n'
           } >> "$GITHUB_STEP_SUMMARY"
+          df -h "$GITHUB_WORKSPACE"

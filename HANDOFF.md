@@ -5,7 +5,7 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-22 — CI ro‘yxatga olindi; WIP run ishlamoqda
+## 2026-10-22 — CI ro‘yxatga olindi; test224 PASS, universal build'da runner disk full
 
 Foydalanuvchi main'ga **faqat** `.github/workflows/wip-android-debug.yml` qo‘shishga
 aniq ruxsat berdi. Main commit `8871b3ac007ab05402949b3eacd4327340c6913c`, sole
@@ -18,8 +18,14 @@ Bu ruxsat boshqa main o‘zgarishlari yoki WIP application merge uchun emas.
 Run `39811651782` faqat `workflow_dispatch`, branch WIP, source
 `f145cceb7338ea93ff95324f793717dc56565683`:
 https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39811651782
-Dependency resolution, analyze va Flutter test step'lari PASS. APK build hozircha
-in progress; final test count/APK/artifact hali yakuniy logdan tekshirilmagan.
+Dependency resolution PASS, analyze No issues (11.5s), barcha224 Flutter test PASS.
+APK `:app:stripDebugDebugSymbols` bosqichida `No space left on device` bilan FAIL
+(9m45s); setup'dan so‘ng hosted runnerda9.8GiB qolgan. SIGSEGV kuzatilmadi.
+Integrity/upload skipped, artifact API0. Bitta maqsadli WIP-only CI fix: faqat
+disposable hosted VM'da sdkmanager bilan kerakmas NDK versiyalarini olib tashlash,
+required28.2 saqlash; hosted/exactSDK/symlink guard va disk diagnostics. App/ABI/
+Gradle/Java versiyalari o‘zgarmaydi. Bitta yangi manual validation natijasi kutiladi;
+avtomatik retry yo‘q, main workflow registration nusxasiga yana tegilmaydi.
 Lokal katta build/test, device install va foydalanuvchi data o‘zgarishi yo‘q.
 Texnik tafsilot va xavfsiz artifact chegaralari `BILGA_CI.md`da.
 

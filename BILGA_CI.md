@@ -37,9 +37,22 @@ syntax and credential patterns were checked before registration. A dispatch on
 `f145cceb7338ea93ff95324f793717dc56565683`:
 <https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39811651782>.
 
-The run's dependency resolution, analyzer and Flutter-test steps have succeeded.
-APK build is still in progress at this checkpoint; no APK/artifact success is
-claimed. Final counts and build outcome must be read from the completed run log.
+The completed run's dependency resolution succeeded; analyze found no issues
+(11.5s), and **all 224 Flutter tests passed**. The job failed after 13m43s because
+the universal APK's `:app:stripDebugDebugSymbols` task exhausted the hosted runner's
+disk: `LLVM ERROR: IO failure on output stream: No space left on device`.
+There was 9.8 GiB free after SDK setup. The APK build failed in 9m45s; integrity
+verification and upload were skipped, and the artifact API confirmed zero files.
+No Dart/Java SIGSEGV was present in this run's log. Native device tests were not run.
+
+One targeted WIP-only CI correction removes unused SDK-managed NDK versions from
+the **disposable GitHub-hosted VM**, retaining required NDK 28.2.13676358. It uses
+`sdkmanager --uninstall` for detected numeric-version NDK packages only, with
+hosted-runner, exact SDK-root and symlink guards. No local SDK/files, unrelated
+toolchains, application files, ABI targets or Gradle versions are changed. Disk
+usage is printed before/after setup and at job completion. This WIP correction
+does not modify the registration copy on `main`; dispatch reads the WIP workflow.
+Its result requires one new manual validation run, not automatic retry loops.
 
 ## Workflow
 
