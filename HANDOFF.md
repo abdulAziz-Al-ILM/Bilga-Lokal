@@ -1,9 +1,39 @@
 # Bilga — loyiha handoff’i
 
-Yangilangan: **2026-10-16**
+Yangilangan: **2026-10-22**
 Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-recovery**.
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
+
+## 2026-10-22 — yangi JVM SIGSEGV; WIP saqlandi, davom ettirish to‘xtadi
+
+Boshlang‘ich lokal/remote WIP `407feea3e4fe1424c283fa66f4c69465e02e48b4` bir xil,
+tree clean, repo private, fsck PASS. Bitta cached-engine Todo test PASS (2s), keyingi
+18 tegishli Flutter test PASS (14s), analyze No issues (10.8s). Bu RAM barqarorligini
+to‘liq tasdiqlamadi: native test APK buildida OpenJDK21.0.12.1 single-use daemon
+20:38:05 da, 22s ishlagach, GC Thread#1 ichida SIGSEGV/SEGV_MAPERR bilan quladi.
+Frame `G1ParScanThreadState::trim_queue_to_threshold`; lokal ignored crash log
+`hs_err_pid17726.log`. Aniq RAM/JVM sabab isbotlanmagan; qayta build yoki versiya/GC
+almashtirish bajarilmadi. Native testlar, yangi APK va haqiqiy qurilma sinovi yo‘q.
+
+Source WIP checkpointlar private branchga push qilinib remote SHA tasdiqlandi:
+`2ca5c879cca28045dddd74e869fc6b78abda751d` va
+`0e8f407fd7f8a83a01ed84221c241e7f88b508f8`.
+Widget native preset menyusiga custom entry va nonexported TodoSnoozeActivity
+qo‘shildi, widget custom timestamp rad etilishi olib tashlanib mavjud capability /
+lock / lease / SQLCipher tranzaksiyasi saqlandi. Spinner input clearFocus bilan
+o‘qiladi, future validation bor, deadline yozilmaydi. Tayyor 99216b2 sync qayta
+ishlatiladi. **Yangi native kod build/device'da hali tasdiqlanmagan**.
+
+Debug-only DUMP/shell ruxsatli inspector faqat rezerv sinov taskining SQL/mirror
+holatini read-only o‘qiydi; u instrumentation kabi app'ni qayta ishga tushirmasdan
+alarmni kuzatish uchun, release'da yo‘q. UI probe yangi20261022 sinov nomini taniydi.
+Qurilmaga install/data/UI o‘zgarishi bajarilmadi; Tab16 ulanganligi read-only tekshirildi.
+
+Holat va yangi to‘xtash diagnostikasi: `BILGA_PROGRESS_20261022.md`.
+Koddan oldindan o‘qilgan 7 kartochka inventari/backlog: `BILGA_CARD_AUDIT_20261022.md`;
+bu dastlabki audit, runtime/full audit PASS emas. Doimiy Todo notification va Habits
+upgrade boshlanmagan. Core ovozli buyruqlariga va main branchga tegilmadi.
 
 ## 2026-10-16 — Recovery tekshiruvi (WIP)
 
