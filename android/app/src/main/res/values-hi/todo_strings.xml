@@ -9,4 +9,8 @@
     <string name="tw_empty">अभी तक यहां कुछ भी नहीं है</string>
     <string name="tw_reminders">रिमाइंडर</string>
     <string name="tw_limits">Android रिमाइंडर में देरी कर सकता है या पैनल छिपा सकता है। सूचना, सटीक अलार्म और बैटरी सेटिंग जाँचें; पॉप-अप की गारंटी नहीं है।</string>
+    <string name="tw_custom">समय चुनें</string>
+    <string name="tw_save">सहेजें</string>
+    <string name="tw_cancel">रद्द करें</string>
+    <string name="tw_future">रिमाइंडर के लिए भविष्य का समय चुनें।</string>
 </resources>

@@ -9,4 +9,8 @@
     <string name="tw_empty">Bado hakuna kitu hapa</string>
     <string name="tw_reminders">Vikumbusho</string>
     <string name="tw_limits">Android inaweza kuchelewesha vikumbusho au kuficha paneli. Angalia arifa, kengele sahihi na betri; arifa ibukizi haihakikishwi.</string>
+    <string name="tw_custom">Chagua wakati</string>
+    <string name="tw_save">Hifadhi</string>
+    <string name="tw_cancel">Ghairi</string>
+    <string name="tw_future">Chagua wakati wa baadaye wa kikumbusho.</string>
 </resources>

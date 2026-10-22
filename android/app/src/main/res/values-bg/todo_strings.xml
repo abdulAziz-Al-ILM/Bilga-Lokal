@@ -9,4 +9,8 @@
     <string name="tw_empty">Тук още няма нищо</string>
     <string name="tw_reminders">Напомняния</string>
     <string name="tw_limits">Android може да забави напомнянията или да скрие панелите. Проверете известията, точните аларми и батерията; изскачащо известие не е гарантирано.</string>
+    <string name="tw_custom">Избор на час</string>
+    <string name="tw_save">Запазване</string>
+    <string name="tw_cancel">Отказ</string>
+    <string name="tw_future">Изберете бъдещ час за напомняне.</string>
 </resources>

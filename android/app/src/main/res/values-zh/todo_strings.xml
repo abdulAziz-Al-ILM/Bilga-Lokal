@@ -9,4 +9,8 @@
     <string name="tw_empty">这里还没有内容</string>
     <string name="tw_reminders">提醒</string>
     <string name="tw_limits">Android 可能延迟提醒或隐藏浮动面板。请检查通知、精确闹钟和电池设置；无法保证始终显示悬浮通知。</string>
+    <string name="tw_custom">选择时间</string>
+    <string name="tw_save">保存</string>
+    <string name="tw_cancel">取消</string>
+    <string name="tw_future">请选择未来的提醒时间。</string>
 </resources>

@@ -9,4 +9,8 @@
     <string name="tw_empty">Qui ancora niente</string>
     <string name="tw_reminders">Promemoria</string>
     <string name="tw_limits">Android può ritardare promemoria o nascondere pannelli. Controlla notifiche, sveglie esatte e batteria; la comparsa del popup non è garantita.</string>
+    <string name="tw_custom">Scegli l’ora</string>
+    <string name="tw_save">Salva</string>
+    <string name="tw_cancel">Annulla</string>
+    <string name="tw_future">Scegli un orario futuro per il promemoria.</string>
 </resources>

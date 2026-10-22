@@ -9,4 +9,8 @@
     <string name="tw_empty">Zatím tu nic není</string>
     <string name="tw_reminders">Připomínky</string>
     <string name="tw_limits">Android může připomínky zpozdit nebo skrýt panely. Zkontrolujte oznámení, přesné budíky a baterii; vyskakovací oznámení není zaručeno.</string>
+    <string name="tw_custom">Vybrat čas</string>
+    <string name="tw_save">Uložit</string>
+    <string name="tw_cancel">Zrušit</string>
+    <string name="tw_future">Vyberte budoucí čas připomínky.</string>
 </resources>

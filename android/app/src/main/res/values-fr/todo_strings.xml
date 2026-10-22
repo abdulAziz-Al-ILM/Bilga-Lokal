@@ -9,4 +9,8 @@
     <string name="tw_empty">Rien ici pour l\'instant</string>
     <string name="tw_reminders">Rappels</string>
     <string name="tw_limits">Android peut retarder les rappels ou masquer les panneaux. Vérifiez notifications, alarmes précises et batterie ; l’affichage flottant n’est pas garanti.</string>
+    <string name="tw_custom">Choisir l’heure</string>
+    <string name="tw_save">Enregistrer</string>
+    <string name="tw_cancel">Annuler</string>
+    <string name="tw_future">Choisissez une heure de rappel future.</string>
 </resources>

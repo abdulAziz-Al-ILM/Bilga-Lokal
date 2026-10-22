@@ -9,4 +9,8 @@
     <string name="tw_empty">Ei täällä vielä mitään</string>
     <string name="tw_reminders">Muistutukset</string>
     <string name="tw_limits">Android voi viivästyttää muistutuksia tai piilottaa paneelit. Tarkista ilmoitukset, tarkat hälytykset ja akku; ponnahdusilmoitusta ei taata.</string>
+    <string name="tw_custom">Valitse aika</string>
+    <string name="tw_save">Tallenna</string>
+    <string name="tw_cancel">Peruuta</string>
+    <string name="tw_future">Valitse tuleva muistutusaika.</string>
 </resources>

@@ -90,6 +90,10 @@ class TodoWidget: AppWidgetProvider() {
                     views.setTextViewText(R.id.todo_widget_title,label("reminderSnooze",R.string.tw_snooze))
                     views.setOnClickPendingIntent(R.id.todo_widget_title,TodoNativeActions.pending(c,id,menuTask,"menu"))
                     val menu=RemoteViews(c.packageName,R.layout.todo_widget_snooze)
+                    menu.setViewVisibility(R.id.todo_snoozeCustom,View.VISIBLE)
+                    menu.setTextViewText(R.id.todo_snoozeCustom,label("snoozeCustom",R.string.tw_custom))
+                    menu.setTextColor(R.id.todo_snoozeCustom,foreground)
+                    menu.setOnClickPendingIntent(R.id.todo_snoozeCustom,TodoSnoozeActivity.pending(c,id,menuTask))
                     for((view,pair) in listOf(R.id.todo_snooze5 to (5 to "snooze5"),R.id.todo_snooze10 to (10 to "snooze10"),R.id.todo_snooze30 to (30 to "snooze30"),R.id.todo_snooze60 to (60 to "snooze60"),R.id.todo_snoozeTomorrow to (-1 to "tomorrow"))) {
                         menu.setTextViewText(view,root.optJSONObject("labels")?.optString(pair.second) ?: "")
                         menu.setTextColor(view,foreground)

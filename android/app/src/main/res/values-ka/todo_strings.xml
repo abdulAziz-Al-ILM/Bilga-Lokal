@@ -9,4 +9,8 @@
     <string name="tw_empty">აქ ჯერ არაფერია</string>
     <string name="tw_reminders">შეხსენებები</string>
     <string name="tw_limits">Android-მა შეიძლება შეაყოვნოს შეხსენება ან დამალოს პანელი. შეამოწმეთ შეტყობინებების, ზუსტი მაღვიძარისა და ბატარეის პარამეტრები; ამომხტარი შეტყობინება გარანტირებული არ არის.</string>
+    <string name="tw_custom">დროის არჩევა</string>
+    <string name="tw_save">შენახვა</string>
+    <string name="tw_cancel">გაუქმება</string>
+    <string name="tw_future">შეხსენებისთვის აირჩიეთ მომავალი დრო.</string>
 </resources>

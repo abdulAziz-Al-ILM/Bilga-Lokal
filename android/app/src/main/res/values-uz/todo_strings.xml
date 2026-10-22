@@ -9,4 +9,8 @@
     <string name="tw_empty">Hozircha bo‘sh</string>
     <string name="tw_reminders">Eslatmalar</string>
     <string name="tw_limits">Android eslatmani kechiktirishi yoki suzuvchi oynani yashirishi mumkin. Bildirishnoma, aniq alarm va batareya sozlamalarini tekshiring; heads-up kafolatlanmaydi.</string>
+    <string name="tw_custom">Vaqt tanlash</string>
+    <string name="tw_save">Saqlash</string>
+    <string name="tw_cancel">Bekor qilish</string>
+    <string name="tw_future">Kelajakdagi eslatma vaqtini tanlang.</string>
 </resources>

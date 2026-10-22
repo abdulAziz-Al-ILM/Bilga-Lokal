@@ -9,4 +9,8 @@
     <string name="tw_empty">Hier ist noch nichts</string>
     <string name="tw_reminders">Erinnerungen</string>
     <string name="tw_limits">Android kann Erinnerungen verzögern oder Fenster verbergen. Prüfen Sie Benachrichtigungen, genaue Alarme und Akku; Einblendungen sind nicht garantiert.</string>
+    <string name="tw_custom">Zeit wählen</string>
+    <string name="tw_save">Speichern</string>
+    <string name="tw_cancel">Abbrechen</string>
+    <string name="tw_future">Wählen Sie einen zukünftigen Erinnerungszeitpunkt.</string>
 </resources>

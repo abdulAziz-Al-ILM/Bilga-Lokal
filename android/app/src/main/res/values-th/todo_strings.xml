@@ -9,4 +9,8 @@
     <string name="tw_empty">ยังไม่มีสิ่งใดที่นี่</string>
     <string name="tw_reminders">การเตือน</string>
     <string name="tw_limits">Android อาจเลื่อนการเตือนหรือซ่อนแผงลอย ตรวจสอบการแจ้งเตือน นาฬิกาปลุกที่แม่นยำ และแบตเตอรี่ ไม่รับประกันป๊อปอัป</string>
+    <string name="tw_custom">เลือกเวลา</string>
+    <string name="tw_save">บันทึก</string>
+    <string name="tw_cancel">ยกเลิก</string>
+    <string name="tw_future">เลือกเวลาเตือนในอนาคต</string>
 </resources>

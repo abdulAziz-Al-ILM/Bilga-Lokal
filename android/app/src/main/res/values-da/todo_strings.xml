@@ -9,4 +9,8 @@
     <string name="tw_empty">Intet her endnu</string>
     <string name="tw_reminders">Påmindelser</string>
     <string name="tw_limits">Android kan forsinke påmindelser eller skjule paneler. Tjek notifikationer, præcise alarmer og batteri; popup-notifikationer garanteres ikke.</string>
+    <string name="tw_custom">Vælg tidspunkt</string>
+    <string name="tw_save">Gem</string>
+    <string name="tw_cancel">Annuller</string>
+    <string name="tw_future">Vælg et fremtidigt tidspunkt for påmindelsen.</string>
 </resources>

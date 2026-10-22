@@ -9,4 +9,8 @@
     <string name="tw_empty">Nothing here yet</string>
     <string name="tw_reminders">Reminders</string>
     <string name="tw_limits">Android may delay reminders or hide floating panels. Check notification, precise alarm and battery settings; heads-up is not guaranteed.</string>
+    <string name="tw_custom">Choose time</string>
+    <string name="tw_save">Save</string>
+    <string name="tw_cancel">Cancel</string>
+    <string name="tw_future">Choose a future reminder time.</string>
 </resources>

@@ -9,4 +9,8 @@
     <string name="tw_empty">שום דבר כאן עדיין</string>
     <string name="tw_reminders">תזכורות</string>
     <string name="tw_limits">Android עשוי לעכב תזכורות או להסתיר חלוניות. בדקו התראות, שעון מדויק וסוללה; התראה קופצת אינה מובטחת.</string>
+    <string name="tw_custom">בחירת שעה</string>
+    <string name="tw_save">שמור</string>
+    <string name="tw_cancel">בטל</string>
+    <string name="tw_future">יש לבחור מועד עתידי לתזכורת.</string>
 </resources>

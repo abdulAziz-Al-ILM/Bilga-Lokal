@@ -9,4 +9,8 @@
     <string name="tw_empty">এখানে এখনও কিছুই নেই</string>
     <string name="tw_reminders">অনুস্মারক</string>
     <string name="tw_limits">Android অনুস্মারক দেরি করতে বা প্যানেল লুকাতে পারে। বিজ্ঞপ্তি, নির্ভুল অ্যালার্ম ও ব্যাটারি সেটিংস দেখুন; পপ-আপ নিশ্চিত নয়।</string>
+    <string name="tw_custom">সময় বাছুন</string>
+    <string name="tw_save">সংরক্ষণ করুন</string>
+    <string name="tw_cancel">বাতিল করুন</string>
+    <string name="tw_future">অনুস্মারকের জন্য ভবিষ্যতের সময় বাছুন।</string>
 </resources>

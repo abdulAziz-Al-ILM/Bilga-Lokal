@@ -9,4 +9,8 @@
     <string name="tw_empty">Nada aqui ainda</string>
     <string name="tw_reminders">Lembretes</string>
     <string name="tw_limits">O Android pode atrasar lembretes ou ocultar painéis. Verifique notificações, alarmes exatos e bateria; a exibição flutuante não é garantida.</string>
+    <string name="tw_custom">Escolher hora</string>
+    <string name="tw_save">Salvar</string>
+    <string name="tw_cancel">Cancelar</string>
+    <string name="tw_future">Escolha um horário futuro para o lembrete.</string>
 </resources>

@@ -9,4 +9,8 @@
     <string name="tw_empty">Тут ще нічого немає</string>
     <string name="tw_reminders">Нагадування</string>
     <string name="tw_limits">Android може затримувати нагадування або приховувати панелі. Перевірте сповіщення, точні будильники й батарею; спливне вікно не гарантується.</string>
+    <string name="tw_custom">Вибрати час</string>
+    <string name="tw_save">Зберегти</string>
+    <string name="tw_cancel">Скасувати</string>
+    <string name="tw_future">Виберіть майбутній час нагадування.</string>
 </resources>

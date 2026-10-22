@@ -9,4 +9,8 @@
     <string name="tw_empty">ここにはまだ何もありません</string>
     <string name="tw_reminders">リマインダー</string>
     <string name="tw_limits">Android が通知を遅らせたりパネルを隠したりする場合があります。通知、正確なアラーム、バッテリー設定を確認してください。ポップアップは保証されません。</string>
+    <string name="tw_custom">時刻を選択</string>
+    <string name="tw_save">保存</string>
+    <string name="tw_cancel">キャンセル</string>
+    <string name="tw_future">リマインダーは未来の時刻を選んでください。</string>
 </resources>

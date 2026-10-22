@@ -9,4 +9,8 @@
     <string name="tw_empty">Még nincs itt semmi</string>
     <string name="tw_reminders">Emlékeztetők</string>
     <string name="tw_limits">Az Android késleltetheti az emlékeztetőket vagy elrejtheti a paneleket. Ellenőrizze az értesítéseket, pontos riasztásokat és az akkumulátort; a felugró értesítés nem garantált.</string>
+    <string name="tw_custom">Időpont választása</string>
+    <string name="tw_save">Mentés</string>
+    <string name="tw_cancel">Mégse</string>
+    <string name="tw_future">Válasszon jövőbeli emlékeztetési időpontot.</string>
 </resources>

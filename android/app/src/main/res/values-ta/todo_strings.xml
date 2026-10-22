@@ -9,4 +9,8 @@
     <string name="tw_empty">இங்கே இன்னும் எதுவுமில்லை</string>
     <string name="tw_reminders">நினைவூட்டல்கள்</string>
     <string name="tw_limits">Android நினைவூட்டலைத் தாமதப்படுத்தலாம் அல்லது பலகையை மறைக்கலாம். அறிவிப்பு, துல்லிய அலாரம், பேட்டரி அமைப்புகளைப் பாருங்கள்; மேலெழும் அறிவிப்பு உறுதியல்ல.</string>
+    <string name="tw_custom">நேரத்தைத் தேர்வு செய்</string>
+    <string name="tw_save">சேமி</string>
+    <string name="tw_cancel">ரத்துசெய்</string>
+    <string name="tw_future">நினைவூட்டலுக்கு எதிர்கால நேரத்தைத் தேர்வு செய்யவும்.</string>
 </resources>

@@ -9,4 +9,8 @@
     <string name="tw_empty">Бұл жерде әлі ештеңе жоқ</string>
     <string name="tw_reminders">Еске салғыштар</string>
     <string name="tw_limits">Android еске салуды кешіктіруі немесе панельді жасыруы мүмкін. Хабарландыру, дәл дабыл және батарея баптауларын тексеріңіз; қалқымалы хабарламаға кепілдік жоқ.</string>
+    <string name="tw_custom">Уақыт таңдау</string>
+    <string name="tw_save">Сақтау</string>
+    <string name="tw_cancel">Болдырмау</string>
+    <string name="tw_future">Болашақ еске салу уақытын таңдаңыз.</string>
 </resources>

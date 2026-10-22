@@ -9,4 +9,8 @@
     <string name="tw_empty">Hier nog niets</string>
     <string name="tw_reminders">Herinneringen</string>
     <string name="tw_limits">Android kan herinneringen vertragen of panelen verbergen. Controleer meldingen, exacte alarmen en batterij; pop-ups zijn niet gegarandeerd.</string>
+    <string name="tw_custom">Tijd kiezen</string>
+    <string name="tw_save">Opslaan</string>
+    <string name="tw_cancel">Annuleren</string>
+    <string name="tw_future">Kies een toekomstig tijdstip voor de herinnering.</string>
 </resources>

@@ -9,4 +9,8 @@
     <string name="tw_empty">Burada henüz bir şey yok</string>
     <string name="tw_reminders">Hatırlatmalar</string>
     <string name="tw_limits">Android hatırlatmaları geciktirebilir veya panelleri gizleyebilir. Bildirim, tam alarm ve pil ayarlarını kontrol edin; açılır bildirim garanti edilmez.</string>
+    <string name="tw_custom">Saat seç</string>
+    <string name="tw_save">Kaydet</string>
+    <string name="tw_cancel">İptal</string>
+    <string name="tw_future">Gelecekte bir hatırlatma saati seçin.</string>
 </resources>

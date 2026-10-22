@@ -9,4 +9,8 @@
     <string name="tw_empty">Nimic aici încă</string>
     <string name="tw_reminders">Mementouri</string>
     <string name="tw_limits">Android poate întârzia mementourile sau ascunde panourile. Verificați notificările, alarmele exacte și bateria; afișarea pop-up nu este garantată.</string>
+    <string name="tw_custom">Alege ora</string>
+    <string name="tw_save">Salvați</string>
+    <string name="tw_cancel">Anulează</string>
+    <string name="tw_future">Alegeți o oră viitoare pentru memento.</string>
 </resources>

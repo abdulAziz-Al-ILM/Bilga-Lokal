@@ -9,4 +9,8 @@
     <string name="tw_empty">Nada aquí todavía</string>
     <string name="tw_reminders">Recordatorios</string>
     <string name="tw_limits">Android puede retrasar recordatorios u ocultar paneles. Revise notificaciones, alarmas exactas y batería; no se garantiza la ventana emergente.</string>
+    <string name="tw_custom">Elegir hora</string>
+    <string name="tw_save">guardar</string>
+    <string name="tw_cancel">Cancelar</string>
+    <string name="tw_future">Elija una hora futura para el recordatorio.</string>
 </resources>

@@ -86,17 +86,24 @@ internal object TodoNativeActions {
             db.setTransactionSuccessful();return next
         } finally { db.endTransaction() }
     }
+    internal fun authorizedTask(c:Context,root:JSONObject,intent:Intent):JSONObject? {
+        if(!permitted(c,root)) return null
+        val id=intent.getStringExtra("id") ?: return null
+        val widget=intent.getIntExtra("widget",-1)
+        if(widget!=-1 && !TodoWidget.ids(c).contains(widget)) return null
+        if(root.optString("blockedTask")==id) return null
+        val task=TodoReminders.tasks(root).firstOrNull { it.optString("id")==id && !it.optBoolean("done") } ?: return null
+        val token=intent.getStringExtra("token") ?: return null
+        if(token.isEmpty() || token!=task.optString("actionToken")) return null
+        if(widget==-1 && (task.optJSONObject("reminder")?.optBoolean("fired")!=true || !TodoTime.dueNow(JSONObject(task.toString()).apply { getJSONObject("reminder").put("fired",false) },System.currentTimeMillis()))) return null
+        return task
+    }
     @Synchronized fun perform(c:Context,intent:Intent):Boolean = synchronized(TodoReminders) {
         val root=TodoStore.read(c) ?: return false
-        if(!permitted(c,root)) return refused(c,"access_unavailable")
-        val id=intent.getStringExtra("id") ?: return false
+        val task=authorizedTask(c,root,intent) ?: return refused(c,"access_or_capability_unavailable")
+        val id=task.getString("id")
         val widget=intent.getIntExtra("widget",-1)
-        if(widget!=-1 && !TodoWidget.ids(c).contains(widget)) return false
-        val task=TodoReminders.tasks(root).firstOrNull { it.optString("id")==id && !it.optBoolean("done") } ?: return false
-        val token=intent.getStringExtra("token") ?: return false
-        if(token.isEmpty() || token!=task.optString("actionToken")) return refused(c,"stale_capability")
         val op=intent.getStringExtra("operation") ?: return false
-        if(widget==-1 && (task.optJSONObject("reminder")?.optBoolean("fired")!=true || !TodoTime.dueNow(JSONObject(task.toString()).apply { getJSONObject("reminder").put("fired",false) },System.currentTimeMillis()))) return refused(c,"reminder_not_due")
         if(op=="reminderMenu") {
             if(widget!=-1) return false
             // Expand the existing notification; never launch a Flutter Activity.
@@ -114,7 +121,7 @@ internal object TodoNativeActions {
         val at=if(op=="snooze") {
             val custom=intent.getStringExtra("at")
             if(custom!=null) {
-                if(widget!=-1 || (TodoTime.instant(custom) ?: 0)<=System.currentTimeMillis()) return refused(c,"custom_time_not_future")
+                if((TodoTime.instant(custom) ?: 0)<=System.currentTimeMillis()) return refused(c,"custom_time_not_future")
                 custom
             } else TodoTime.snooze(intent.getIntExtra("minutes",0))
         } else null
@@ -142,14 +149,15 @@ internal object TodoNativeActions {
             false
         }
     }
-    fun receive(c:Context,intent:Intent,finished:()->Unit) {
+    fun submit(c:Context,intent:Intent,result:(Boolean)->Unit) {
         executor.execute {
             val ok=try { perform(c,intent) } catch (_:Exception) { false }
-            Handler(Looper.getMainLooper()).post {
-                if(!ok) Toast.makeText(c,c.getString(R.string.tw_limits),Toast.LENGTH_LONG).show()
-                finished()
-            }
+            Handler(Looper.getMainLooper()).post { result(ok) }
         }
+    }
+    fun receive(c:Context,intent:Intent,finished:()->Unit) = submit(c,intent) { ok ->
+        if(!ok) Toast.makeText(c,c.getString(R.string.tw_limits),Toast.LENGTH_LONG).show()
+        finished()
     }
 }
 class TodoActionReceiver:BroadcastReceiver() {

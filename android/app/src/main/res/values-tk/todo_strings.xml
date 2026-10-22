@@ -9,4 +9,8 @@
     <string name="tw_empty">Entek hiç zat ýok</string>
     <string name="tw_reminders">Ýatlatmalar</string>
     <string name="tw_limits">Android ýatlatmany gijikdirip ýa-da paneli gizläp biler. Bildiriş, takyk alarm we batareýa sazlamalaryny barlaň; ýüzýän bildiriş kepillendirilmeýär.</string>
+    <string name="tw_custom">Wagt saýlamak</string>
+    <string name="tw_save">Ýatda sakla</string>
+    <string name="tw_cancel">Ýatyr</string>
+    <string name="tw_future">Geljekki ýatlatma wagtyny saýlaň.</string>
 </resources>

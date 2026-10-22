@@ -9,4 +9,8 @@
     <string name="tw_empty">Chưa có gì ở đây</string>
     <string name="tw_reminders">Lời nhắc</string>
     <string name="tw_limits">Android có thể trì hoãn lời nhắc hoặc ẩn bảng nổi. Kiểm tra thông báo, báo thức chính xác và pin; không bảo đảm thông báo bật lên.</string>
+    <string name="tw_custom">Chọn thời gian</string>
+    <string name="tw_save">Lưu</string>
+    <string name="tw_cancel">Hủy bỏ</string>
+    <string name="tw_future">Chọn thời gian nhắc trong tương lai.</string>
 </resources>

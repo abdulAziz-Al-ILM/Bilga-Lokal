@@ -9,4 +9,8 @@
     <string name="tw_empty">Jeszcze nic tu nie ma</string>
     <string name="tw_reminders">Przypomnienia</string>
     <string name="tw_limits">Android może opóźniać przypomnienia lub ukrywać panele. Sprawdź powiadomienia, dokładne alarmy i baterię; wyskakujące powiadomienie nie jest gwarantowane.</string>
+    <string name="tw_custom">Wybierz czas</string>
+    <string name="tw_save">Zapisz</string>
+    <string name="tw_cancel">Anuluj</string>
+    <string name="tw_future">Wybierz przyszły czas przypomnienia.</string>
 </resources>

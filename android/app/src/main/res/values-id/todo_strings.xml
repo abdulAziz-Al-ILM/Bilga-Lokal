@@ -9,4 +9,8 @@
     <string name="tw_empty">Belum ada apa pun di sini</string>
     <string name="tw_reminders">Pengingat</string>
     <string name="tw_limits">Android dapat menunda pengingat atau menyembunyikan panel. Periksa notifikasi, alarm tepat waktu dan baterai; notifikasi mengambang tidak dijamin.</string>
+    <string name="tw_custom">Pilih waktu</string>
+    <string name="tw_save">Simpan</string>
+    <string name="tw_cancel">Batal</string>
+    <string name="tw_future">Pilih waktu pengingat di masa depan.</string>
 </resources>

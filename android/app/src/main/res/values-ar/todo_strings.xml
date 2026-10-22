@@ -9,4 +9,8 @@
     <string name="tw_empty">لا شيء هنا بعد</string>
     <string name="tw_reminders">التذكيرات</string>
     <string name="tw_limits">قد يؤخر Android التذكيرات أو يخفي اللوحات. تحقق من إعدادات الإشعارات والمنبّه الدقيق والبطارية؛ لا يُضمن الظهور المنبثق.</string>
+    <string name="tw_custom">اختيار الوقت</string>
+    <string name="tw_save">حفظ</string>
+    <string name="tw_cancel">إلغاء</string>
+    <string name="tw_future">اختر وقتًا مستقبليًا للتذكير.</string>
 </resources>

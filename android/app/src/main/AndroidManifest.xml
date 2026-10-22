@@ -64,6 +64,7 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/></intent-filter>
         </activity>
         <receiver android:name=".TodoActionReceiver" android:exported="false"/>
+        <activity android:name=".TodoSnoozeActivity" android:exported="false" android:taskAffinity="" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize"/>
         <receiver android:name=".TodoReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
