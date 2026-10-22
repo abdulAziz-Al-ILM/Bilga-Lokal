@@ -31,7 +31,12 @@ class TodoSnoozeActivity : Activity() {
         setContentView(R.layout.todo_snooze_picker)
         val body=findViewById<LinearLayout>(R.id.todo_picker_body)
         body.setBackgroundColor(WidgetTheme.background(this))
-        findViewById<TextView>(R.id.todo_picker_title).apply { setText(R.string.tw_custom);setTextColor(WidgetTheme.foreground(this@TodoSnoozeActivity)) }
+        findViewById<TextView>(R.id.todo_picker_title).apply {
+            val root=TodoStore.read(this@TodoSnoozeActivity)
+            val task=root?.let { TodoNativeActions.authorizedTask(this@TodoSnoozeActivity,it,intent) }
+            text=getString(R.string.tw_custom)+(if(task?.optBoolean("widgetAllowed")==true) " · "+task.optString("title").take(160) else "")
+            setTextColor(WidgetTheme.foreground(this@TodoSnoozeActivity))
+        }
         val date=findViewById<DatePicker>(R.id.todo_picker_date)
         val time=findViewById<TimePicker>(R.id.todo_picker_time)
         val initial=ZonedDateTime.now().plusMinutes(10)

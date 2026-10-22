@@ -11,7 +11,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
  * No idle wait, no app restart; only static/synthetic labels and geometry leave
  * the device. User note/task text is never printed. */
 public final class WidgetUiProbe extends Instrumentation {
-    private static final String[] ALLOWED = {"Bilga Recovery 20261016","Bilga Notes Recovery 20261016","RecoveryTest",
+    private static final String[] ALLOWED = {"Bilga Recovery 20261022","Vaqt tanlash","Bilga Recovery 20261016","Bilga Notes Recovery 20261016","RecoveryTest",
    "Widget preview line one. Line two. Line three.","Vazifalar","Yozuvlar","Eslatmalar","Saqlash",
    "Vidjetda ko‘rsatishga ruxsat berish","Tasdiqlangan sarlavhalar","To-Do vidjeti","Notes vidjeti",
    "Davom etish","Kechiktirish","Bajarildi","Bajarilgan","Bugun","OK","Cancel",
@@ -32,6 +32,22 @@ public final class WidgetUiProbe extends Instrumentation {
         return null;
     }
     private void fixtureAction() {
+        if("customSave".equals(requested)) {
+            AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();
+            if(find(root,"com.ilmmizan.bilga:id/todo_picker_title","Bilga Recovery 20261022")==null) throw new IllegalStateException("Visible new synthetic picker required");
+            AccessibilityNodeInfo time=find(root,"com.ilmmizan.bilga:id/todo_picker_time",null);
+            java.util.ArrayList<AccessibilityNodeInfo> fields=new java.util.ArrayList<>();
+            collectInputs(time,fields);
+            if(fields.size()<2) throw new IllegalStateException("Time inputs unavailable");
+            java.util.Calendar future=java.util.Calendar.getInstance();future.add(java.util.Calendar.MINUTE,2);
+            int hour=future.get(java.util.Calendar.HOUR_OF_DAY);
+            if(!android.text.format.DateFormat.is24HourFormat(getContext())) hour=hour%12==0 ? 12 : hour%12;
+            setText(fields.get(0),String.valueOf(hour));setText(fields.get(1),String.valueOf(future.get(java.util.Calendar.MINUTE)));
+            AccessibilityNodeInfo save=find(root,"com.ilmmizan.bilga:id/todo_picker_save",null);
+            if(save==null || !save.performAction(AccessibilityNodeInfo.ACTION_CLICK)) throw new IllegalStateException("Save unavailable");
+            future.set(java.util.Calendar.SECOND,0);future.set(java.util.Calendar.MILLISECOND,0);
+            output.append("Synthetic custom selection millis: ").append(future.getTimeInMillis()).append('\n');return;
+        }
         if("overlaySnooze5".equals(requested)) {
             for(android.view.accessibility.AccessibilityWindowInfo window:getUiAutomation().getWindows()) {
                 AccessibilityNodeInfo panel=window.getRoot();
@@ -43,20 +59,30 @@ public final class WidgetUiProbe extends Instrumentation {
             }
             throw new IllegalStateException("Visible synthetic overlay required");
         }
-        if(!"snooze5".equals(requested) && !"done".equals(requested)) throw new IllegalArgumentException("Unsupported fixture action");
+        if(!"snooze5".equals(requested) && !"done".equals(requested) && !"custom".equals(requested)) throw new IllegalArgumentException("Unsupported fixture action");
         AccessibilityNodeInfo root=getUiAutomation().getRootInActiveWindow();
-        AccessibilityNodeInfo title=find(root,"com.ilmmizan.bilga:id/todo_widget_row_title","Bilga Recovery 20261016");
+        AccessibilityNodeInfo title=find(root,"com.ilmmizan.bilga:id/todo_widget_row_title","Bilga Recovery 20261022");
+        if(title==null) title=find(root,"com.ilmmizan.bilga:id/todo_widget_row_title","Bilga Recovery 20261016");
         if(title==null) throw new IllegalStateException("Visible synthetic fixture required");
         AccessibilityNodeInfo row=title.getParent().getParent();
         AccessibilityNodeInfo button=find(row,"com.ilmmizan.bilga:id/todo_widget_row_"+("done".equals(requested) ? "done" : "snooze"),null);
         if(button==null || !button.performAction(AccessibilityNodeInfo.ACTION_CLICK)) throw new IllegalStateException("Fixture button unavailable");
-        if("snooze5".equals(requested)) {
+        if("snooze5".equals(requested) || "custom".equals(requested)) {
             AccessibilityNodeInfo choice=null;
-            for(int i=0;i<20 && choice==null;i++) { android.os.SystemClock.sleep(100);choice=find(getUiAutomation().getRootInActiveWindow(),"com.ilmmizan.bilga:id/todo_snooze5",null); }
+            for(int i=0;i<20 && choice==null;i++) { android.os.SystemClock.sleep(100);choice=find(getUiAutomation().getRootInActiveWindow(),"com.ilmmizan.bilga:id/"+("custom".equals(requested) ? "todo_snoozeCustom" : "todo_snooze5"),null); }
             if(choice==null || !choice.performAction(AccessibilityNodeInfo.ACTION_CLICK)) throw new IllegalStateException("Inline preset unavailable");
         }
         android.os.SystemClock.sleep(1500);
         output.append("Synthetic widget action delivered: ").append(requested).append('\n');
+    }
+    private void collectInputs(AccessibilityNodeInfo node,java.util.ArrayList<AccessibilityNodeInfo> fields) {
+        if(node==null)return;
+        if(node.isVisibleToUser() && "android.widget.EditText".contentEquals(String.valueOf(node.getClassName()))) fields.add(node);
+        for(int i=0;i<node.getChildCount();i++) collectInputs(node.getChild(i),fields);
+    }
+    private void setText(AccessibilityNodeInfo node,String value) {
+        Bundle args=new Bundle();args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,value);
+        if(!node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,args)) throw new IllegalStateException("Time input rejected");
     }
     private void walk(AccessibilityNodeInfo node) {
         String text=String.valueOf(node.getText())+"\n"+String.valueOf(node.getContentDescription());
