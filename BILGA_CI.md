@@ -1,5 +1,37 @@
 # WIP Android CI
 
+## Latest verified run — PASS, 2026-10-22
+
+Run <https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39814336862>
+completed successfully in 15m09s. Event: `workflow_dispatch`; branch:
+`wip/todo-widget-recovery`; tested source:
+`8bf0faff7cc83452a85faa9a451971bd73058af9`.
+
+| Check | Result |
+| --- | --- |
+| Locked `flutter pub get` | PASS |
+| `flutter analyze` | PASS, no issues, 13.9s |
+| Flutter tests | All 224 PASS |
+| Universal Android debug APK | PASS, build step 11m18s |
+| ZIP CRC / APK v2 signature / SHA-256 | PASS |
+| APK artifact upload and artifact API | PASS, one unexpired artifact |
+
+Download (private repository login required):
+<https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39814336862/artifacts/12441708102>.
+Artifact size: 293,931,559 bytes; expiry: 2026-10-29 16:43:19 UTC. Contents are
+`app-debug.apk`, `SHA256SUMS` and `SOURCE.txt` only. APK SHA-256:
+`752a548c7193f9bce219dc91cc43871407b6c52fcd97ef0af9c0f49a6a6206d0`.
+
+The SDK manager removed unused hosted NDK packages 27.3.13750724, 29.0.14206865
+and 30.0.16248370. Required NDK 28.2.13676358 was installed/preserved. There was
+17 GiB free after setup and 5.4 GiB after the job. The first run's diagnosed disk
+exhaustion was resolved by this single targeted correction and one manual
+validation run. Neither run logged Dart/Java SIGSEGV. No further reruns were needed.
+
+No local build/test, tablet install, database/model/signing-key change or Core
+voice-code change occurred. Native instrumentation/device flows were not tested.
+Later documentation-only checkpoints do not change this artifact's tested SHA.
+
 ## Initial validation — 2026-10-22
 
 Workflow source was committed/pushed as
@@ -27,8 +59,8 @@ The owner explicitly approved adding **only**
 branch or merging any WIP application changes. Registration commit
 `8871b3ac007ab05402949b3eacd4327340c6913c` has the existing main commit
 `ae7b27c1e4f7ff15f386361ecec109688f7b35e6` as its sole parent and adds exactly that
-one file. GitHub confirmed its file list and SHA. The workflow is byte-identical
-to WIP's copy. Main's application files/history and WIP's working tree were
+one file. GitHub confirmed its file list and SHA. At registration the workflow was
+byte-identical to WIP's copy. Main's application files/history and WIP's working tree were
 preserved. The private repository's default branch remains `main`.
 
 Manual/private/exact-WIP guards, read-only permissions, pinned action SHAs, Bash
@@ -52,7 +84,8 @@ hosted-runner, exact SDK-root and symlink guards. No local SDK/files, unrelated
 toolchains, application files, ABI targets or Gradle versions are changed. Disk
 usage is printed before/after setup and at job completion. This WIP correction
 does not modify the registration copy on `main`; dispatch reads the WIP workflow.
-Its result requires one new manual validation run, not automatic retry loops.
+Its successful single manual validation is recorded above; there are no automatic
+retry loops.
 
 ## Workflow
 

@@ -5,13 +5,35 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
+## 2026-10-22 — GitHub hosted CI PASS; APK artifact tayyor
+
+Latest run `39814336862`, manual `workflow_dispatch`, private WIP, tested source
+`8bf0faff7cc83452a85faa9a451971bd73058af9`, job15m09s — **SUCCESS**:
+https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39814336862
+Locked pub get PASS, analyze No issues (13.9s), barcha224 Flutter test PASS,
+universal debug APK PASS (build step11m18s), ZIP CRC/APK v2 signature/SHA256 PASS.
+Artifact API bitta unexpired artifact'ni tasdiqladi, size293931559 bytes:
+https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39814336862/artifacts/12441708102
+Expiry2026-10-29 16:43:19UTC; faqat APK, SHA256SUMS, SOURCE.txt. APK SHA256:
+`752a548c7193f9bce219dc91cc43871407b6c52fcd97ef0af9c0f49a6a6206d0`.
+
+Birinchi run'dagi disk full uchun bitta maqsadli CI correction va bitta nazorat
+run bajarildi. Faqat disposable hosted runner SDK'sidan kerakmas NDK27.3/29/30
+sdkmanager bilan olindi; required28.2 saqlandi. Setup'dan keyin17GiB, oxirida5.4GiB
+bo‘sh qoldi. Hech qaysi run logida Dart/Java SIGSEGV yo‘q. Bu lokal RAM barqarorligi
+tasdig‘i emas. Lokal katta build/test, tablet install, foydalanuvchi database/model/
+private key/production signing va Core ovozli code o‘zgarishi bajarilmadi. Native
+instrumentation/device oqimlari bu CI doirasida tekshirilmagan. Keyingi docs-only
+checkpoint APK'ning source SHA'sini o‘zgartirmaydi. Main8871b3a faqat ruxsat berilgan
+workflow registration; default main o‘zgarmagan, boshqa main fayllari saqlangan.
+
 ## 2026-10-22 — CI ro‘yxatga olindi; test224 PASS, universal build'da runner disk full
 
 Foydalanuvchi main'ga **faqat** `.github/workflows/wip-android-debug.yml` qo‘shishga
 aniq ruxsat berdi. Main commit `8871b3ac007ab05402949b3eacd4327340c6913c`, sole
 parent `ae7b27c1e4f7ff15f386361ecec109688f7b35e6`; GitHub commit/file list aynan
 bitta added workflow'ni tasdiqladi. Boshqa main fayllari/tarixi o‘zgarmadi, default
-branch main bo‘lib qoldi. WIP bilan workflow byte-identical; guard manual/private/
+branch main bo‘lib qoldi. Registration paytida WIP bilan workflow byte-identical; guard manual/private/
 exact-WIP, read-only permission, SHA-pinned actions va Bash sintaksisi tekshirildi.
 Bu ruxsat boshqa main o‘zgarishlari yoki WIP application merge uchun emas.
 
@@ -24,8 +46,8 @@ APK `:app:stripDebugDebugSymbols` bosqichida `No space left on device` bilan FAI
 Integrity/upload skipped, artifact API0. Bitta maqsadli WIP-only CI fix: faqat
 disposable hosted VM'da sdkmanager bilan kerakmas NDK versiyalarini olib tashlash,
 required28.2 saqlash; hosted/exactSDK/symlink guard va disk diagnostics. App/ABI/
-Gradle/Java versiyalari o‘zgarmaydi. Bitta yangi manual validation natijasi kutiladi;
-avtomatik retry yo‘q, main workflow registration nusxasiga yana tegilmaydi.
+Gradle/Java versiyalari o‘zgarmaydi. Yagona yangi manual validation yuqorida PASS;
+avtomatik retry yo‘q, main workflow registration nusxasiga yana tegilmagan.
 Lokal katta build/test, device install va foydalanuvchi data o‘zgarishi yo‘q.
 Texnik tafsilot va xavfsiz artifact chegaralari `BILGA_CI.md`da.
 
