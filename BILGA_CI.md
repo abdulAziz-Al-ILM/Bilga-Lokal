@@ -15,10 +15,31 @@ One manual dispatch attempt returned:
 HTTP 404: workflow wip-android-debug.yml not found on the default branch
 ```
 
-No CI run, test result or APK artifact exists from that attempt. `main` and the
-default-branch setting were left unchanged. Owner approval is pending to resolve
-GitHub's registration requirement described below. Static checks are not a
-replacement for an actual runner execution.
+No CI run, test result or APK artifact existed from that attempt. `main` and the
+default-branch setting were left unchanged then. Owner approval was requested to
+resolve GitHub's registration requirement; the registration below supersedes
+that blocker. Static checks are not a replacement for an actual runner execution.
+
+## Owner-authorized registration — 2026-10-22
+
+The owner explicitly approved adding **only**
+`.github/workflows/wip-android-debug.yml` to `main`, without changing the default
+branch or merging any WIP application changes. Registration commit
+`8871b3ac007ab05402949b3eacd4327340c6913c` has the existing main commit
+`ae7b27c1e4f7ff15f386361ecec109688f7b35e6` as its sole parent and adds exactly that
+one file. GitHub confirmed its file list and SHA. The workflow is byte-identical
+to WIP's copy. Main's application files/history and WIP's working tree were
+preserved. The private repository's default branch remains `main`.
+
+Manual/private/exact-WIP guards, read-only permissions, pinned action SHAs, Bash
+syntax and credential patterns were checked before registration. A dispatch on
+`main` cannot run the job. The actual manual dispatch selected WIP commit
+`f145cceb7338ea93ff95324f793717dc56565683`:
+<https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39811651782>.
+
+The run's dependency resolution, analyzer and Flutter-test steps have succeeded.
+APK build is still in progress at this checkpoint; no APK/artifact success is
+claimed. Final counts and build outcome must be read from the completed run log.
 
 ## Workflow
 
@@ -69,11 +90,11 @@ no billing settings or paid runner configuration are changed.
 GitHub documents that a new `workflow_dispatch` workflow must exist on the default
 branch before it can be manually triggered:
 <https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow>.
-The repository's default branch is currently `main`. This change adds the workflow
-only to WIP and does not change `main`, repository visibility or the default branch.
-If GitHub refuses dispatch because the workflow is not registered, owner approval
-is required before placing a copy on `main` or changing repository settings. The
-WIP-only job guard must remain in place even if registration is later approved.
+The repository's default branch remains `main`. The owner-authorized registration
+adds only the workflow file there; application changes remain on WIP. Further
+changes to `main` or repository settings require explicit authorization. Keep the
+WIP-only job guard in both copies. A WIP workflow correction does not authorize
+merging other WIP changes into `main`.
 
 Once GitHub accepts the workflow, run:
 

@@ -5,6 +5,24 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
+## 2026-10-22 — CI ro‘yxatga olindi; WIP run ishlamoqda
+
+Foydalanuvchi main'ga **faqat** `.github/workflows/wip-android-debug.yml` qo‘shishga
+aniq ruxsat berdi. Main commit `8871b3ac007ab05402949b3eacd4327340c6913c`, sole
+parent `ae7b27c1e4f7ff15f386361ecec109688f7b35e6`; GitHub commit/file list aynan
+bitta added workflow'ni tasdiqladi. Boshqa main fayllari/tarixi o‘zgarmadi, default
+branch main bo‘lib qoldi. WIP bilan workflow byte-identical; guard manual/private/
+exact-WIP, read-only permission, SHA-pinned actions va Bash sintaksisi tekshirildi.
+Bu ruxsat boshqa main o‘zgarishlari yoki WIP application merge uchun emas.
+
+Run `39811651782` faqat `workflow_dispatch`, branch WIP, source
+`f145cceb7338ea93ff95324f793717dc56565683`:
+https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39811651782
+Dependency resolution, analyze va Flutter test step'lari PASS. APK build hozircha
+in progress; final test count/APK/artifact hali yakuniy logdan tekshirilmagan.
+Lokal katta build/test, device install va foydalanuvchi data o‘zgarishi yo‘q.
+Texnik tafsilot va xavfsiz artifact chegaralari `BILGA_CI.md`da.
+
 ## 2026-10-22 — manual WIP CI tayyor; GitHub dispatch hali bloklangan
 
 Foydalanuvchi lokal katta build/testlarni qayta bajarmaslikni buyurdi. Private WIP
