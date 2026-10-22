@@ -1,0 +1,149 @@
+name: WIP Android debug
+run-name: WIP debug · ${{ github.sha }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bilga-wip-android-debug
+  cancel-in-progress: false
+
+jobs:
+  validate-and-build:
+    # workflow_dispatch has no branch filter. Keep this guard even if the
+    # workflow is later registered on the default branch with owner approval.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'abdulAziz-Al-ILM/Bilga-Lokal' &&
+      github.event.repository.private == true &&
+      github.ref == 'refs/heads/wip/todo-widget-recovery'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      DART_SUPPRESS_ANALYTICS: 'true'
+      FLUTTER_REVISION: 6655482ec06e547f90abf8ae7590466f4415978d
+      GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+    steps:
+      - name: Check out the requested WIP commit
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          submodules: false
+
+      - name: Set up Java 21
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Flutter 3.47.1 from its official pinned revision
+        id: flutter
+        timeout-minutes: 10
+        run: |
+          # Do not import this computer's SDK, caches or signing material.
+          bilga_flutter="$RUNNER_TEMP/bilga-flutter"
+          git init --quiet "$bilga_flutter"
+          git -C "$bilga_flutter" remote add origin https://github.com/flutter/flutter.git
+          git -C "$bilga_flutter" fetch --depth=1 origin refs/tags/3.47.1:refs/tags/3.47.1
+          git -C "$bilga_flutter" checkout --quiet --detach FETCH_HEAD
+          test "$(git -C "$bilga_flutter" rev-parse HEAD)" = "$FLUTTER_REVISION"
+          echo "$bilga_flutter/bin" >> "$GITHUB_PATH"
+          "$bilga_flutter/bin/flutter" config --no-analytics --jdk-dir "$JAVA_HOME" --android-sdk "$ANDROID_HOME"
+          "$bilga_flutter/bin/flutter" --version
+          java -version
+
+      - name: Set up matching Android SDK and SQLite test runtime
+        id: android
+        timeout-minutes: 10
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends libsqlite3-0 libglu1-mesa
+          bilga_sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$bilga_sdkmanager"
+          "$bilga_sdkmanager" --licenses < <(yes) > /dev/null
+          "$bilga_sdkmanager" \
+            'platform-tools' 'platforms;android-34' 'platforms;android-36' \
+            'build-tools;36.0.0' 'ndk;28.2.13676358'
+          df -h "$GITHUB_WORKSPACE"
+
+      - name: Resolve locked Flutter dependencies
+        id: dependencies
+        timeout-minutes: 10
+        run: flutter pub get --enforce-lockfile
+
+      - name: Flutter analyze
+        id: analyze
+        timeout-minutes: 10
+        run: flutter analyze --no-pub
+
+      - name: Flutter tests
+        id: tests
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        timeout-minutes: 15
+        run: flutter test --no-pub --concurrency=2 --reporter expanded
+
+      - name: Build Android debug APK
+        id: apk
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.android.outcome == 'success' }}
+        timeout-minutes: 25
+        # Uses the runner's disposable Android debug key, never release signing.
+        run: flutter build apk --debug --no-pub
+
+      - name: Verify APK integrity and prepare artifact
+        id: verify
+        if: ${{ !cancelled() && steps.apk.outcome == 'success' }}
+        run: |
+          bash tool/verify_android_apk.sh
+          mkdir -p "$RUNNER_TEMP/bilga-debug-artifact"
+          cp build/app/outputs/flutter-apk/app-debug.apk "$RUNNER_TEMP/bilga-debug-artifact/"
+          cd "$RUNNER_TEMP/bilga-debug-artifact"
+          sha256sum app-debug.apk > SHA256SUMS
+          printf 'Source commit: %s\n' "$GITHUB_SHA" > SOURCE.txt
+
+      - name: Upload debug APK only
+        id: artifact
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: bilga-wip-debug-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/bilga-debug-artifact/app-debug.apk
+            ${{ runner.temp }}/bilga-debug-artifact/SHA256SUMS
+            ${{ runner.temp }}/bilga-debug-artifact/SOURCE.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+          include-hidden-files: false
+
+      - name: Record actual check outcomes
+        if: ${{ always() }}
+        env:
+          PUB_RESULT: ${{ steps.dependencies.outcome }}
+          ANALYZE_RESULT: ${{ steps.analyze.outcome }}
+          TEST_RESULT: ${{ steps.tests.outcome }}
+          APK_RESULT: ${{ steps.apk.outcome }}
+          VERIFY_RESULT: ${{ steps.verify.outcome }}
+          ARTIFACT_URL: ${{ steps.artifact.outputs.artifact-url }}
+        run: |
+          {
+            printf 'Source commit: `%s`\n\n' "$GITHUB_SHA"
+            printf '| Check | Outcome |\n| --- | --- |\n'
+            printf '| pub get | %s |\n' "$PUB_RESULT"
+            printf '| analyze | %s |\n' "$ANALYZE_RESULT"
+            printf '| Flutter tests | %s |\n' "$TEST_RESULT"
+            printf '| debug APK | %s |\n' "$APK_RESULT"
+            printf '| APK CRC / signature / SHA-256 | %s |\n\n' "$VERIFY_RESULT"
+            if [[ -n "$ARTIFACT_URL" ]]; then
+              printf '[Download debug APK artifact](%s) (7 days; private repository access required).\n\n' "$ARTIFACT_URL"
+            fi
+            printf 'Debug build only. No device or native instrumentation tests were run.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
