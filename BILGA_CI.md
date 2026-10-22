@@ -1,5 +1,27 @@
 # WIP Android CI
 
+## Initial validation — 2026-10-22
+
+Workflow source was committed/pushed as
+`60f48bd44447c5e87af53ccac872bfc9ab86038f`; the private remote branch and commit
+were verified. YAML structure, every inline Bash script's syntax, manual/private/
+WIP guards, read-only permissions, action SHA pins and the three-file artifact
+allowlist passed static checks. `git fsck --full` exited successfully (existing
+dangling objects were preserved). No local Flutter/Java build or test was run.
+
+One manual dispatch attempt returned:
+
+```text
+HTTP 404: workflow wip-android-debug.yml not found on the default branch
+```
+
+No CI run, test result or APK artifact exists from that attempt. `main` and the
+default-branch setting were left unchanged. Owner approval is pending to resolve
+GitHub's registration requirement described below. Static checks are not a
+replacement for an actual runner execution.
+
+## Workflow
+
 Local Dart/Java SIGSEGV failures are not retried by this workflow. All compilation
 and Flutter tests run on a fresh GitHub-hosted Ubuntu 24.04 runner.
 

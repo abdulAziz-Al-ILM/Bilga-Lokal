@@ -5,6 +5,24 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
+## 2026-10-22 — manual WIP CI tayyor; GitHub dispatch hali bloklangan
+
+Foydalanuvchi lokal katta build/testlarni qayta bajarmaslikni buyurdi. Private WIP
+uchun `.github/workflows/wip-android-debug.yml` va `BILGA_CI.md` qo‘shildi;
+source commit `60f48bd44447c5e87af53ccac872bfc9ab86038f` push/remote tasdiqlangan.
+Faqat manual/private/exact-WIP guard, existing Flutter3.47.1/Java21/Android versions,
+locked pub get, analyze, Flutter tests, debug APK + CRC/signature/SHA256, allowlisted
+7 kunlik artifact. Production signing/secrets, lokal cache/model/data talab qilinmaydi.
+YAML/Bash/security static tekshiruvlar va fsck PASS; lokal build/test bajarilmadi.
+
+Bitta `gh workflow run ... --ref wip/todo-widget-recovery` GitHub HTTP404:
+`workflow wip-android-debug.yml not found on the default branch`. Default `main`;
+GitHub yangi workflow_dispatch uchun default branchda workflow bo‘lishini talab
+qiladi. CI/test/APK/artifact hali yo‘q. Main/default setting o‘zgarmadi; foydalanuvchidan
+defaultni WIP qilish yoki faqat CI faylini main'ga qo‘shish bo‘yicha ruxsat so‘raldi.
+Ruxsatsiz ushbu cheklovni aylanib o‘tmang, push trigger qo‘shmang. Mavjud APK,
+qurilma, foydalanuvchi bazalari va Core ovoz funksiyalari o‘zgartirilmadi.
+
 ## 2026-10-22 — yangi JVM SIGSEGV; WIP saqlandi, davom ettirish to‘xtadi
 
 Boshlang‘ich lokal/remote WIP `407feea3e4fe1424c283fa66f4c69465e02e48b4` bir xil,
