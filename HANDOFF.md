@@ -5,6 +5,21 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
+## 2026-10-23 — private draft APK delivery checkpoint (not yet runner-tested)
+
+Starting WIP479d3b4/local=remote clean. Owner requested ONLY fresh APK delivery and
+signer checks, no feature changes/main edits. Manual private_draft_release input
+prepares a new private unpublished draft (never publish), using job-scoped
+contents:write and step-scoped automatic GH_TOKEN, no custom/signing secrets.
+Four allowlisted assets, runner Python/native SHA agreement + stat, ZIP CRC and
+apksigner certificate fingerprint, post-upload server size/digest validation.
+Source build configuration is unchanged. Six small Python safety tests PASS;
+AST, manual/private/WIP guards, permission allowlist, action SHA pins and inline
+Bash syntax PASS. Actual runner result remains pending. Previous corrupt APK is
+excluded, never reused. No install/key upload/user database operation authorized
+unless fresh hashes and installed signer match. Secret upload requires NEW owner
+approval; risks/procedure in BILGA_CI.md. Main stays8871b3a.
+
 ## 2026-10-23 — STOP: local artifact integrity FAIL; install/test bajarilmadi
 
 Starting local/remote WIP4b21e34 clean; 8bf0faf'dan farq faqat ikki hujjat. User

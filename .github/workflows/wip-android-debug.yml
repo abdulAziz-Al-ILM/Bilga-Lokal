@@ -3,6 +3,11 @@ run-name: WIP debug · ${{ github.sha }}
 
 on:
   workflow_dispatch:
+    inputs:
+      private_draft_release:
+        description: 'Deliver via a PRIVATE unpublished draft release (artifact quota fallback)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -13,6 +18,10 @@ concurrency:
 
 jobs:
   validate-and-build:
+    # Release assets require contents:write; all other token permissions stay off.
+    # No PAT/signing secret. Token is passed only to the guarded delivery step.
+    permissions:
+      contents: write
     # workflow_dispatch has no branch filter. Keep this guard even if the
     # workflow is later registered on the default branch with owner approval.
     if: >-
@@ -120,16 +129,13 @@ jobs:
         id: verify
         if: ${{ !cancelled() && steps.apk.outcome == 'success' }}
         run: |
+          python3 -B -m unittest discover -s tool -p test_ci_debug_delivery.py -v
           bash tool/verify_android_apk.sh
-          mkdir -p "$RUNNER_TEMP/bilga-debug-artifact"
-          cp build/app/outputs/flutter-apk/app-debug.apk "$RUNNER_TEMP/bilga-debug-artifact/"
-          cd "$RUNNER_TEMP/bilga-debug-artifact"
-          sha256sum app-debug.apk > SHA256SUMS
-          printf 'Source commit: %s\n' "$GITHUB_SHA" > SOURCE.txt
+          python3 tool/ci_debug_delivery.py prepare
 
       - name: Upload debug APK only
         id: artifact
-        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' && !inputs.private_draft_release }}
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: bilga-wip-debug-${{ github.sha }}
@@ -137,10 +143,22 @@ jobs:
             ${{ runner.temp }}/bilga-debug-artifact/app-debug.apk
             ${{ runner.temp }}/bilga-debug-artifact/SHA256SUMS
             ${{ runner.temp }}/bilga-debug-artifact/SOURCE.txt
+            ${{ runner.temp }}/bilga-debug-artifact/BUILD_METADATA.json
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
           include-hidden-files: false
+
+      - name: Deliver only to a private unpublished draft release
+        id: release
+        if: >-
+          !cancelled() && inputs.private_draft_release &&
+          steps.verify.outcome == 'success' && steps.analyze.outcome == 'success' &&
+          steps.tests.outcome == 'success'
+        timeout-minutes: 10
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tool/ci_debug_delivery.py publish
 
       - name: Record actual check outcomes
         if: ${{ always() }}
@@ -151,6 +169,7 @@ jobs:
           APK_RESULT: ${{ steps.apk.outcome }}
           VERIFY_RESULT: ${{ steps.verify.outcome }}
           ARTIFACT_URL: ${{ steps.artifact.outputs.artifact-url }}
+          RELEASE_RESULT: ${{ steps.release.outcome }}
         run: |
           {
             printf 'Source commit: `%s`\n\n' "$GITHUB_SHA"
@@ -160,6 +179,7 @@ jobs:
             printf '| Flutter tests | %s |\n' "$TEST_RESULT"
             printf '| debug APK | %s |\n' "$APK_RESULT"
             printf '| APK CRC / signature / SHA-256 | %s |\n\n' "$VERIFY_RESULT"
+            printf '| Private draft delivery | %s |\n\n' "$RELEASE_RESULT"
             if [[ -n "$ARTIFACT_URL" ]]; then
               printf '[Download debug APK artifact](%s) (7 days; private repository access required).\n\n' "$ARTIFACT_URL"
             fi

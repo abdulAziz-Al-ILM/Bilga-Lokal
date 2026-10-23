@@ -1,5 +1,59 @@
 # WIP Android CI
 
+## Private draft delivery — preparation, 2026-10-23
+
+The owner requested a private Release-asset alternative after artifact quota
+failure. Manual input `private_draft_release=true` skips Actions artifact storage
+and uploads exactly APK, SHA256SUMS, SOURCE.txt and BUILD_METADATA.json to a new
+**unpublished draft/prerelease** in this private repository. It never publishes,
+replaces an asset, changes visibility, modifies main or pushes a Git tag. The
+draft targets the exact dispatched WIP SHA and is not marked latest. Drafts do
+not expire automatically; owner cleanup is a later explicit operation.
+
+`contents:write` is the minimum repository token permission for Release uploads.
+Only the guarded CI job receives this permission; all unspecified permissions
+are disabled. Checkout still persists no credentials, and GH_TOKEN is passed
+only to the delivery step. This permission can also write repository contents:
+only trusted, inspected WIP code may be dispatched. No PAT/custom token or signing
+secret is used. Global default remains contents:read. Repository privacy is
+rechecked through the API before creating a draft and after uploading it.
+
+The runner verifies original/copy Python and native SHA-256 agreement, unchanged
+file stat, independent Python/unzip CRC, apksigner verification and public signer
+SHA-256. Upload completion, exact asset allowlist, sizes and GitHub server SHA-256
+digests must match every local file. Any mismatch fails closed; no retry, deletion
+or byte repair. Six small Python safety tests cover hash disagreement, mutation,
+public/wrong repositories and forbidden execution contexts. Real runner execution
+and end-to-end tablet delivery are still pending at this checkpoint.
+
+```bash
+gh workflow run wip-android-debug.yml \
+  --repo abdulAziz-Al-ILM/Bilga-Lokal --ref wip/todo-widget-recovery \
+  -f private_draft_release=true
+```
+
+Never reuse the previously corrupted artifact. Download the fresh raw APK to a
+new ignored directory, close/fsync the writer, and compare runner/server SHA,
+Python hashlib and sha256sum with stat checks. Any disagreement means STOP, no
+signing/install. After local agreement, a copy to a new `/data/local/tmp` directory
+may be checked with the tablet's sha256sum without modifying the installed app.
+The installed signer must separately match before any `install -r`.
+
+Signing remains the runner's disposable debug key. Uploading the matching local
+debug key as an Actions secret requires NEW explicit owner approval. Proposed
+procedure: dedicated manual private-WIP signing step/job, locally encrypted secret
+upload through `gh secret set` stdin (base64 is only transport encoding), never
+CLI arguments/logs/repo/artifacts. Decode to a new runner-temp mode0600 file after
+build, check public fingerprint against `38ecfe0234e465924812ba3ee84ef838557a1d03d53713bd7a6d76478663bd6d`,
+sign a separate APK, verify and regenerate all SHA metadata, clean up only the
+created temporary key. A malicious future workflow with secret access could
+exfiltrate the key and impersonate this debug app, so approval must acknowledge
+moving signing trust to GitHub/authorized workflow maintainers. No secret has been
+created and that signing path is not enabled.
+
+API documentation: [Release creation](https://docs.github.com/en/rest/releases/releases#create-a-release),
+[asset digests and permissions](https://docs.github.com/en/rest/releases/assets).
+
 ## Latest attempt — build/tests PASS, artifact upload FAIL, 2026-10-23
 
 User-requested latest-starting-HEAD run
@@ -112,7 +166,8 @@ and Flutter tests run on a fresh GitHub-hosted Ubuntu 24.04 runner.
 `.github/workflows/wip-android-debug.yml` accepts only `workflow_dispatch`.
 Its job requires the private `abdulAziz-Al-ILM/Bilga-Lokal` repository and the
 exact `wip/todo-widget-recovery` branch. There are no push, PR, schedule or release
-triggers, deployment steps, write permissions or automatic retry loops.
+triggers, production deployments or automatic retry loops. The private draft
+delivery exception and its job-level contents:write permission are described above.
 
 ## Environment and checks
 
@@ -136,7 +191,7 @@ triggers, deployment steps, write permissions or automatic retry loops.
 ## Privacy and signing
 
 No repository secrets, production signing keys or custom tokens are needed.
-Checkout uses GitHub's automatic read-only repository token without persisting
+Checkout uses GitHub's automatic repository token without persisting
 credentials. Official GitHub actions are pinned by full commit SHA. No environment
 dump, Gradle debug/scan, cache upload or broad workspace artifact upload is used.
 No databases, recordings, backups, local models, keystores or SDKs are uploaded.
