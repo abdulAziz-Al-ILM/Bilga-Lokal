@@ -5,7 +5,21 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-23 — fresh private draft delivery PASS; signer mismatch remains
+## 2026-10-23 — local matching-key candidate prepared; CI verification pending
+
+Original runner APK3c34795f… was verified locally and on tablet, no mismatches.
+Read-only existing local debug key signed a SEPARATE v2-only APK copy. No key
+export/encoding/upload/GitHub secret. Candidate SHA9a01ddd6a8f77df800627b2c4214ecc3cdd3e87b3147dc1715b9be506e7a36d8,
+size293937033, cert38ecfe02…663bd6d matches installed. All779 ZIP entry contents
+match CI-built original; Python/native hashes and apksigner PASS. No install yet.
+New manual verify_candidate_release mode skips Flutter/build and independently
+checks fixed original source/run/digest, candidate server/local hashes, CRC,
+certificate and every payload entry on a fresh hosted runner. Eight small safety
+tests and workflow guards/AST/pins/Bash syntax PASS locally. Source checkpoint
+must be pushed before candidate draft upload and manual verification. No other
+features/main/production signing or user data changed.
+
+## 2026-10-23 — fresh private draft delivery PASS; initial signer mismatch
 
 CI39926382854 on WIP5ee550e SUCCESS: locked deps, analyze/no issues10.9s,224 Flutter
 tests, debug APK, six safety tests, ZIP/signature/Python-native SHA PASS. Private

@@ -1,5 +1,31 @@
 # WIP Android CI
 
+## Tablet-compatible signing without uploading a key — checkpoint
+
+Fresh original runner APK passed full independent hashes and ZIP/signature checks
+locally AND its tablet staging SHA matches. The existing matching local debug key
+was then used read-only by apksigner to sign **a separate copy**, v2 only. No key
+copy/export/base64/upload/secret was made. No Flutter/Gradle rebuild was run.
+Local candidate signer matches installed38ecfe02…663bd6d; all779 uncompressed ZIP
+entries have identical SHA-256 to the known CI-built original. Candidate size
+293937033, SHA-256 `9a01ddd6a8f77df800627b2c4214ecc3cdd3e87b3147dc1715b9be506e7a36d8`.
+This is a new signed file; the original3c34795f… APK remains unchanged.
+
+Manual `verify_candidate_release` mode skips the entire Flutter build/test job.
+A separate hosted verifier downloads the fixed known CI original and the private
+candidate draft, checks the successful source run, both server/full Python/native
+hashes, ZIP CRC/signature, expected installed certificate and each payload entry.
+It uploads only final checksums/public verification metadata. The candidate must
+target original app source5ee550e and remain an unpublished private draft.
+The recovery verifier deliberately accepts only this exact original/source/draft
+name; future source upgrades require reviewing those pins. It executes no app
+build code and never reads signing keys. Eight small local safety tests PASS;
+independent runner result and final tablet staging are pending at this checkpoint.
+
+This local-sign/remote-verify path replaces the need for a GitHub signing secret
+for this delivery. The optional secret design below remains disabled and requires
+separate explicit approval if ever used.
+
 ## Fresh private draft delivery PASS — 2026-10-23
 
 Run [39926382854](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39926382854)

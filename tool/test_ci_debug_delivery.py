@@ -4,12 +4,33 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import patch
 
 import ci_debug_delivery as delivery
+from verify_tablet_apk import same_payload
 
 
 class DeliverySafetyTest(unittest.TestCase):
+    def test_payload_comparison_accepts_same_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            first, second = Path(directory) / "a.zip", Path(directory) / "b.zip"
+            for path in (first, second):
+                with zipfile.ZipFile(path, "w") as archive:
+                    archive.writestr("synthetic.txt", b"synthetic app fixture")
+            self.assertEqual(same_payload(first, second), 1)
+
+    def test_payload_content_or_entry_change_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            first, second = Path(directory) / "a.zip", Path(directory) / "b.zip"
+            with zipfile.ZipFile(first, "w") as archive:
+                archive.writestr("synthetic.txt", b"before")
+            for name, content in (("synthetic.txt", b"after"), ("extra.txt", b"before")):
+                with self.subTest(name=name), zipfile.ZipFile(second, "w") as archive:
+                    archive.writestr(name, content)
+                with self.assertRaisesRegex(RuntimeError, "payload changed|entries differ"):
+                    same_payload(first, second)
+
     def test_independent_hashes_agree(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "synthetic.txt"
