@@ -5,7 +5,38 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-23 — FINAL: private APK delivery/signing PASS; install not performed
+## 2026-10-23 — tablet UPDATE PASS; Todo real flows passed, Notes/Recents pending
+
+User authorized install-r and real UI testing. APK9a01ddd6…e7a36d8 hash/signature
+freshly checked against private draft and matching installed cert38ec…; USB and
+package confirmed. install-r Success. Before first launch, on-device Notes/Todo
+database+present sidecar SHA maps and app UID identical before/after update.
+No raw DB/key export, uninstall/pm clear or local Flutter/Gradle build.
+
+One new reserved synthetic Todo created through widget+. Complete deadline/time
+auto-enabled reminder. Only its widget consent granted; prior grants preserved.
+Widget Snooze5 stayed launcher. Native Other time actual selected20:18 equals
+single alarm; old20:24 replaced. Cold startup's3-second sample was premature;
+one notification delivered at20:18:00.079. Reopened SQL-backed editor confirmed
+reminder23Oct20:18 and unchanged deadline24Oct20:09. Source test probe1162c42 fixes
+synthetic NumberPicker focus; production APK unchanged. Initial unfocused test
+displayed a time without changing spinner; recorded FAIL, then focused flow PASS.
+
+Actual overlay over Calculator frame[180,1438][1020,1937] visible, current Amethyst
+dark text contrast14.34:1/button7.67:1. First late action found no panel; bounded
+atomic action then delivered overlay Snooze5. Its immediate SQL sample was early;
+one follow-up observed committed +5min alarm20:31:06.652, Calculator foreground,
+notification901/902 both0. Todo consent persisted through cold reopen. Widget Done
+one click stayed launcher, showed Done, cancelled task reminder; only widget
+midnight alarm remained. No real user task/note edited.
+
+Remaining: Notes preview+tags/consent persistence and final Recents. Full evolving
+evidence: BILGA_TABLET_UPDATE_20261023.md. Temporary Java self-targeted UI-only
+probe built without Flutter/Gradle, no database access or network; APK/logs/private
+hashes ignored. Source probe1162c42 backed up; current result docs checkpoint follows.
+Main8871b3a untouched. No Habits/Finance/Core feature changes.
+
+## 2026-10-23 — earlier: private APK delivery/signing PASS; before install
 
 App compiled from5ee550e in CI39926382854: analyze10.9s/no issues,224 Flutter
 tests, debug APK, CRC/signature/hash PASS. Artifact quota bypassed through PRIVATE
