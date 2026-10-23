@@ -51,7 +51,8 @@ public final class WidgetUiProbe extends Instrumentation {
         if("overlaySnooze5".equals(requested)) {
             for(android.view.accessibility.AccessibilityWindowInfo window:getUiAutomation().getWindows()) {
                 AccessibilityNodeInfo panel=window.getRoot();
-                if(panel!=null && "com.ilmmizan.bilga".contentEquals(String.valueOf(panel.getPackageName())) && find(panel,null,"Bilga Recovery 20261016")!=null) {
+                if(panel!=null && "com.ilmmizan.bilga".contentEquals(String.valueOf(panel.getPackageName())) &&
+                    (find(panel,null,"Bilga Recovery 20261022")!=null || find(panel,null,"Bilga Recovery 20261016")!=null)) {
                     AccessibilityNodeInfo choice=find(panel,null,"5 daq");
                     if(choice==null || !choice.performAction(AccessibilityNodeInfo.ACTION_CLICK)) throw new IllegalStateException("Overlay preset unavailable");
                     output.append("Synthetic overlay snooze delivered\n");return;
@@ -81,6 +82,10 @@ public final class WidgetUiProbe extends Instrumentation {
         for(int i=0;i<node.getChildCount();i++) collectInputs(node.getChild(i),fields);
     }
     private void setText(AccessibilityNodeInfo node,String value) {
+        // NumberPicker commits typed text when the focused input loses focus.
+        // ACTION_SET_TEXT alone changes display text without simulating typing.
+        if(!node.isFocused() && !node.performAction(AccessibilityNodeInfo.ACTION_FOCUS))
+            throw new IllegalStateException("Time input could not receive focus");
         Bundle args=new Bundle();args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,value);
         if(!node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,args)) throw new IllegalStateException("Time input rejected");
     }
