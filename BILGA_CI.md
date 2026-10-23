@@ -1,6 +1,23 @@
 # WIP Android CI
 
-## Latest verified run — PASS, 2026-10-22
+## Latest attempt — build/tests PASS, artifact upload FAIL, 2026-10-23
+
+User-requested latest-starting-HEAD run
+<https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39916149000>
+tested WIP source `4b21e3492bdc119eef853e0f251b659e452c7481`. Relative to the prior
+passing source, only two documentation files changed. Locked pub get, analyze
+(no issues,14.9s), all224 Flutter tests, debug APK build and CRC/signature/SHA
+verification passed. APK SHA:
+`b509fcd85fb987b2ecec3e29678e6f103bb2cef8277519a7fe2914d0f9b10505`.
+
+Overall run FAILED because GitHub refused artifact creation: `Artifact storage
+quota has been hit. Unable to upload any new artifacts. Usage is recalculated
+every 6-12 hours.` Artifact API confirmed0. No workflow retry, artifact deletion,
+billing change or main modification was made. Tablet signing/update is separately
+blocked by local artifact hash/CRC failures; evidence and the unconfigured secret
+design are in `BILGA_TABLET_VALIDATION_20261023.md`. No tablet-flow PASS is claimed.
+
+## Previous complete PASS — 2026-10-22
 
 Run <https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39814336862>
 completed successfully in 15m09s. Event: `workflow_dispatch`; branch:

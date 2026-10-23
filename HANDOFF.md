@@ -5,15 +5,24 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-23 — tablet update gate; original CI imzosi mos emas
+## 2026-10-23 — STOP: local artifact integrity FAIL; install/test bajarilmadi
 
 Starting local/remote WIP4b21e34 clean; 8bf0faf'dan farq faqat ikki hujjat. User
-talabi bilan latest-starting-HEAD uchun manual CI39916149000 boshlandi; analyze va
-Flutter tests PASS, APK build hali kutilmoqda. Main8871b3a/default main o‘zgarmadi.
+talabi bilan latest-starting-HEAD uchun manual CI39916149000 bajarildi: pub get,
+analyze No issues14.9s,224 Flutter tests, debug APK build va CRC/signature/SHA PASS.
+Faqat upload GitHub `Artifact storage quota has been hit` bilan FAIL, artifact0.
+Overall run FAIL. Main8871b3a/default main o‘zgarmadi; retry/delete/billing yo‘q.
 Installed debug APK va mavjud lokal debug key public cert SHA256 bir xil38ecfe02…
 663bd6d; old CI39814336862 cert a5a196c7…581cb26b — mos emas. Install/uninstall/
-pm clear bajarilmadi. Kerakli local debug key mavjud; new CI APK verified separate
-copy'ni lokal re-sign qilib, cert/payload/data gates'dan keyin install-r rejalandi.
+pm clear bajarilmadi. Kerakli local debug key mavjud; lokal re-sign faqat reja edi.
+Retained old artifact code/config4b21e34 bilan bir xil, ammo yuklangan ZIP SHA256
+GitHub'ga mos kelmadi; native unzip va Python CRC ikkalasi ham FAIL. Bir xil faylning
+Python/native SHA qiymatlari ham turlicha. Single-bit taxmini server-MD5 range bilan
+tasdiqlanmadi; byte repair qilinmadi. Aniq RAM/disk/transfer sababi isbotlanmagan.
+Signing/install shu xavfsizlik gate'da TO‘XTADI; existing UID/version/update time
+o‘zgarmadi. To-Do/Notes real flows hali tekshirilmagan. Git fsck full no-dangling
+PASS, ammo host barqarorligiga dalil emas. Buzilgan vaqtinchalik fayl/loglar ignored,
+hech biri source commitga kirmaydi. Barqaror host/uzatish yo‘li zarur.
 Private key upload yoki GitHub secret yaratilmagan; signing build emas. Xavfsiz
 secret varianti va tekshiriladigan device oqimlari `BILGA_TABLET_VALIDATION_20261023.md`da.
 Qurilma flow'lari hali PASS emas. Boshqa funksiyalar/Core'ga tegilmadi.
