@@ -1,5 +1,55 @@
 # Blackview Tab 16 — guarded CI update and widget verification
 
+## Fresh private draft — 2026-10-23
+
+The owner authorized investigating private Release assets as the artifact-quota
+alternative. WIP `5ee550e977e905c55e053f2c4fb288f515e33fc1` was inspected, committed,
+fsck checked and pushed; GitHub confirmed SHA/commit existence and PRIVATE status.
+Main remains8871b3a. No application/Gradle/source-version changes were made.
+
+CI [39926382854](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39926382854)
+SUCCESS: locked pub get, analyze10.9s/no issues, all224 Flutter tests, debug APK,
+six Python delivery safety tests, ZIP CRC/signature/independent hashes. New raw APK
+is293931059 bytes, SHA-256
+`3c34795f6a36af877a3e5ffe8365e15991d5731b16cc7ed0815d78d202fb0f5d`.
+
+Draft release421631112 is private and unpublished, targets exact WIP5ee550e,
+has four allowlisted assets with server sizes/digests matching the runner, and
+does not use Actions artifact storage. APK asset668549689. Draft link:
+<https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/releases/tag/untagged-d98aa71e80dbcf0d0311>.
+
+Runner verified new signer
+`97f2e21a6e5dc77f74ddfe316153be1cca6e8f916de397cd074453bb0fe14e78`.
+Installed signer remains `38ecfe0234e465924812ba3ee84ef838557a1d03d53713bd7a6d76478663bd6d`:
+certificate mismatch, **DO NOT INSTALL**. Device UID11022/version1.4.0+9/package
+path/last update2026-10-16 were rechecked unchanged. No signing key was exported,
+used, encoded or uploaded; no custom Actions secret was created. The exact risks
+and proposed secret procedure are in BILGA_CI.md; NEW explicit approval is required.
+
+The prior corrupt artifact is not reused. A fresh single-stream transfer proved
+slow (~0.23–0.34MiB/s), was intentionally interrupted, and its partial is retained
+ignored, without resume/reuse. The same new immutable Release asset is instead
+downloaded to separate new4MiB chunk files, each checked against received-buffer,
+Python and native SHA, then assembled in order to a new APK. The resulting whole
+file must still match the runner/server digest and independent full-file hashes
+with unchanged inode/size/mtime/ctime; per-chunk success alone is insufficient.
+Final local/tablet checks PASS for this original runner-signed APK: all71 chunks,
+received-buffer and stored-file hashes agreed; assembled-stream SHA, full-file
+Python hashlib and sha256sum equal the runner/server3c34795f…2fb0f5d. Inode,
+size, mtime and ctime remained identical between reads. Native ZIP CRC and local
+apksigner v2 validation PASS; local fingerprint equals runner97f2e21a…fe14e78.
+ADB copied it only to a new `/data/local/tmp/bilga-delivery-39926382854` directory;
+tablet SHA matches exactly. No install occurred. Installed UID/version/update time
+remain unchanged. This verifies these specific bytes, not general RAM health.
+
+The historical local re-sign plan below had not been executed. With fresh
+end-to-end integrity now established, the next scoped step is local signing of
+a separate copy using the existing matching debug key, without key export/upload.
+A short CI validation mode will independently verify the final candidate hash,
+certificate and equality of every ZIP entry with this original CI-built APK.
+Only a final independently verified candidate can become install-ready. No local
+Flutter/Gradle build, secret upload or installation is part of this signing step.
+
 ## Starting evidence
 
 Local and private remote WIP HEAD matched

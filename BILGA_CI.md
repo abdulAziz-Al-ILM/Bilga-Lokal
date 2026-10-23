@@ -1,6 +1,28 @@
 # WIP Android CI
 
-## Private draft delivery — preparation, 2026-10-23
+## Fresh private draft delivery PASS — 2026-10-23
+
+Run [39926382854](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39926382854)
+tested `5ee550e977e905c55e053f2c4fb288f515e33fc1` and completed SUCCESS.
+Locked pub get, analyze (no issues,10.9s), all224 Flutter tests, debug APK,
+six delivery safety tests, independent Python/unzip CRC, apksigner and independent
+Python/native SHA verification passed. No local Flutter/Gradle build/test ran.
+
+[Private UNPUBLISHED draft](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/releases/tag/untagged-d98aa71e80dbcf0d0311):
+release421631112, requested draft tag `wip-debug-39926382854-1`, APK asset668549689,
+293931059 bytes. API confirms private repository, draft=true, prerelease=true,
+published_at=null and exact WIP target SHA. Four explicit assets uploaded; all
+GitHub server sizes/SHA-256 digests match the runner. Actions artifact upload was
+intentionally skipped to avoid the diagnosed quota. Nothing was published.
+
+APK SHA-256: `3c34795f6a36af877a3e5ffe8365e15991d5731b16cc7ed0815d78d202fb0f5d`.
+Signer SHA-256: `97f2e21a6e5dc77f74ddfe316153be1cca6e8f916de397cd074453bb0fe14e78`.
+This differs from the installed debug signer
+`38ecfe0234e465924812ba3ee84ef838557a1d03d53713bd7a6d76478663bd6d`.
+No update is authorized by a valid ZIP/hash alone. Local/tablet delivery checks
+will be recorded below; no signing secret has been uploaded.
+
+## Private draft delivery design, 2026-10-23
 
 The owner requested a private Release-asset alternative after artifact quota
 failure. Manual input `private_draft_release=true` skips Actions artifact storage
@@ -23,8 +45,8 @@ file stat, independent Python/unzip CRC, apksigner verification and public signe
 SHA-256. Upload completion, exact asset allowlist, sizes and GitHub server SHA-256
 digests must match every local file. Any mismatch fails closed; no retry, deletion
 or byte repair. Six small Python safety tests cover hash disagreement, mutation,
-public/wrong repositories and forbidden execution contexts. Real runner execution
-and end-to-end tablet delivery are still pending at this checkpoint.
+public/wrong repositories and forbidden execution contexts. Actual runner evidence
+is recorded above; end-to-end tablet evidence must be checked separately.
 
 ```bash
 gh workflow run wip-android-debug.yml \

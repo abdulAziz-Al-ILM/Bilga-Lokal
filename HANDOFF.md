@@ -5,7 +5,24 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-23 — private draft APK delivery checkpoint (not yet runner-tested)
+## 2026-10-23 — fresh private draft delivery PASS; signer mismatch remains
+
+CI39926382854 on WIP5ee550e SUCCESS: locked deps, analyze/no issues10.9s,224 Flutter
+tests, debug APK, six safety tests, ZIP/signature/Python-native SHA PASS. Private
+unpublished draft421631112/asset668549689 delivered293931059 bytes; all4 asset
+server digests match. APK SHA3c34795f6a36af877a3e5ffe8365e15991d5731b16cc7ed0815d78d202fb0f5d.
+Fresh local original also PASS:71 new chunks (no old corrupt APK or resume),
+assembled stream/Python/sha256sum equal runner/server, unchanged file stats,
+ZIP/apksigner PASS. Copied only to tablet temp directory; device SHA identical.
+Installed package UID/version/update time unchanged; NO install/data operations.
+Runner/local certificate97f2e21a…fe14e78 differs from installed38ecfe02…663bd6d.
+Next: locally sign a separate copy with existing matching debug key (no export,
+encoding or GitHub secret), then short independent CI verification of final hash,
+certificate and every ZIP payload entry. No further Flutter build is necessary.
+Key upload still requires NEW explicit approval and is not planned. Only APK/public
+verification metadata may be uploaded to private draft. Main stays8871b3a.
+
+## 2026-10-23 — private draft APK delivery checkpoint (before runner test)
 
 Starting WIP479d3b4/local=remote clean. Owner requested ONLY fresh APK delivery and
 signer checks, no feature changes/main edits. Manual private_draft_release input
