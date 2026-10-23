@@ -18,7 +18,7 @@ Flutter tests, APK PASS), separately locally signed, and independently validated
 by CI39930640049 (signature, hashes,779 payload entries,8 safety tests PASS).
 No local Flutter/Gradle build or repeated full test suite was needed here.
 
-## Real UI evidence so far
+## Real UI evidence
 
 - Created one new reserved synthetic task through the widget's + editor. Selecting
   a complete date/time switched reminder OFF to ON automatically. Saved deadline
@@ -55,13 +55,36 @@ No local Flutter/Gradle build or repeated full test suite was needed here.
   this fixture with one click, without opening Main or a confirmation dialog.
   Launcher stayed foreground; fixture displayed Done. The20:31 reminder vanished;
   only the widget's next-midnight alarm remained, as expected.
+- The user independently confirmed the20:22 overlay: “Panel va tugmalar aniq
+  o‘qiladi”. This confirms human readability in addition to native geometry and
+  contrast checks; it does not claim testing all seven themes or Android versions.
+- Final actual Recent Apps UI had one Bilga label/card. Native recents metadata
+  showed one visible MainActivity task1140 and NotesWidgetConfigureActivity
+  task1141 with FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS (0x00800000, within0x30800000).
+  The hidden configuration task is not a second visible Bilga card. No duplicate
+  visible card reproduced after the exercised widget/configuration/reminder paths.
 
-## Remaining checks at this checkpoint
+## Notes check blocked — not a PASS
 
-Notes preview/tags and Notes permission persistence, and final Recent Apps checks
-are pending. This intermediate document is not a
-claim those flows passed. A small self-targeted test-only UI package was compiled
+The existing Notes widget configuration opened with recent source and safe hidden
+privacy. Its note-choice area stayed loading and Save remained disabled, including
+one bounded cold restart/reopen. No note choices became available. Accordingly,
+Notes body/tag preview and Notes grant persistence were **not verified**. No real
+note was modified and no new Notes consent was granted to bypass this blocker.
+The examined app log had no DatabaseException, SQLITE_BUSY/NOTADB, E/flutter,
+Unhandled Exception or SIGSEGV marker. This does not establish the root cause or
+prove the database healthy; the loading path needs a separate focused diagnostic.
+No database reset, deletion, plaintext export or key extraction was attempted.
+
+## Scope and resulting device state
+
+A small self-targeted test-only UI package was compiled
 from the Java probe, without Flutter/Gradle; it cannot read Bilga databases and
-exports only static/synthetic accessibility labels. Test helper/source changes do
+exports only static/synthetic accessibility labels. The helper remains installed;
+it has no launcher activity or Internet permission. Test helper/source changes do
 not alter the installed application's779 payload entries. No Habits/Finance/Core
-feature code or main changes are part of this task.
+feature code or main changes are part of this task. Existing CI evidence is for
+application source5ee550e, not a newly run local analyze/build. The new synthetic
+Todo remains completed, with no outstanding task reminder; pre-existing user
+records and consent choices were not edited. APK update preservation was checked
+before first launch, separately from later expected synthetic test database writes.

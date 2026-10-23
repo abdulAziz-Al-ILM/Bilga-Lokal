@@ -5,7 +5,7 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-23 — tablet UPDATE PASS; Todo real flows passed, Notes/Recents pending
+## 2026-10-23 — tablet UPDATE PASS; Todo/overlay/Recents passed, Notes blocked
 
 User authorized install-r and real UI testing. APK9a01ddd6…e7a36d8 hash/signature
 freshly checked against private draft and matching installed cert38ec…; USB and
@@ -30,10 +30,19 @@ notification901/902 both0. Todo consent persisted through cold reopen. Widget Do
 one click stayed launcher, showed Done, cancelled task reminder; only widget
 midnight alarm remained. No real user task/note edited.
 
-Remaining: Notes preview+tags/consent persistence and final Recents. Full evolving
-evidence: BILGA_TABLET_UPDATE_20261023.md. Temporary Java self-targeted UI-only
+User confirmed overlay text/buttons clearly readable. Final actual Recents UI
+showed one Bilga card; native metadata has one visible MainActivity task plus
+excluded Notes configuration task (not a second visible card).
+
+Notes configuration stayed loading with Save disabled, including one cold reopen.
+No note choices available: Notes preview/tags/consent persistence NOT VERIFIED.
+Examined app logs show no SQL/Flutter/crash marker; root cause is not established.
+No Notes grants/records reset or changed to bypass it. New synthetic Todo remains
+completed with no task reminder. Full evidence: BILGA_TABLET_UPDATE_20261023.md.
+Temporary Java self-targeted UI-only
 probe built without Flutter/Gradle, no database access or network; APK/logs/private
-hashes ignored. Source probe1162c42 backed up; current result docs checkpoint follows.
+hashes ignored. Helper remains installed without launcher. Source probe1162c42 and
+intermediate result checkpoint0d109e2 backed up; final result checkpoint follows.
 Main8871b3a untouched. No Habits/Finance/Core feature changes.
 
 ## 2026-10-23 — earlier: private APK delivery/signing PASS; before install

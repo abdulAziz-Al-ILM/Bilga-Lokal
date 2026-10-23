@@ -1,6 +1,15 @@
 # Blackview Tab 16 — guarded CI update and widget verification
 
-## FINAL: matching signed APK ready, not installed
+## Current update result
+
+The later user-authorized `adb install -r` succeeded with byte-identical Notes/Todo
+database files and unchanged UID before first launch. Todo custom time, inline
+actions, default reminder, consent persistence, overlay and single-card Recents
+were checked on the tablet. Notes configuration remains loading; its preview and
+consent persistence are not verified. See [the installation and UI report](BILGA_TABLET_UPDATE_20261023.md).
+The delivery-only evidence below predates this installation.
+
+## Earlier delivery result: matching signed APK ready, not installed yet
 
 Local signing of a separate copy completed without exporting/copying/uploading
 the existing debug private key. APK293937033 bytes, SHA-256
