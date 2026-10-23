@@ -5,7 +5,36 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-23 — local matching-key candidate prepared; CI verification pending
+## 2026-10-23 — FINAL: private APK delivery/signing PASS; install not performed
+
+App compiled from5ee550e in CI39926382854: analyze10.9s/no issues,224 Flutter
+tests, debug APK, CRC/signature/hash PASS. Artifact quota bypassed through PRIVATE
+UNPUBLISHED drafts (never published). Original SHA3c34795f… verified runner/server/
+local Python+native/tablet. Existing local debug key then signed a SEPARATE APK;
+key never exported, encoded, uploaded, logged or saved as a GitHub secret.
+Final candidate293937033 bytes, SHA-256
+9a01ddd6a8f77df800627b2c4214ecc3cdd3e87b3147dc1715b9be506e7a36d8.
+Cert38ecfe0234e465924812ba3ee84ef838557a1d03d53713bd7a6d76478663bd6d
+matches freshly pulled/apksigner-verified current installed APK.
+
+Independent CI39930640049 on verifier1c96e3c SUCCESS:8 safety tests, both original/
+final server/download/Python/native SHA, CRC/signature and all779 payload entries
+PASS. Heavy build/tests correctly skipped (no app code changed). Final file SHA
+also identical on device staging copy. Draft421646821/asset668591356 has APK,
+SHA256SUMS, VERIFIED_TABLET_METADATA.json with verified server digests:
+https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/releases/tag/untagged-eaa4988a7f96b80d0572
+
+Both byte/signer gates cleared: READY for data-preserving install-r, NOT INSTALLED
+in this task. Device UID11022/version1.4.0+9/lastUpdate2026-10-16 unchanged.
+No database/user settings/model reads or writes, no main/Core/Habits/Finance edits.
+Old corrupt artifact excluded; fresh one-stream transfer was interrupted for speed
+and kept unused,71 new chunks independently verified then globally hashed. No byte
+repair or integrity-failure retry. No general RAM-health claim. All APK/log/runtime
+files ignored, never committed. Main remains8871b3a; source backup milestones
+5ee550e/e4e5bf7/036d2df/1c96e3c confirmed in private WIP; final docs checkpoint follows.
+Full evidence/procedure: BILGA_CI.md, BILGA_TABLET_VALIDATION_20261023.md.
+
+## 2026-10-23 — local matching-key candidate checkpoint (before CI verification)
 
 Original runner APK3c34795f… was verified locally and on tablet, no mismatches.
 Read-only existing local debug key signed a SEPARATE v2-only APK copy. No key

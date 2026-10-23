@@ -1,5 +1,36 @@
 # Blackview Tab 16 — guarded CI update and widget verification
 
+## FINAL: matching signed APK ready, not installed
+
+Local signing of a separate copy completed without exporting/copying/uploading
+the existing debug private key. APK293937033 bytes, SHA-256
+`9a01ddd6a8f77df800627b2c4214ecc3cdd3e87b3147dc1715b9be506e7a36d8`.
+Public signer `38ecfe0234e465924812ba3ee84ef838557a1d03d53713bd7a6d76478663bd6d`
+matches a freshly pulled, apksigner-verified installed APK, not only cached metadata.
+All779 uncompressed ZIP entry SHA values match the trusted CI-built original.
+
+Private unpublished candidate draft421646821/asset668591356:
+<https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/releases/tag/untagged-eaa4988a7f96b80d0572>.
+Local upload server digest equals9a01…; independent hosted verifier
+[39930640049](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39930640049)
+on WIP1c96e3c also PASS:8 small safety tests, successful source run5ee550e, original
+and final downloaded server/Python/native SHA values, CRC/signature/fingerprint,
+all779 payload entries. No build was repeated. Only APK, SHA256SUMS and public
+VERIFIED_TABLET_METADATA.json are present; all server digests verified.
+
+Final signed local file had independent Python/native SHA agreement again before
+ADB copy to a NEW `/data/local/tmp/bilga-tablet-signed-39926382854` directory.
+Tablet sha256sum equals9a01… exactly. Thus final runner/server/local/tablet bytes
+match despite the intentionally different original-versus-re-signed APK hashes.
+The original CI app payload is unchanged; only signing/container bytes differ.
+
+Both integrity and installed-certificate gates now PASS for this candidate.
+**Ready for install-r; installation was NOT performed in this delivery-only task.**
+No uninstall/pm clear/reinstall/data mutation, private-key upload or Actions signing
+secret. Current installed UID11022/version1.4.0+9/last update2026-10-16 unchanged.
+No new RAM/CPU health claim follows from these successful file-specific checks.
+Widget/user flows below remain untested, not retrospectively marked PASS.
+
 ## Fresh private draft — 2026-10-23
 
 The owner authorized investigating private Release assets as the artifact-quota

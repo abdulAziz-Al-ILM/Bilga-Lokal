@@ -1,6 +1,34 @@
 # WIP Android CI
 
-## Tablet-compatible signing without uploading a key — checkpoint
+## FINAL: tablet-compatible APK delivery PASS — 2026-10-23
+
+Download **tablet-debug.apk** from the
+[PRIVATE unpublished draft](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/releases/tag/untagged-eaa4988a7f96b80d0572)
+(release421646821, asset668591356,293937033 bytes).
+Final APK SHA-256:
+`9a01ddd6a8f77df800627b2c4214ecc3cdd3e87b3147dc1715b9be506e7a36d8`.
+Signer SHA-256:
+`38ecfe0234e465924812ba3ee84ef838557a1d03d53713bd7a6d76478663bd6d`.
+
+[Independent verification39930640049](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/39930640049)
+on verifier source `1c96e3ca678c588fdc01e38c3e12210b5c304801` SUCCESS. All8 safety
+tests PASS; original CI build evidence, both server/download hashes, independent
+Python/native hashes, ZIP CRC, signature and all779 ZIP payload entries PASS.
+Build/test job was correctly skipped; no redundant compilation occurred.
+Final SHA matches runner, GitHub server, local Python, local sha256sum and the
+tablet's separate temporary copy. Current installed APK was freshly pulled and
+apksigner-verified: identical38ec… certificate. All byte/certificate gates clear;
+ready for a data-preserving `install -r`, **not installed in this task**.
+Installed UID11022/version1.4.0+9/last update2026-10-16 remain unchanged.
+
+Draft contains only tablet-debug.apk, SHA256SUMS and VERIFIED_TABLET_METADATA.json;
+all three server digests match the verifier. Draft remains private/unpublished.
+No local heavy build/test, secret/key upload, production signing, uninstall,
+data clear, user database/model change, main edit or Core/Habits/Finance change.
+The previous corrupt APK remains excluded. This successful specific transfer does
+not diagnose or certify the host's RAM generally.
+
+## Tablet-compatible signing without uploading a key — implementation
 
 Fresh original runner APK passed full independent hashes and ZIP/signature checks
 locally AND its tablet staging SHA matches. The existing matching local debug key
@@ -22,7 +50,7 @@ target original app source5ee550e and remain an unpublished private draft.
 The recovery verifier deliberately accepts only this exact original/source/draft
 name; future source upgrades require reviewing those pins. It executes no app
 build code and never reads signing keys. Eight small local safety tests PASS;
-independent runner result and final tablet staging are pending at this checkpoint.
+independent runner and final tablet evidence are recorded above.
 
 This local-sign/remote-verify path replaces the need for a GitHub signing secret
 for this delivery. The optional secret design below remains disabled and requires
