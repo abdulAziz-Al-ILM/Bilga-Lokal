@@ -1,9 +1,22 @@
 # Bilga — loyiha handoff’i
 
-Yangilangan: **2026-10-22**
+Yangilangan: **2026-10-23**
 Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-recovery**.
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
+
+## 2026-10-23 — tablet update gate; original CI imzosi mos emas
+
+Starting local/remote WIP4b21e34 clean; 8bf0faf'dan farq faqat ikki hujjat. User
+talabi bilan latest-starting-HEAD uchun manual CI39916149000 boshlandi; analyze va
+Flutter tests PASS, APK build hali kutilmoqda. Main8871b3a/default main o‘zgarmadi.
+Installed debug APK va mavjud lokal debug key public cert SHA256 bir xil38ecfe02…
+663bd6d; old CI39814336862 cert a5a196c7…581cb26b — mos emas. Install/uninstall/
+pm clear bajarilmadi. Kerakli local debug key mavjud; new CI APK verified separate
+copy'ni lokal re-sign qilib, cert/payload/data gates'dan keyin install-r rejalandi.
+Private key upload yoki GitHub secret yaratilmagan; signing build emas. Xavfsiz
+secret varianti va tekshiriladigan device oqimlari `BILGA_TABLET_VALIDATION_20261023.md`da.
+Qurilma flow'lari hali PASS emas. Boshqa funksiyalar/Core'ga tegilmadi.
 
 ## 2026-10-22 — GitHub hosted CI PASS; APK artifact tayyor
 
