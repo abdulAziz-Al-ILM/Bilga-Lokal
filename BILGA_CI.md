@@ -15,6 +15,8 @@ Manual `verify_candidate_release` mode skips the entire Flutter build/test job.
 A separate hosted verifier downloads the fixed known CI original and the private
 candidate draft, checks the successful source run, both server/full Python/native
 hashes, ZIP CRC/signature, expected installed certificate and each payload entry.
+That verifier alone also receives actions:read to check the original run's status;
+it cannot change or trigger workflows using that permission.
 It uploads only final checksums/public verification metadata. The candidate must
 target original app source5ee550e and remain an unpublished private draft.
 The recovery verifier deliberately accepts only this exact original/source/draft

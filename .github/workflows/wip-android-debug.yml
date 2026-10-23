@@ -202,6 +202,7 @@ jobs:
       inputs.verify_candidate_release != ''
     permissions:
       contents: write
+      actions: read # Verify the original successful run, without workflow writes.
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
