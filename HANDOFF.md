@@ -1,9 +1,33 @@
 # Bilga — loyiha handoff’i
 
-Yangilangan: **2026-10-23**
+Yangilangan: **2026-10-24**
 Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-recovery**.
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
+
+## 2026-10-24 — Notes recovery WIP; STOPPED after local Dart SIGSEGV
+
+Starting WIP94dbf3f matched private remote, worktree clean, Tab16 connected.
+Read-only VM operational metadata pinned Notes loading to the temporary SQLCipher
+verification handle's pending close callback; its database Future stayed pending
+while Todo's retained handle was open/idle. No note/key values exported. Notes-only
+option now verifies integrity on its retained connection before configuration/
+migration; Todo's default path unchanged. Added fixed non-content phase logging,
+15-second readiness/retry UI in43 languages, lifecycle/access guards and tests.
+Source checkpointdf24865 was fsck checked/pushed/remote-SHA confirmed.
+
+Four focused tests PASS; CI40089303279: analyze PASS,227 Flutter PASS/1 FAIL
+(Notes sync timeout Timer survived disposal). Its APK build was cancelled; no
+candidate installed. Five focused tests passed an intermediate dispose correction.
+Final shared load-scope correction + sixth regression test remain UNVERIFIED:
+exact regional-test local compiler SIGSEGV (Dart3.13.1, ScavengerVisitor GC), and
+already-started six-test run also segfaulted (one complete/five incomplete).
+No repeated local tests, further CI dispatch, signing/install or destructive
+fallback after crash. Stuck owned test session interrupted. Existing APK9a01…
+and user data/consents unchanged. Notes preview/grant/restart/reboot still pending;
+no success claim. Details: BILGA_NOTES_WIDGET.md recovery checkpoint section.
+Final source/diagnostic WIP backup follows. Main8871b3a and Todo/Habits/Core code
+untouched. Resume with hosted validation only after the owner steers continuation.
 
 ## 2026-10-23 — tablet UPDATE PASS; Todo/overlay/Recents passed, Notes blocked
 

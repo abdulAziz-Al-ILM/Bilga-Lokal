@@ -48,6 +48,7 @@ class _NotesWidgetConfigPageState extends State<NotesWidgetConfigPage>
   bool busy = false, loading = false, configLoaded = false;
   String? error;
   int request = 0;
+  final _reads = NotesWidgetLoadScope();
   Future<Database> get db async =>
       widget.database ??
       await (widget.databaseLoader?.call() ?? NoteDatabase.database);
@@ -69,6 +70,7 @@ class _NotesWidgetConfigPageState extends State<NotesWidgetConfigPage>
   void dispose() {
     debounce?.cancel();
     request++;
+    _reads.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -96,7 +98,7 @@ class _NotesWidgetConfigPageState extends State<NotesWidgetConfigPage>
     try {
       if (!canRead) throw StateError('locked');
       if (!configLoaded) {
-        final configs = await NotesWidgetLoading.step(
+        final configs = await _reads.step(
           'config.store',
           NotesWidgetBridge.configs,
         );
@@ -113,24 +115,23 @@ class _NotesWidgetConfigPageState extends State<NotesWidgetConfigPage>
         }
         configLoaded = true;
       }
-      final database = await NotesWidgetLoading.step(
-        'config.database',
-        () => db,
-      );
-      final foundTags = await NotesWidgetLoading.step(
+      final database = await _reads.step('config.database', () => db);
+      if (!mounted || current != request || !canRead) return;
+      final foundTags = await _reads.step(
         'config.tags',
         () => NoteTagStore(database).all(),
       );
       if (!mounted || current != request || !canRead) return;
       tags = foundTags;
       if (!tags.any((t) => t.id == tagId)) tagId = null;
-      final found = await NotesWidgetLoading.step(
+      final found = await _reads.step(
         'config.notes',
         () =>
             NotesWidgetData(database)
                 .available(config, choosing: true, query: query),
       );
-      final permissions = await NotesWidgetLoading.step(
+      if (!mounted || current != request || !canRead) return;
+      final permissions = await _reads.step(
         'config.permissions',
         () => NoteWidgetPermissionStore(database).allowed(found),
       );
@@ -160,15 +161,15 @@ class _NotesWidgetConfigPageState extends State<NotesWidgetConfigPage>
     if (busy || notes == null) return;
     setState(() => busy = true);
     try {
-      await NotesWidgetLoading.step(
+      await _reads.step(
         'config.save',
         () => NotesWidgetBridge.channel.invokeMethod<void>('saveConfig', {
           ...config.toMap(),
           'approvals': <String, String>{},
         }),
       );
-      await NotesWidgetLoading.step('config.export', widget.sync.refresh);
-      await NotesWidgetLoading.step(
+      await _reads.step('config.export', widget.sync.refresh);
+      await _reads.step(
         'config.finish',
         () =>
             NotesWidgetBridge.channel.invokeMethod<void>('finishConfiguration'),
@@ -183,7 +184,7 @@ class _NotesWidgetConfigPageState extends State<NotesWidgetConfigPage>
 
   Future<void> cancel() async {
     try {
-      await NotesWidgetLoading.step(
+      await _reads.step(
         'config.cancel',
         () =>
             NotesWidgetBridge.channel.invokeMethod<void>('cancelConfiguration'),

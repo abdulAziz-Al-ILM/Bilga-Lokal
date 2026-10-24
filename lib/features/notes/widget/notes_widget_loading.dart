@@ -29,3 +29,25 @@ class NotesWidgetLoading {
     }
   }
 }
+
+/// Stop observing an in-flight read when its owner leaves. The underlying
+/// singleton DB open is not cancelled/reset, and its late result stays handled.
+class NotesWidgetLoadScope {
+  final _closed = Completer<void>();
+
+  Future<T> step<T>(String phase, Future<T> Function() action) =>
+      NotesWidgetLoading.step(
+        phase,
+        () => Future.any<T>([
+          if (_closed.isCompleted)
+            Future<T>.error(StateError('disposed'))
+          else
+            action(),
+          _closed.future.then<T>((_) => throw StateError('disposed')),
+        ]),
+      );
+
+  void dispose() {
+    if (!_closed.isCompleted) _closed.complete();
+  }
+}

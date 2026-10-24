@@ -22,6 +22,7 @@ class NotesWidgetSync {
   Timer? _timer;
   Future<void>? _work;
   bool _dirty = false, _disposed = false;
+  final _reads = NotesWidgetLoadScope();
 
   void start() {
     _changes = NotesChanges.events.listen((_) => schedule());
@@ -51,7 +52,7 @@ class NotesWidgetSync {
           await NotesWidgetBridge.channel.invokeMethod<void>('redact');
           continue;
         }
-        final configs = (await NotesWidgetLoading.step(
+        final configs = (await _reads.step(
           'sync.store',
           NotesWidgetBridge.configs,
         )).map(NotesWidgetConfig.fromMap).toList();
@@ -75,7 +76,7 @@ class NotesWidgetSync {
           settings.brightness,
         ).colorScheme;
         final data = NotesWidgetData(
-          await NotesWidgetLoading.step('sync.database', database),
+          await _reads.step('sync.database', database),
         );
         final widgets = <Map<String, Object?>>[];
         for (final config in configs) {
@@ -83,7 +84,7 @@ class NotesWidgetSync {
             'id': config.id,
             'revision': config.revision,
             'permissionEpoch': config.permissionEpoch,
-            'rows': await NotesWidgetLoading.step(
+            'rows': await _reads.step(
               'sync.snapshot',
               () =>
                   data.snapshot(config, labels, forceHidden: settings.appLock),
@@ -108,6 +109,7 @@ class NotesWidgetSync {
       } on MissingPluginException {
         // Android-only integration. No alternate plaintext persistence.
       } catch (_) {
+        if (_disposed) return;
         try {
           await NotesWidgetBridge.channel.invokeMethod<void>('redact');
         } catch (_) {
@@ -119,6 +121,7 @@ class NotesWidgetSync {
 
   void dispose() {
     _disposed = true;
+    _reads.dispose();
     _timer?.cancel();
     unawaited(_changes?.cancel());
     AppSettings.instance.removeListener(schedule);

@@ -221,4 +221,45 @@ void main() {
       sync.dispose();
     },
   );
+  testWidgets(
+    'Disposing sync cancels its deadline even when the native read never answers',
+    (tester) async {
+      messenger.setMockMethodCallHandler(NotesWidgetBridge.channel, (
+        call,
+      ) async {
+        if (call.method == 'configs') return Completer<Object?>().future;
+        return null;
+      });
+      final sync = NotesWidgetSync(canRead: () => true)..start();
+      await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+      await tester.pump();
+      sync.dispose();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      messenger.setMockMethodCallHandler(NotesWidgetBridge.channel, null);
+      expect(tester.takeException(), isNull);
+      // Flutter also asserts that no pending deadline Timer survives disposal.
+    },
+  );
+  testWidgets(
+    'Closing config while the store is loading cancels its deadline',
+    (tester) async {
+      messenger.setMockMethodCallHandler(NotesWidgetBridge.channel, (
+        call,
+      ) async {
+        if (call.method == 'configs') return Completer<Object?>().future;
+        return null;
+      });
+      final sync = NotesWidgetSync(canRead: () => false);
+      await tester.pumpWidget(
+        MaterialApp(home: NotesWidgetConfigPage(widgetId: 7, sync: sync)),
+      );
+      await tester.pump();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      sync.dispose();
+      messenger.setMockMethodCallHandler(NotesWidgetBridge.channel, null);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

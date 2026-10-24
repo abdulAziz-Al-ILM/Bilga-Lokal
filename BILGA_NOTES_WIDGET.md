@@ -185,3 +185,32 @@ The existing AppLock screen supplies in-app authentication; host gating also
 prevents the config from starting reads while locked. Native locked/corrupt cache
 still fails closed without replacing existing encrypted settings. Production
 source and four focused regression tests require validation before claiming PASS.
+
+### Recovery checkpoint stopped after local SIGSEGV
+
+CI40089303279 ondf2486547d4da61fa3ddf784c6ca83ec25a3ac68:
+analyze PASS; Flutter227 passed/1 failed. The failure was a15-second Notes sync
+Timer surviving widget disposal in the regional calendar/time-picker test. The
+in-progress APK build was cancelled deliberately; no APK from that run was used.
+The focused four initial tests had passed locally. A disposal-signal correction
+then passed five focused tests. The final correction shares a cancellable load
+scope between sync and configuration, rejects late/disposed reads and adds a
+sixth regression test. This final source is **not validated**: the exact single
+regional regression test's local Dart compiler crashed with SIGSEGV in
+`dart::ScavengerVisitor::VisitPointers` (Dart3.13.1/linux_x64). The already-started
+focused six-test process also segfaulted: only one test completed; five did not.
+Neither run is a PASS. Crash logs remain ignored under
+`.buildlog/notes-loading-20261024/`; the stuck owned test session was interrupted.
+No local test/build retry or second CI dispatch followed the crash, honoring the
+owner's stop-and-backup instruction. No RAM-health/root hardware claim is made.
+
+The existing tablet APK9a01ddd6… remains installed. Its public certificate was
+freshly verified as38ecfe02…663bd6d. Only read-only debug operational metadata and
+the public APK were inspected; no user note text or encryption key was exported.
+The newly prepared downloader/guarded installer were NOT executed. No update,
+uninstall, pm clear, reboot, consent change or user-record edit occurred in this
+recovery task. Notes configuration/preview/persistence are therefore still NOT
+confirmed on the tablet. Next authorized continuation should use hosted CI for
+final-source tests/build, then the existing strict SHA/signature/data-preservation
+gates, and only then actual Notes preview/grant/restart/reboot tests. Do not start
+Habits or change Todo/Core while this Notes validation remains incomplete.
