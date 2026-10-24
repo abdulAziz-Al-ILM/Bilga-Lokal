@@ -5,6 +5,34 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
+## 2026-10-24 — hosted Notes checks PASS; LOCAL APK INTEGRITY STOP
+
+Owner resumed fromd1da32c and explicitly prohibited local Dart/Java tests/builds.
+No local test/compiler/build was run in this continuation. Existing cancellation
+scope retained; source16814a54e600f026f0a56b644b84d0af90bc1f2a adds focused Notes
+and exact regional regression steps before full CI, and gates APK build on PASS.
+Manual private-WIP run40100139344: focused Notes/regional, analyze and full Flutter
+tests PASS; APK build currently in progress. Prior Timer-disposal FAIL is fixed
+in the hosted environment. Do not translate that into a tablet UI success claim.
+
+Fresh pull of the existing public installed APK failed local signature verification.
+Independent local Python/native SHA values differed. One bounded diagnostic made
+the copy read-only and confirmed unchanged inode/size/mtime/ctime across hashing,
+yet Python=af5b748c…65d63 and native=28625970…98fe9e differed again. The actual
+installed tablet file independently hashes to trusted9a01ddd6…e7a36d8. This is a
+local read/hash/storage/runtime-path integrity failure, not a proven specific RAM
+or disk diagnosis. Suspect copy is quarantined by non-use in ignored runtime
+storage. Do not retry/reuse it or claim the fresh certificate verified.
+
+No new APK download, private-key read/signing/upload, adb install, uninstall,
+pm clear, database reset, consent edit or fixture/UI mutation followed this gate
+failure. Existing tablet app/data remain in place. CI is independent and continues
+only to preserve hosted test/build evidence; signing/install/tablet preview,
+Recent Apps reopen and widget re-add tests are BLOCKED, not PASS. Source16814a5
+and current state are saved only to private WIP; main8871b3a unchanged. No
+Todo/Habits/Core feature changes. Ignored evidence: notes-final-20261024/
+integrity-stop.json. Full chronology: BILGA_NOTES_WIDGET.md.
+
 ## 2026-10-24 — Notes recovery WIP; STOPPED after local Dart SIGSEGV
 
 Starting WIP94dbf3f matched private remote, worktree clean, Tab16 connected.

@@ -224,3 +224,31 @@ calendar test before analyze/full suite. APK build requires those checks to PASS
 a failed test can no longer launch a wasted build. No environment/version/main
 changes or local test execution. All runtime/UI evidence remains pending until
 this hosted validation and the existing signature/hash/install gates succeed.
+
+### Hosted checks PASS; fresh local public-APK copy fails integrity
+
+CI40100139344 on16814a54e600f026f0a56b644b84d0af90bc1f2a has passed the focused
+Notes/regional regression step, analyze and full Flutter suite. APK build is still
+in progress at this checkpoint. This validates the saved Timer-disposal correction
+on a hosted runner; no local Dart/Java tests or APK build ran.
+
+The fresh public installed APK pull could not be signature-verified locally.
+Its initial Python/native SHA values were respectively
+`e9f1146bb838fce3d6b5ea7ced8aede533a41de313a9ecbb013568d64b445e1d` and
+`af5b748c7fa09498a4afceed452d6ac7d977657ff5a6e647a6210100fa865d63`.
+One bounded read-only diagnosis confirmed unchanged inode2128002,293937033 bytes,
+mtime and ctime, but Python/native hashes again differed:
+`af5b748c7fa09498a4afceed452d6ac7d977657ff5a6e647a6210100fa865d63` versus
+`28625970a4773dbea6d663fabec318de7c94662bd8794d8d8f3a7b7fde98fe9e`.
+The actual installed APK was hashed separately on the tablet and still matches
+trusted `9a01ddd6a8f77df800627b2c4214ecc3cdd3e87b3147dc1715b9be506e7a36d8`.
+An unchanged local file does not yield consistent hashes: local read/hash/storage/
+runtime integrity remains untrusted; RAM versus disk is not isolated here.
+
+The suspect copy remains unused/read-only; no repeat transfer, new APK download,
+key use/export, signing or install was attempted. A fresh certificate PASS is NOT
+claimed. The old debug signer38ec… is historical trusted evidence only. No user
+record, consent, database, installed app or existing widget was changed to bypass
+this safety gate. Actual new Notes configuration, preview, permission persistence,
+Recent Apps reopen and widget re-add checks remain blocked. Only independent hosted
+CI completion and safe source/evidence backup continue; no other card is changed.
