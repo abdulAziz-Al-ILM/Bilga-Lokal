@@ -288,5 +288,6 @@
   "snooze5": "5 분",
   "snooze10": "10 분",
   "snooze30": "30 분",
-  "snooze60": "60 분"
+  "snooze60": "60 분",
+  "widgetNotesUnavailable": "메모가 아직 준비되지 않았습니다. Bilga 또는 기기의 잠금을 해제하고 다시 시도하세요. 위젯 권한은 유지됩니다."
 }

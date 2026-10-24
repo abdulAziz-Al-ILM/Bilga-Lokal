@@ -99,6 +99,7 @@ class _NotesWidgetHostState extends State<NotesWidgetHost>
           page = NotesWidgetConfigPage(
             widgetId: launch['id'] as int,
             sync: sync,
+            canRead: () => allowed,
           );
         case 'create':
           page = const NoteEditorPage();

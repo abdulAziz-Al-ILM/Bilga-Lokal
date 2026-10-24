@@ -1,6 +1,7 @@
 import '../../core/private_database.dart';
 import 'note_tag_store.dart';
 import 'note_widget_permission_store.dart';
+import 'widget/notes_widget_loading.dart';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -28,6 +29,8 @@ class NoteDatabase {
     return PrivateDatabase.open(
       path,
       secure: secure,
+      verifyOnOpen: true,
+      diagnostic: NotesWidgetLoading.trace,
       version: 13,
 
       onConfigure: (db) async {

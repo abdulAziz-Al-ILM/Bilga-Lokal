@@ -288,5 +288,6 @@
   "snooze5": "5 min",
   "snooze10": "10 min",
   "snooze30": "30 min",
-  "snooze60": "60 min"
+  "snooze60": "60 min",
+  "widgetNotesUnavailable": "Muistiinpanot eivät ole vielä valmiita. Avaa Bilgan tai laitteen lukitus ja yritä uudelleen. Widgetin käyttöluvat säilytetään."
 }

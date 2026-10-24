@@ -9,6 +9,7 @@ import '../note_database.dart';
 import '../notes_changes.dart';
 import 'notes_widget_bridge.dart';
 import 'notes_widget_data.dart';
+import 'notes_widget_loading.dart';
 
 class NotesWidgetSync {
   final bool Function() canRead;
@@ -50,9 +51,10 @@ class NotesWidgetSync {
           await NotesWidgetBridge.channel.invokeMethod<void>('redact');
           continue;
         }
-        final configs = (await NotesWidgetBridge.configs())
-            .map(NotesWidgetConfig.fromMap)
-            .toList();
+        final configs = (await NotesWidgetLoading.step(
+          'sync.store',
+          NotesWidgetBridge.configs,
+        )).map(NotesWidgetConfig.fromMap).toList();
         if (configs.isEmpty || _disposed) continue;
         final settings = AppSettings.instance;
         final labels = {
@@ -72,17 +74,19 @@ class NotesWidgetSync {
           settings.palette,
           settings.brightness,
         ).colorScheme;
-        final data = NotesWidgetData(await database());
+        final data = NotesWidgetData(
+          await NotesWidgetLoading.step('sync.database', database),
+        );
         final widgets = <Map<String, Object?>>[];
         for (final config in configs) {
           widgets.add({
             'id': config.id,
             'revision': config.revision,
             'permissionEpoch': config.permissionEpoch,
-            'rows': await data.snapshot(
-              config,
-              labels,
-              forceHidden: settings.appLock,
+            'rows': await NotesWidgetLoading.step(
+              'sync.snapshot',
+              () =>
+                  data.snapshot(config, labels, forceHidden: settings.appLock),
             ),
           });
         }

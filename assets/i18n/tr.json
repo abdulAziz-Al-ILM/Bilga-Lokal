@@ -288,5 +288,6 @@
   "snooze5": "5 dk",
   "snooze10": "10 dk",
   "snooze30": "30 dk",
-  "snooze60": "60 dk"
+  "snooze60": "60 dk",
+  "widgetNotesUnavailable": "Notlar henüz hazır değil. Bilga veya cihazınızın kilidini açıp tekrar deneyin. Widget izinleriniz korunur."
 }

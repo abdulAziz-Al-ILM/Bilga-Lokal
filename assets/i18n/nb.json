@@ -288,5 +288,6 @@
   "snooze5": "5 min",
   "snooze10": "10 min",
   "snooze30": "30 min",
-  "snooze60": "60 min"
+  "snooze60": "60 min",
+  "widgetNotesUnavailable": "Notatene er ikke klare ennå. Lås opp Bilga eller enheten og prøv igjen. Widgettillatelsene dine beholdes."
 }

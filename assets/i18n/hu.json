@@ -288,5 +288,6 @@
   "snooze5": "5 perc",
   "snooze10": "10 perc",
   "snooze30": "30 perc",
-  "snooze60": "60 perc"
+  "snooze60": "60 perc",
+  "widgetNotesUnavailable": "A jegyzetek még nem érhetők el. Oldja fel a Bilga vagy az eszköz zárolását, és próbálja újra. A widget engedélyei megmaradnak."
 }

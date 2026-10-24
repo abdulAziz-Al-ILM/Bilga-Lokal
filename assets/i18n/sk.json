@@ -288,5 +288,6 @@
   "snooze5": "5 min",
   "snooze10": "10 min",
   "snooze30": "30 min",
-  "snooze60": "60 min"
+  "snooze60": "60 min",
+  "widgetNotesUnavailable": "Poznámky zatiaľ nie sú dostupné. Odomknite Bilga alebo zariadenie a skúste to znova. Povolenia miniaplikácie zostanú zachované."
 }

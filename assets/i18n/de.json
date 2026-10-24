@@ -288,5 +288,6 @@
   "snooze5": "5 Min.",
   "snooze10": "10 Min.",
   "snooze30": "30 Min.",
-  "snooze60": "60 Min."
+  "snooze60": "60 Min.",
+  "widgetNotesUnavailable": "Notizen sind noch nicht verfügbar. Entsperre Bilga oder dein Gerät und versuche es erneut. Deine Widget-Freigaben bleiben erhalten."
 }

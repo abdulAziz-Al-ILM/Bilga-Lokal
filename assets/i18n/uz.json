@@ -288,5 +288,6 @@
   "snooze5": "5 daq",
   "snooze10": "10 daq",
   "snooze30": "30 daq",
-  "snooze60": "60 daq"
+  "snooze60": "60 daq",
+  "widgetNotesUnavailable": "Yozuvlar hozircha tayyor emas. Bilga yoki qurilma qulfini ochib, qayta urinib ko‘ring. Vidjet ruxsatlaringiz saqlanadi."
 }

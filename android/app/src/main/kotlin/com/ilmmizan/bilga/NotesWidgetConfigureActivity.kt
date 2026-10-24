@@ -12,6 +12,8 @@ import android.os.ResultReceiver
 /** Hand off to the existing Flutter activity; never attach its shared audio engine twice. */
 class NotesWidgetConfigureActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0)
+            android.util.Log.d("NotesWidgetLoading", "handoff.create")
         setResult(RESULT_CANCELED)
         super.onCreate(savedInstanceState)
         val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)

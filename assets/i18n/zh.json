@@ -288,5 +288,6 @@
   "snooze5": "5 分钟",
   "snooze10": "10 分钟",
   "snooze30": "30 分钟",
-  "snooze60": "60 分钟"
+  "snooze60": "60 分钟",
+  "widgetNotesUnavailable": "笔记尚未就绪。请解锁 Bilga 或设备后重试。小组件权限将保留。"
 }

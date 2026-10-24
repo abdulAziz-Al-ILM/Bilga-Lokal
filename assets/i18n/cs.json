@@ -288,5 +288,6 @@
   "snooze5": "5 min",
   "snooze10": "10 min",
   "snooze30": "30 min",
-  "snooze60": "60 min"
+  "snooze60": "60 min",
+  "widgetNotesUnavailable": "Poznámky zatím nejsou dostupné. Odemkněte Bilga nebo zařízení a zkuste to znovu. Oprávnění widgetu zůstanou zachována."
 }

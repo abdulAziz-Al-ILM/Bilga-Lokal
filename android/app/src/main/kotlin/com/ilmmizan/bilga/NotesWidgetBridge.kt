@@ -17,7 +17,12 @@ class NotesWidgetBridge(private val activity: Activity, messenger: BinaryMesseng
     private val channel = MethodChannel(messenger, "bilga/notes_widget")
     private var launch: Map<String, Any>? = null
     private var configuring: Pair<Int, ResultReceiver>? = null
+    private fun trace(phase: String) {
+        if (activity.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0)
+            android.util.Log.d("NotesWidgetLoading", phase)
+    }
     init {
+        trace("native.attach")
         NotesWidget.observeLock(activity)
         // AudioService keeps the Flutter engine alive across activity recreation.
         // Notify an already-running Dart host; cold Dart also consumes this queue.
@@ -27,15 +32,18 @@ class NotesWidgetBridge(private val activity: Activity, messenger: BinaryMesseng
                 when (call.method) {
                     "consumeLaunch" -> { result.success(launch); launch = null }
                     "configs" -> {
+                        trace("native.store.begin")
                         val ids = NotesWidget.ids(activity).toMutableSet()
-                        result.success(ids.map { id ->
+                        val configs = ids.map { id ->
                             val v = NotesWidgetStore.readableOrNew(activity, id)
                             mapOf("id" to id, "source" to v.optString("source", "recent"), "privacy" to v.optString("privacy", "hidden"),
                                 "revision" to v.optString("revision", ""),
                                 "permissionEpoch" to activity.getSharedPreferences("notes-widget-ui", Context.MODE_PRIVATE).getLong("permissionEpoch", 0),
                                 "tagId" to v.optString("tagId").takeIf { it.isNotEmpty() && it != "null" },
                                 "pinnedIds" to array(v.optJSONArray("pinnedIds")), "approvals" to objectMap(v.optJSONObject("approvals")))
-                        })
+                        }
+                        trace("native.store.ready")
+                        result.success(configs)
                     }
                     "saveConfig" -> {
                         val id = call.argument<Int>("id") ?: -1
@@ -102,6 +110,7 @@ class NotesWidgetBridge(private val activity: Activity, messenger: BinaryMesseng
                     else -> result.notImplemented()
                 }
             } catch (_: Exception) {
+                trace("native.unavailable")
                 activity.getSharedPreferences("notes-widget-ui", Context.MODE_PRIVATE).edit().putBoolean("forceHidden", true).commit()
                 NotesWidget.refresh(activity)
                 result.error("notes_widget", "Notes widget unavailable", null)
@@ -126,7 +135,7 @@ class NotesWidgetBridge(private val activity: Activity, messenger: BinaryMesseng
         }
         if (notify) channel.invokeMethod("launch", null)
     }
-    fun ready() { channel.invokeMethod("refresh", null) }
+    fun ready() { trace("native.ready"); channel.invokeMethod("refresh", null) }
     fun close() { channel.setMethodCallHandler(null) }
     private fun array(value: JSONArray?): List<String> = if (value == null) emptyList() else (0 until value.length()).map { value.getString(it) }
     private fun objectMap(value: JSONObject?): Map<String, String> = value?.keys()?.asSequence()?.associateWith { value.getString(it) } ?: emptyMap()

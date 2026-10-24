@@ -161,3 +161,27 @@ APK: `build/app/outputs/flutter-apk/app-debug.apk`, **321450143 bytes**;
 SHA-256 `6fad8283d76783773dc0cf1bc6a5059d1688cb0d8ac35506398e682ca3f1dc4d`.
 Joriy ruxsat testlari loglari: `.buildlog/notes-widget-permissions/`;
 oldingi vidjet sinovlari: `.buildlog/notes-widget/` (shaxsiy DB/UI nusxalari olinmagan).
+
+## 2026-10-24 — WIP loading recovery (device validation pending)
+
+Starting source/remote94dbf3f, existing Tab16 APK9a01ddd6… was reproduced stuck.
+Read-only debug VM metadata (no key/content/context values exported) showed Notes
+`_opening` unresolved, SQLCipher bilga.db handle already marked closed, and its
+close-lock Future still pending. Todo's retained handle was open/idle. Thus Notes
+never reached tag/note/permission loading: the temporary integrity-check connection
+was waiting for Android closeDatabase, before its normal connection could open.
+No definitive hardware, corruption or plugin-worker-race diagnosis is claimed.
+
+Notes now requests integrity verification on its retained SQLCipher connection,
+before configuration/schema migration. It uses the same database/key/schema and
+still fails closed on integrity errors. Todo keeps the default existing open path.
+Existing Notes migration remnants are retained on this path, not eagerly removed.
+Fixed debug phase markers cover native handoff/store, vault/cipher/integrity,
+config tags/notes/permissions and sync; no exceptions, SQL, paths, IDs or text log.
+Each configuration read has a15-second bound, a localized43-language unavailable
+message and explicit retry. Retry reuses the singleton pending database Future,
+retains loaded configuration and never treats read failure as permission removal.
+The existing AppLock screen supplies in-app authentication; host gating also
+prevents the config from starting reads while locked. Native locked/corrupt cache
+still fails closed without replacing existing encrypted settings. Production
+source and four focused regression tests require validation before claiming PASS.
