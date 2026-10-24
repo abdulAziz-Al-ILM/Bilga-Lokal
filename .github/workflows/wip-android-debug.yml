@@ -113,6 +113,13 @@ jobs:
         timeout-minutes: 10
         run: flutter pub get --enforce-lockfile
 
+      - name: Notes widget regression tests
+        id: notes
+        timeout-minutes: 8
+        run: |
+          flutter test --no-pub test/notes_widget_loading_test.dart test/notes_widget_test.dart --concurrency=1 --reporter expanded
+          flutter test --no-pub test/localization_test.dart --plain-name 'Regional calendars and time pickers use the selected language' --concurrency=1 --reporter expanded
+
       - name: Flutter analyze
         id: analyze
         timeout-minutes: 10
@@ -120,13 +127,13 @@ jobs:
 
       - name: Flutter tests
         id: tests
-        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.notes.outcome == 'success' }}
         timeout-minutes: 15
         run: flutter test --no-pub --concurrency=2 --reporter expanded
 
       - name: Build Android debug APK
         id: apk
-        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.android.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.android.outcome == 'success' && steps.notes.outcome == 'success' && steps.analyze.outcome == 'success' && steps.tests.outcome == 'success' }}
         timeout-minutes: 25
         # Uses the runner's disposable Android debug key, never release signing.
         run: flutter build apk --debug --no-pub
@@ -170,6 +177,7 @@ jobs:
         if: ${{ always() }}
         env:
           PUB_RESULT: ${{ steps.dependencies.outcome }}
+          NOTES_RESULT: ${{ steps.notes.outcome }}
           ANALYZE_RESULT: ${{ steps.analyze.outcome }}
           TEST_RESULT: ${{ steps.tests.outcome }}
           APK_RESULT: ${{ steps.apk.outcome }}
@@ -181,6 +189,7 @@ jobs:
             printf 'Source commit: `%s`\n\n' "$GITHUB_SHA"
             printf '| Check | Outcome |\n| --- | --- |\n'
             printf '| pub get | %s |\n' "$PUB_RESULT"
+            printf '| Notes focused regressions | %s |\n' "$NOTES_RESULT"
             printf '| analyze | %s |\n' "$ANALYZE_RESULT"
             printf '| Flutter tests | %s |\n' "$TEST_RESULT"
             printf '| debug APK | %s |\n' "$APK_RESULT"

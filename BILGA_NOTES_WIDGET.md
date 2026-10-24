@@ -214,3 +214,13 @@ confirmed on the tablet. Next authorized continuation should use hosted CI for
 final-source tests/build, then the existing strict SHA/signature/data-preservation
 gates, and only then actual Notes preview/grant/restart/reboot tests. Do not start
 Habits or change Todo/Core while this Notes validation remains incomplete.
+
+### Hosted-only continuation
+
+Owner explicitly resumed fromd1da32c and forbade local Dart/Java tests/builds.
+The saved shared cancellation scope is retained. Manual private-WIP CI now runs
+Notes loading/widget regressions and the exact previously failing regional
+calendar test before analyze/full suite. APK build requires those checks to PASS;
+a failed test can no longer launch a wasted build. No environment/version/main
+changes or local test execution. All runtime/UI evidence remains pending until
+this hosted validation and the existing signature/hash/install gates succeed.
