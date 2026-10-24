@@ -252,3 +252,32 @@ record, consent, database, installed app or existing widget was changed to bypas
 this safety gate. Actual new Notes configuration, preview, permission persistence,
 Recent Apps reopen and widget re-add checks remain blocked. Only independent hosted
 CI completion and safe source/evidence backup continue; no other card is changed.
+
+### Final hosted result — new device validation still blocked
+
+[CI40100139344](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/40100139344)
+SUCCESS on16814a54e600f026f0a56b644b84d0af90bc1f2a:
+
+- Focused Notes32 PASS (six loading/lifecycle tests plus26 existing widget tests).
+- The exact previously failing regional calendar/time-picker test1 PASS.
+- Analyze: no issues13.8s. Full Flutter suite:230 PASS in1m08s.
+- Debug APK build PASS;8 Python delivery safety tests PASS on runner.
+- ZIP/CRC, signature and independent Python/native/server SHA checks PASS there.
+- Private UNPUBLISHED draft422769062, asset672427724;293935671 bytes.
+  SHA-256 `3939827110a27b605b7b2736fc4e273bab8d4a7deb1e908cdef9ddabc6cc0238`.
+  [Draft](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/releases/tag/untagged-f32701240845bda24f13).
+
+Runner signer `ff44bdaf2ca133d5cfe83326bba9a657a5ca18ecf3588e5d5ca60b06922eb2e7`
+is disposable and differs from known tablet38ec…663bd6d. No matching-key signed
+candidate was produced: the local integrity failure above correctly stopped that
+path. Neither the suspect installed-APK copy nor the new CI APK was installed.
+Only small CI metadata/logs were downloaded after the stop; no new APK transfer
+or repeated integrity retry. Existing installed device APK independently retains
+9a01…36d8. User databases/consents/widgets were not reset or edited.
+
+Thus the CI FAIL is resolved and the source is backed up, but **the new Notes
+settings page has NOT been confirmed open/working on the tablet**. New preview,
+tags, disclosure grant persistence after Recent Apps close/reopen and widget
+re-add remain blocked. Local source/log review is not a substitute for those real
+flows. No Notes completion or Habits/To-Do next-phase readiness is claimed. Source
+has not changed since the successful hosted run, apart from these reports.

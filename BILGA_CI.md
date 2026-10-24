@@ -1,5 +1,30 @@
 # WIP Android CI
 
+## Latest Notes recovery — hosted SUCCESS, tablet installation blocked
+
+[Run40100139344](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/40100139344)
+on WIP16814a54e600f026f0a56b644b84d0af90bc1f2a succeeded:32 focused Notes tests,
+one exact regional lifecycle regression, analyze/no issues13.8s,230 full Flutter
+tests, APK build and8 delivery safety checks. Runner ZIP/CRC, apksigner, Python/
+sha256sum and GitHub server digest checks passed. No local Dart/Java tests/builds.
+
+[PRIVATE unpublished draft422769062](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/releases/tag/untagged-f32701240845bda24f13)
+has the four allowlisted CI assets; APK672427724 is293935671 bytes.
+SHA-256 `3939827110a27b605b7b2736fc4e273bab8d4a7deb1e908cdef9ddabc6cc0238`.
+Runner signer `ff44bdaf2ca133d5cfe83326bba9a657a5ca18ecf3588e5d5ca60b06922eb2e7`
+differs from known tablet signer38ec…663bd6d. **Do not install this runner APK.**
+
+A fresh pull of the OLD installed APK failed local signature verification; its
+independent local hashes disagreed despite unchanged read-only file metadata.
+Tablet-side installed SHA remains trusted9a01…36d8. One bounded diagnostic was
+recorded, then local transfer/signing/install stopped. No key read/upload, new
+APK download, install, reset or user-data mutation. This is not an end-to-end
+integrity/signing PASS. Notes UI/persistence still awaits safe device validation.
+See BILGA_NOTES_WIDGET.md for exact failure hashes and evidence. The old one-off
+candidate verifier below remains pinned to an older source/build, not this APK.
+
+The earlier delivery-only history below concerns the previous9a01… tablet APK.
+
 ## FINAL: tablet-compatible APK delivery PASS — 2026-10-23
 
 Download **tablet-debug.apk** from the

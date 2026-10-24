@@ -5,33 +5,42 @@ Repo: **abdulAziz-Al-ILM/Bilga-Lokal** (private), branch: **wip/todo-widget-reco
 
 > Bu hujjat keyingi AI/ishlab chiquvchi uchun joriy holatning asosiy manbasi. Repo faktlari, foydalanuvchi qarorlari va tekshirilmagan joylar alohida ajratiladi. Taxmin bilan “ishlaydi” deb yozilmasin.
 
-## 2026-10-24 — hosted Notes checks PASS; LOCAL APK INTEGRITY STOP
+## 2026-10-24 — hosted Notes recovery PASS; device update BLOCKED by local integrity
 
-Owner resumed fromd1da32c and explicitly prohibited local Dart/Java tests/builds.
-No local test/compiler/build was run in this continuation. Existing cancellation
-scope retained; source16814a54e600f026f0a56b644b84d0af90bc1f2a adds focused Notes
-and exact regional regression steps before full CI, and gates APK build on PASS.
-Manual private-WIP run40100139344: focused Notes/regional, analyze and full Flutter
-tests PASS; APK build currently in progress. Prior Timer-disposal FAIL is fixed
-in the hosted environment. Do not translate that into a tablet UI success claim.
+Owner resumed fromd1da32c; no local Dart/Java tests, compiler or APK build ran.
+Saved SQLCipher/lifecycle fix retained. Source16814a54e600f026f0a56b644b84d0af90bc1f2a
+adds hosted Notes/regional regressions before full CI and gates APK build on PASS.
+CI40100139344 SUCCESS:32 focused Notes tests + exact prior failing regional test,
+analyze/no issues13.8s,230 full Flutter tests, debug APK,8 delivery safety tests,
+ZIP/CRC/signature/independent hashes and PRIVATE unpublished draft delivery PASS.
+Prior Timer-disposal FAIL is resolved on the runner. Later WIP changes are reports
+only; no application changes after tested16814a5.
+
+Draft422769062/asset672427724 (not published),293935671 bytes:
+https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/releases/tag/untagged-f32701240845bda24f13
+Runner/server APK SHA3939827110a27b605b7b2736fc4e273bab8d4a7deb1e908cdef9ddabc6cc0238.
+Runner disposable debug signerff44bdaf2ca133d5cfe83326bba9a657a5ca18ecf3588e5d5ca60b06922eb2e7
+is not the known tablet signer38ec…663bd6d. This is NOT an authorized tablet update.
 
 Fresh pull of the existing public installed APK failed local signature verification.
-Independent local Python/native SHA values differed. One bounded diagnostic made
-the copy read-only and confirmed unchanged inode/size/mtime/ctime across hashing,
-yet Python=af5b748c…65d63 and native=28625970…98fe9e differed again. The actual
-installed tablet file independently hashes to trusted9a01ddd6…e7a36d8. This is a
-local read/hash/storage/runtime-path integrity failure, not a proven specific RAM
-or disk diagnosis. Suspect copy is quarantined by non-use in ignored runtime
-storage. Do not retry/reuse it or claim the fresh certificate verified.
+One bounded diagnostic confirmed unchanged inode/size/mtime/ctime/read-only file,
+yet Python=af5b748c…65d63 and sha256sum=28625970…98fe9e differed. Actual tablet
+installed file independently still hashes to trusted9a01ddd6…e7a36d8. Local
+read/hash/storage/runtime integrity is untrusted; RAM versus disk not isolated.
+Suspect local copy remains unused/ignored. Do not retry/reuse it or claim a freshly
+verified installed certificate. Host disk free space:home8.7GB/system11GB; no cleanup.
 
-No new APK download, private-key read/signing/upload, adb install, uninstall,
-pm clear, database reset, consent edit or fixture/UI mutation followed this gate
-failure. Existing tablet app/data remain in place. CI is independent and continues
-only to preserve hosted test/build evidence; signing/install/tablet preview,
-Recent Apps reopen and widget re-add tests are BLOCKED, not PASS. Source16814a5
-and current state are saved only to private WIP; main8871b3a unchanged. No
-Todo/Habits/Core feature changes. Ignored evidence: notes-final-20261024/
-integrity-stop.json. Full chronology: BILGA_NOTES_WIDGET.md.
+No new APK downloaded locally; no private-key use/upload/signing, install-r,
+uninstall/pm clear, database reset, consent or fixture/UI edits, widget re-add or
+reboot. Existing tablet app/data stay in place. New Notes configuration/preview,
+Recent Apps reopen and widget re-add persistence remain NOT TESTED/BLOCKED, not
+PASS. Hosted source/evidence backed up in private WIP (checkpoint7049017, final
+report follows); main8871b3a and Todo/Habits/Core untouched. Next step needs a
+trustworthy transfer/signing environment, matching existing key without export,
+and all integrity gates before data-preserving update and real Notes UI checks.
+Old verify_tablet_apk.py is deliberately pinned to5ee550e/39926382854; it must not
+be used unchanged to certify this new build. Full evidence: BILGA_NOTES_WIDGET.md
+and BILGA_CI.md; ignored runtime report notes-final-20261024/integrity-stop.json.
 
 ## 2026-10-24 — Notes recovery WIP; STOPPED after local Dart SIGSEGV
 
