@@ -19,7 +19,7 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Voice | NOT STARTED | Explicitly excluded from this release; no reachable speech/microphone flow |
 | Cross-module relationships | NOT STARTED | Note-to-task and journal-to-task durable links still required |
 | 40-day trial | IMPLEMENTED | Recovered Keystore/AtomicFile, monotonic/high-water clock protection; device tests pending |
-| Read-only access after trial | TESTED | Data browser, note versions and exports remain accessible under AppLock |
+| Read-only access after trial | TESTED | Host reader/history/no-edit regression passes; read/export routes remain under AppLock. Native export acceptance still needs a device |
 | Lifetime purchase | BLOCKED | Product ID updated; secure grant flow recovered; real Play/verifier configuration and test purchases unavailable |
 | Regional pricing | IN PROGRESS | Runtime localized price remains Play-supplied; owner approval and Console activation pending |
 | App lock and local encryption | IMPLEMENTED | Existing device authentication, SQLCipher, Keystore and encrypted attachments retained; standalone app PIN absent |

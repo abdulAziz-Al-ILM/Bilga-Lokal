@@ -15,6 +15,7 @@ Environment: Ubuntu 26.04.1 / Linux x64, Flutter 3.47.8 at official revision `73
 | `flutter test --no-pub --concurrency=2 --reporter expanded` | **158 PASS, exit 0, 64s** | Complete current Flutter suite |
 | `python3 tool/check_catalogs.py` | PASS, 43 × 324 strings | Structural coverage, not native-language review |
 | `python3 tool/check_schema.py` | PASS, Notes v1–v10 / Tasks v1–v5 | Static extraction covers legacy direct SQL only; helper-based upgrades are verified by Flutter runtime tests |
+| `dart tool/check_private_rules.dart` | 30 PASS | Finance validation and authenticated chunk-encryption/security rules |
 | Dart habit-plan / task-rules / command-grammar checks | PASS: 19 habit-plan checks; task boundary/timezone checks; 14 grammar/calendar checks | Grammar code is preserved but speech and phone actions are not exposed |
 | `python3 tool/test_play_manifest.py` | 4 PASS | Release-manifest gate rejects obsolete Billing, wrong identity/target and microphone permission |
 | `git diff --check`, shell syntax and new literal translation-key audit | PASS | Diff hygiene, build-helper syntax and new UI catalog lookup |
@@ -32,9 +33,11 @@ Android artifact attempts:
 
 - `flutter doctor -v`: Android SDK unavailable; no Android device. Flutter's detached pinned tag is reported as an unknown channel; this is expected for this temporary checkout.
 - `flutter build apk --debug --no-pub` and `flutter build appbundle --release --no-pub` were started, then interrupted during Android engine setup after doctor confirmed missing toolchain. They generated **no APK/AAB** and are not passing builds (the interrupted AAB setup returned 0, which is not evidence of an artifact).
-- Hosted CI has a configured build environment; its current branch run/result is recorded separately in RELEASE_READINESS.md after pushing.
+- Hosted CI has a configured build environment. Run 42668103911 succeeded for source f2bb128: debug APK, ZIP/v2 signature and merged-manifest checks passed; see RELEASE_READINESS.md for the real artifact and hash.
 - No release-signing, real Play purchase/refund, actual reminder delivery, SQLCipher-on-device or Drive-account test has run here.
 
 Policy-required dependency change: in_app_purchase 3.3.1 / in_app_purchase_android 0.5.5, declaring Play Billing 9.1.0. Analyzer and the complete 158-test suite were repeated after this change and passed. See PLAY_POLICY_REVIEW.md.
 
 Hosted CI 42667262437 at source 600ebb7: analyzer, locked resolution, formatting, catalogs and Python manifest tests passed; full suite **157 PASS / 1 FAIL** (48s). Existing note-widget disclosure test tapped the switch while its callback was still disabled during an asynchronous reload. Corrected its wait to require the expected state **and** an enabled callback, keeping the database/privacy assertions. APK stages were skipped. A subsequent run is required; do not call this run successful.
+
+Final hosted retry: **42668103911 SUCCESS**, source f2bb128ed4d4d6adef20fc28a7595de5d00fee2a. Pinned Flutter 3.47.8 / Dart 3.13.7, analyzer no issues (8.9s), full Flutter suite **158 PASS (49s)**, 4 Python gate tests PASS, debug APK build PASS (~7m43s), ZIP integrity/APK v2 signature PASS, actual manifest target 36/Billing 9.1.0/no microphone PASS, artifact uploaded successfully. Hosted synthetic FFI benchmark: 6000 inserts 397 ms, two paged queries 10 ms. These are host results, not Android runtime/device measurements.

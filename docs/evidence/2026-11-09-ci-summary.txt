@@ -1,0 +1,14 @@
+Validated source: f2bb128ed4d4d6adef20fc28a7595de5d00fee2a
+Run: https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/42668103911
+Conclusion: SUCCESS
+Artifact: https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/42668103911/artifacts/13698162381
+
+2026-11-09T17:49:44.2106764Z No issues found! (ran in 8.9s)
+2026-11-09T17:50:19.5392942Z SEARCH BENCHMARK: 6000 inserts=397 ms; two paged queries=10 ms (host FFI, not Android)
+2026-11-09T17:50:42.1862186Z 00:49 +158: All tests passed!
+2026-11-09T17:58:25.1741627Z ✓ Built build/app/outputs/flutter-apk/app-debug.apk
+2026-11-09T17:58:26.4979941Z No errors detected in compressed data of build/app/outputs/flutter-apk/app-debug.apk.
+2026-11-09T17:58:27.1417923Z Verified using v2 scheme (APK Signature Scheme v2): true
+2026-11-09T17:58:27.5215876Z 3ceb34222fc421cd2d9dde65642c63e7f33a8a2f542624fc1151b25c3e7ce4cc  build/app/outputs/flutter-apk/app-debug.apk
+2026-11-09T17:58:29.9762729Z PASS package identity; target API 36; Billing 9.1.0; no microphone permission
+2026-11-09T17:58:30.0971934Z 3ceb34222fc421cd2d9dde65642c63e7f33a8a2f542624fc1151b25c3e7ce4cc  build/app/outputs/flutter-apk/app-debug.apk
