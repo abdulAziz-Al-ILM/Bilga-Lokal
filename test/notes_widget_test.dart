@@ -634,6 +634,14 @@ void main() {
       await db.execute('DROP TRIGGER "${trigger['name']}"');
     }
     await db.execute('DROP TABLE note_widget_permissions');
+    for (final row in await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'search_%'",
+    )) {
+      await db.execute('DROP TRIGGER ${row['name']}');
+    }
+    await db.execute('DROP TABLE bilga_search');
+    await db.execute('DROP INDEX search_note_folder');
+    await db.execute('DROP INDEX search_attachment_owner');
     await db.setVersion(12);
     final path = db.path;
     await db.close();

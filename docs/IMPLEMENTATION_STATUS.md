@@ -18,10 +18,10 @@ Completed source work in this checkpoint:
 - Added Today and next-seven-days views from original task/habit records, quick creation, and trial/purchase status in settings.
 - Standardized the new sale product to `bilga_lifetime_unlock`, retaining legacy verified purchase compatibility. New purchases still require the recovered secure-verifier configuration.
 
-Current work: run actual Flutter analyzer/tests, fix failures, prepare CI and record exact evidence. Test results must be filled from executed commands, never copied from older handoffs.
+Current verification: Flutter analyze PASS (no issues), full Flutter suite 158 PASS (63s), formatting PASS (125 files), 43 × 324 catalog structure PASS. Test failures and fixes are recorded in TEST_REPORT.md. Current work: push the development checkpoint and run its hosted Android debug CI. Local Android builds are blocked by absent Android SDK/Java; no APK/AAB is claimed.
 
-Remaining required implementation includes rich-text editing, task recurrence/subtasks/projects/templates, standalone and habit/note reminder workflows, richer journal history/calendar/categories, cross-module relationships, backup media streaming to Drive and the complete interaction/accessibility/performance audit. See FEATURE_MATRIX.md and KNOWN_LIMITATIONS.md.
+Remaining required implementation includes rich-text editing, task recurrence/subtasks/projects/custom templates, standalone and habit/note reminder workflows, richer journal history/calendar/categories, cross-module relationships, backup media streaming to Drive and the complete interaction/accessibility/performance audit. See FEATURE_MATRIX.md and KNOWN_LIMITATIONS.md.
 
 External configuration: Play product/license key/verification service credentials, OAuth client setup, existing release signing credentials, Android SDK/device access and store acceptance. Never publish, activate regional prices, replace signing keys or merge main without approval.
 
-Next exact step: read TEST_REPORT.md, run the listed focused search/planner/read-only tests, then the full suite and Android build; update this document and the release report with actual results. Continue the remaining modules without replacing working persistence.
+Next exact step: inspect the global-launch-validation workflow run for the latest development commit, address any build failures, record its artifact/hash/result, then implement task recurrence and cross-module links with safe migrations and complete workflows. Do not repeat the already passing suite unless code changes or new failures justify it. Continue remaining modules without replacing working persistence.

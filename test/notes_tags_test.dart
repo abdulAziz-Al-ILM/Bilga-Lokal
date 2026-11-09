@@ -91,7 +91,14 @@ void main() {
         await db.execute(
           'CREATE TABLE note_versions(version_id INTEGER PRIMARY KEY,note_id TEXT,title TEXT,body TEXT,created_at TEXT)',
         );
-        await db.execute('CREATE TABLE folders(id TEXT PRIMARY KEY,name TEXT)');
+        await db.execute(
+          'CREATE TABLE folders(id TEXT PRIMARY KEY,name TEXT,parent_id TEXT,created_at TEXT,updated_at TEXT,is_deleted INTEGER DEFAULT 0,trash_batch TEXT)',
+        );
+        await NoteDatabase.createHabits(db);
+        await db.execute(
+          "ALTER TABLE habits ADD COLUMN details TEXT NOT NULL DEFAULT '{}'",
+        );
+        await NoteDatabase.createRecords(db);
         await db.insert(
           'notes',
           entry(
@@ -114,7 +121,12 @@ void main() {
           'body': 'old',
           'created_at': stamp.toIso8601String(),
         });
-        await db.insert('folders', {'id': 'parent', 'name': 'Parent'});
+        await db.insert('folders', {
+          'id': 'parent',
+          'name': 'Parent',
+          'created_at': stamp.toIso8601String(),
+          'updated_at': stamp.toIso8601String(),
+        });
       },
     );
     final before = {

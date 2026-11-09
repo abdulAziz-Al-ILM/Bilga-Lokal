@@ -1,5 +1,6 @@
 import '../agent/agent_access.dart';
 import '../agent/access_summary.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 
@@ -151,7 +152,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> importFile() async {
-    if (AgentAccess.instance.initialized && !AgentAccess.instance.coreAllowed) { showError(context, 'readOnlyInfo'); return; }
+    if (AgentAccess.instance.initialized && !AgentAccess.instance.coreAllowed) {
+      showError(context, 'readOnlyInfo');
+      return;
+    }
     final items = await Attachments.pick();
     if (items.isEmpty || !mounted) return;
     final secret = await password(creating: false);
@@ -172,7 +176,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> restore(Uint8List bytes, {required bool fromDrive}) async {
-    if (AgentAccess.instance.initialized && !AgentAccess.instance.coreAllowed) { showError(context, 'readOnlyInfo'); return; }
+    if (AgentAccess.instance.initialized && !AgentAccess.instance.coreAllowed) {
+      showError(context, 'readOnlyInfo');
+      return;
+    }
     if (!mounted) return;
     final secret = await password(creating: false);
     if (secret == null) return;
@@ -229,7 +236,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> restoreDrive() async {
-    if (AgentAccess.instance.initialized && !AgentAccess.instance.coreAllowed) { showError(context, 'readOnlyInfo'); return; }
+    if (AgentAccess.instance.initialized && !AgentAccess.instance.coreAllowed) {
+      showError(context, 'readOnlyInfo');
+      return;
+    }
     if (drive.user == null) {
       await connect();
       if (drive.user == null) return;

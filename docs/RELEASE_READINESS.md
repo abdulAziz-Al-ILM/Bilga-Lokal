@@ -22,4 +22,6 @@ Required before release:
 
 Current policy reference consulted: https://developer.android.com/google/play/billing/integrate (2026-11-09). Purchases must be verified and acknowledged only after completion; pending purchases do not unlock. This reference does not replace final policy review.
 
+Current host verification: **158 Flutter tests PASS**, analyzer no issues, formatting and all 43 locale structures PASS. Details and earlier failures are in TEST_REPORT.md. No current Android artifact is available yet.
+
 No release signing credentials were supplied to this work. Do not generate replacement keys or silently substitute debug artifacts.

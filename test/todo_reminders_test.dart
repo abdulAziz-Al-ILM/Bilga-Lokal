@@ -39,6 +39,17 @@ void main() {
         'updated_at': '2020-01-01T08:00:00',
       })
       .then((_) {});
+  Future<void> removeSearchForLegacyFixture() async {
+    for (final row in await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'search_%'",
+    )) {
+      await db.execute('DROP TRIGGER ${row['name']}');
+    }
+    await db.execute('DROP TABLE bilga_search');
+    await db.execute('DROP INDEX planner_due');
+    await db.execute('DROP INDEX planner_completed');
+  }
+
   setUp(() async {
     databaseFactory = createDatabaseFactoryFfi(ffiInit: initializeTestSqlite);
     directory = await Directory.systemTemp.createTemp('bilga-todo-reminder-');
@@ -65,6 +76,7 @@ void main() {
       await db.execute('DROP TABLE todo_reminders');
       await db.execute('DROP TRIGGER todo_widget_revoke');
       await db.execute('DROP TABLE todo_widget_permissions');
+      await removeSearchForLegacyFixture();
       await db.setVersion(6);
       await db.close();
       db = await TodoDatabase.openAt('${directory.path}/todo.db');
@@ -80,6 +92,7 @@ void main() {
     final reminders = await db.query('todo_reminders');
     await db.execute('DROP TRIGGER todo_widget_revoke');
     await db.execute('DROP TABLE todo_widget_permissions');
+    await removeSearchForLegacyFixture();
     await db.setVersion(7);
     await db.close();
     db = await TodoDatabase.openAt('${directory.path}/todo.db');
