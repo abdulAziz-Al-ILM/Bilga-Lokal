@@ -16,9 +16,10 @@ Completed source work in this checkpoint:
 - Added unified local FTS4 search with transactional source triggers, pagination, archive and type filters, source details, attachment export and note-history viewing.
 - Added an explicit read/export route after trial expiry; existing editing routes remain covered by the access gate and AppLock.
 - Added Today and next-seven-days views from original task/habit records, quick creation, and trial/purchase status in settings.
+- Upgraded official billing packages to Play Billing 9.1.0 because the recovered Billing 7.1.1 is past its submission deadline; added a merged-manifest CI gate.
 - Standardized the new sale product to `bilga_lifetime_unlock`, retaining legacy verified purchase compatibility. New purchases still require the recovered secure-verifier configuration.
 
-Current verification: Flutter analyze PASS (no issues), full Flutter suite 158 PASS (63s), formatting PASS (125 files), 43 × 324 catalog structure PASS. Test failures and fixes are recorded in TEST_REPORT.md. Current work: push the development checkpoint and run its hosted Android debug CI. Local Android builds are blocked by absent Android SDK/Java; no APK/AAB is claimed.
+Current verification: Flutter analyze PASS (no issues), full Flutter suite 158 PASS (64s), formatting PASS (125 files), 43 × 324 catalog structure PASS. Test failures and fixes are recorded in TEST_REPORT.md. Source checkpoint `61035a238141a89e478d0190e08f71939f3d6c6e` was pushed and its remote SHA verified. Draft PR: https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/pull/1 . Current work: push the policy-required Billing 9.1.0 upgrade and collect hosted Android debug CI evidence. Local Android builds are blocked by absent Android SDK/Java; no APK/AAB is claimed.
 
 Remaining required implementation includes rich-text editing, task recurrence/subtasks/projects/custom templates, standalone and habit/note reminder workflows, richer journal history/calendar/categories, cross-module relationships, backup media streaming to Drive and the complete interaction/accessibility/performance audit. See FEATURE_MATRIX.md and KNOWN_LIMITATIONS.md.
 

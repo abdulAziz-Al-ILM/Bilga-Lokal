@@ -20,6 +20,8 @@ Required before release:
 - Recheck current official Play target API, Billing Library deadlines, testing-track/account/country rules at submission time.
 - Obtain owner approval for actual publication and final country prices. No prices have been activated.
 
+Current prerequisite review: [PLAY_POLICY_REVIEW.md](PLAY_POLICY_REVIEW.md), including target API 36, updated Billing 9.1.0, conditional account testing and country availability.
+
 Current policy reference consulted: https://developer.android.com/google/play/billing/integrate (2026-11-09). Purchases must be verified and acknowledged only after completion; pending purchases do not unlock. This reference does not replace final policy review.
 
 Current host verification: **158 Flutter tests PASS**, analyzer no issues, formatting and all 43 locale structures PASS. Details and earlier failures are in TEST_REPORT.md. No current Android artifact is available yet.
