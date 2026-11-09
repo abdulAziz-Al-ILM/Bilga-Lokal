@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Tapşırıq vidceti</string>
+    <string name="tw_todos">Tapşırıqlar</string>
+    <string name="tw_task">Tapşırıq</string>
+    <string name="tw_new">Yeni tapşırıq</string>
+    <string name="tw_done">Tamamlanmış</string>
+    <string name="tw_snooze">Təxirə sal</string>
+    <string name="tw_empty">Hələ heç nə yoxdur</string>
+    <string name="tw_reminders">Xatırlatmalar</string>
+    <string name="tw_limits">Android xatırlatmanı gecikdirə və paneli gizlədə bilər. Bildiriş, dəqiq alarm və batareya ayarlarını yoxlayın; açılan bildirişə zəmanət yoxdur.</string>
+    <string name="tw_custom">Vaxt seç</string>
+    <string name="tw_save">Saxla</string>
+    <string name="tw_cancel">Ləğv et</string>
+    <string name="tw_future">Gələcək xatırlatma vaxtını seçin.</string>
+</resources>

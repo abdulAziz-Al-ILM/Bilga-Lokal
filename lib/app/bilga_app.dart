@@ -1,3 +1,5 @@
+import '../features/todo/reminders/todo_host.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -5,6 +7,8 @@ import '../core/settings.dart';
 import '../core/strings.dart';
 import '../core/regional_localizations.dart';
 import '../core/app_lock.dart';
+import '../features/agent/core_access_gate.dart';
+import '../features/notes/widget/notes_widget_host.dart';
 import 'home_page.dart';
 
 class BilgaApp extends StatelessWidget {
@@ -32,9 +36,10 @@ class BilgaApp extends StatelessWidget {
         theme: bilgaTheme(settings.palette, Brightness.light),
         darkTheme: bilgaTheme(settings.palette, Brightness.dark),
         themeMode: settings.mode,
-        builder: (context, child) =>
-            AppLock(child: child ?? const SizedBox.shrink()),
-        home: const HomePage(),
+        builder: (context, child) => AppLock(
+          child: CoreAccessGate(child: child ?? const SizedBox.shrink()),
+        ),
+        home: const NotesWidgetHost(child: TodoHost(child: HomePage())),
       );
     },
   );

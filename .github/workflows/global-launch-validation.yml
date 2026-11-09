@@ -1,0 +1,69 @@
+name: Global launch development validation
+
+on:
+  push:
+    branches: [development/global-launch]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bilga-global-launch-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    if: >-
+      github.repository == 'abdulAziz-Al-ILM/Bilga-Lokal' &&
+      github.event.repository.private == true &&
+      github.ref == 'refs/heads/development/global-launch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      DART_SUPPRESS_ANALYTICS: 'true'
+      GRADLE_OPTS: -Dorg.gradle.daemon=false
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up pinned official Flutter
+        run: |
+          bilga_flutter="$RUNNER_TEMP/bilga-flutter"
+          git clone --depth 1 --branch 3.47.8 https://github.com/flutter/flutter.git "$bilga_flutter"
+          test "$(git -C "$bilga_flutter" rev-parse HEAD)" = '737ba8f885dc774b53b442759999a312c9461e4e'
+          echo "$bilga_flutter/bin" >> "$GITHUB_PATH"
+          "$bilga_flutter/bin/flutter" config --no-analytics --jdk-dir "$JAVA_HOME" --android-sdk "$ANDROID_HOME"
+          "$bilga_flutter/bin/flutter" --version
+      - name: Install matching Android build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends libsqlite3-0 libglu1-mesa
+          bilga_sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$bilga_sdkmanager" --licenses < <(yes) > /dev/null
+          "$bilga_sdkmanager" 'platform-tools' 'platforms;android-34' 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: python3 tool/check_catalogs.py
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub --concurrency=2 --reporter expanded
+      - run: flutter build apk --debug --no-pub
+      - name: Verify debug artifact
+        run: |
+          bash tool/verify_android_apk.sh
+          sha256sum build/app/outputs/flutter-apk/app-debug.apk
+      - name: Save debug artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: bilga-development-debug-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7

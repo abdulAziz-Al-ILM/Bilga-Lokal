@@ -1,3 +1,5 @@
+import 'todo_changes.dart';
+
 import 'package:sqflite/sqflite.dart';
 
 import 'todo_database.dart';
@@ -54,6 +56,7 @@ class TodoService {
       todo.toMap(),
       conflictAlgorithm: ConflictAlgorithm.abort,
     );
+    TodoChanges.committed();
   }
 
   Future<void> updateTodo(Todo todo) async {
@@ -65,6 +68,7 @@ class TodoService {
       where: 'id = ?',
       whereArgs: [todo.id],
     );
+    TodoChanges.committed();
   }
 
   Future<void> toggleTodo(Todo todo) async {
@@ -85,6 +89,7 @@ class TodoService {
       where: 'id = ?',
       whereArgs: [todo.id],
     );
+    TodoChanges.committed();
   }
 
   Future<void> deleteTodo(String id) async {
@@ -100,5 +105,6 @@ class TodoService {
       where: 'id = ?',
       whereArgs: [id],
     );
+    TodoChanges.committed();
   }
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">待办小组件</string>
+    <string name="tw_todos">待办事项</string>
+    <string name="tw_task">任务</string>
+    <string name="tw_new">新建任务</string>
+    <string name="tw_done">已完成</string>
+    <string name="tw_snooze">稍后提醒</string>
+    <string name="tw_empty">这里还没有内容</string>
+    <string name="tw_reminders">提醒</string>
+    <string name="tw_limits">Android 可能延迟提醒或隐藏浮动面板。请检查通知、精确闹钟和电池设置；无法保证始终显示悬浮通知。</string>
+    <string name="tw_custom">选择时间</string>
+    <string name="tw_save">保存</string>
+    <string name="tw_cancel">取消</string>
+    <string name="tw_future">请选择未来的提醒时间。</string>
+</resources>

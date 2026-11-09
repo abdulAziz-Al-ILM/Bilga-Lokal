@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../features/search/library_page.dart';
+import '../features/planning/today_page.dart';
 import 'package:flutter/services.dart';
 
 import '../core/settings.dart';
@@ -143,8 +145,8 @@ class _HomePageState extends State<HomePage> {
         const HabitsPage(),
       ),
       (
-        context.tr('xAgent'),
-        'Start • ${startText('Ovozli yordamchi', 'Voice assistant', 'Голосовой помощник')}',
+        context.tr('textAssistant'),
+        context.tr('searchAssistantShort'),
         Icons.auto_awesome_rounded,
         const AgentHub(),
       ),
@@ -184,6 +186,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         actions: [
+          IconButton(tooltip: context.tr('search'), onPressed: () => open(const LibraryPage()), icon: const Icon(Icons.search)),
           IconButton(
             tooltip: context.tr('profile'),
             onPressed: () => open(const ProfilePage()),
@@ -199,6 +202,7 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 12),
               children: [
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8), child: Card(child: ListTile(leading: const Icon(Icons.today_outlined), title: Text(context.tr('todayPlan')), subtitle: Text(context.tr('weekAhead')), trailing: const Icon(Icons.chevron_right), onTap: () => open(const TodayPage())))),
                 if (settings.nickname.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),

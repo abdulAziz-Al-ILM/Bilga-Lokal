@@ -1,7 +1,5 @@
 import 'features/attachments/attachment_store.dart';
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'features/agent/agent_access.dart';
@@ -28,7 +26,7 @@ class _StartupState extends State<_Startup> {
     await AppSettings.instance.load();
     await Strings.load(code: AppSettings.instance.language);
     await Attachments.clearPreviews();
-    unawaited(AgentAccess.instance.init());
+    await AgentAccess.instance.init();
   }
 
   @override

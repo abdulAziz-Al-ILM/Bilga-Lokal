@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Tiện ích công việc</string>
+    <string name="tw_todos">Việc cần làm</string>
+    <string name="tw_task">Nhiệm vụ</string>
+    <string name="tw_new">Nhiệm vụ mới</string>
+    <string name="tw_done">Đã hoàn thành</string>
+    <string name="tw_snooze">Nhắc lại sau</string>
+    <string name="tw_empty">Chưa có gì ở đây</string>
+    <string name="tw_reminders">Lời nhắc</string>
+    <string name="tw_limits">Android có thể trì hoãn lời nhắc hoặc ẩn bảng nổi. Kiểm tra thông báo, báo thức chính xác và pin; không bảo đảm thông báo bật lên.</string>
+    <string name="tw_custom">Chọn thời gian</string>
+    <string name="tw_save">Lưu</string>
+    <string name="tw_cancel">Hủy bỏ</string>
+    <string name="tw_future">Chọn thời gian nhắc trong tương lai.</string>
+</resources>

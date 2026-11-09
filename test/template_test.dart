@@ -64,7 +64,7 @@ void main() {
       );
       expect(saved.single['body'], 'My own edits');
       expect(saved.single['title'], template.title('uz'));
-      expect(await db.getVersion(), 11);
+      expect(await db.getVersion(), 14);
     } finally {
       await db.close();
       await dir.delete(recursive: true);
@@ -109,7 +109,7 @@ void main() {
         throwsStateError,
       );
       expect(await db.query('todo_folders'), before);
-      expect(await db.getVersion(), 6);
+      expect(await db.getVersion(), 9);
     } finally {
       await db.close();
       await dir.delete(recursive: true);

@@ -10,6 +10,7 @@ import '../collections/collection_repository.dart';
 import 'note_history_page.dart';
 import 'note_model.dart';
 import 'note_service.dart';
+import 'note_tag_picker.dart';
 
 /// Owns persistence: callers only reload their lists when this route closes.
 class NoteEditorPage extends StatefulWidget {
@@ -30,6 +31,8 @@ class _NoteEditorPageState extends State<NoteEditorPage>
   late final NoteService _service;
   late Note _note;
   late bool _inserted;
+  late List<String> _tagNames;
+  List<String>? _tagIds;
   bool _historyRecorded = false;
   bool _allowPop = false;
   bool _busy = false;
@@ -53,12 +56,60 @@ class _NoteEditorPageState extends State<NoteEditorPage>
           updatedAt: now,
         );
     _inserted = widget.note != null;
+    _tagNames = List.of(_note.tags);
+    _tagIds = _note.tagIds == null ? null : List.of(_note.tagIds!);
     _service = widget.service ?? NoteService();
     _title = TextEditingController(text: _note.title);
     _body = TextEditingController(text: _note.body);
   }
 
-  bool get _dirty => _title.text != _note.title || _body.text != _note.body;
+  bool _same(List<String>? a, List<String>? b) => a == null || b == null
+      ? a == b
+      : a.length == b.length &&
+            a.asMap().entries.every((e) => b[e.key] == e.value);
+  bool get _dirty =>
+      _title.text != _note.title ||
+      _body.text != _note.body ||
+      !_same(_tagIds, _note.tagIds) ||
+      !_same(_tagNames, _note.tags);
+
+  Future<void> _chooseTags() async {
+    if (_busy) return;
+    try {
+      final store = await _service.tagStore;
+      final currentIds =
+          _tagIds ?? (await store.forNote(_note.id)).map((t) => t.id).toList();
+      if (!mounted) return;
+      final picked = await showNoteTagPicker(
+        context,
+        store,
+        selected: currentIds,
+      );
+      // Apply a confirmed selection before another Save/Back can close the
+      // editor. IDs are validated/canonicalized by the transactional tag store.
+      final selected =
+          picked ??
+          (await store.all()).where((t) => currentIds.contains(t.id)).toList();
+      if (!mounted) return;
+      setState(() {
+        _tagIds = selected.map((t) => t.id).toList();
+        _tagNames = selected.map((t) => t.name).toList();
+      });
+      _changed('');
+    } catch (_) {
+      if (mounted) showError(context);
+    }
+  }
+
+  void _removeTag(String id) {
+    final index = _tagIds?.indexOf(id) ?? -1;
+    if (index < 0) return;
+    setState(() {
+      _tagIds!.removeAt(index);
+      _tagNames.removeAt(index);
+    });
+    _changed('');
+  }
 
   void _changed(String _) {
     _debounce?.cancel();
@@ -71,14 +122,23 @@ class _NoteEditorPageState extends State<NoteEditorPage>
   Future<bool> _persist() {
     final title = _title.text;
     final body = _body.text;
+    final names = List<String>.of(_tagNames);
+    final ids = _tagIds == null ? null : List<String>.of(_tagIds!);
     final completion = Completer<bool>();
     _queue = _queue.then((_) async {
       try {
-        if (!_inserted && title.trim().isEmpty && body.trim().isEmpty) {
+        if (!_inserted &&
+            title.trim().isEmpty &&
+            body.trim().isEmpty &&
+            names.isEmpty) {
           completion.complete(true);
           return;
         }
-        if (_inserted && title == _note.title && body == _note.body) {
+        if (_inserted &&
+            title == _note.title &&
+            body == _note.body &&
+            _same(ids, _note.tagIds) &&
+            _same(names, _note.tags)) {
           if (mounted) setState(() => _error = null);
           completion.complete(true);
           return;
@@ -87,14 +147,18 @@ class _NoteEditorPageState extends State<NoteEditorPage>
           title: title,
           body: body,
           updatedAt: DateTime.now(),
+          tags: names,
+          tagIds: ids,
         );
         if (_inserted) {
           await _service.updateNote(next, recordHistory: !_historyRecorded);
         } else {
           await _service.addNote(next);
         }
+        if (!_inserted || title != _note.title || body != _note.body) {
+          _historyRecorded = true;
+        }
         _inserted = true;
-        _historyRecorded = true;
         _note = next;
         if (mounted) setState(() => _error = null);
         completion.complete(true);
@@ -195,6 +259,8 @@ class _NoteEditorPageState extends State<NoteEditorPage>
         _note = restored;
         _title.text = restored.title;
         _body.text = restored.body;
+        _tagIds = restored.tagIds;
+        _tagNames = List.of(restored.tags);
       }
       _historyRecorded = false;
     }
@@ -337,6 +403,22 @@ class _NoteEditorPageState extends State<NoteEditorPage>
                   hintText: context.tr('title'),
                   border: InputBorder.none,
                 ),
+              ),
+              Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: _busy ? null : _chooseTags,
+                    icon: const Icon(Icons.label_outline, size: 18),
+                    label: Text(context.tr('tags')),
+                  ),
+                  Expanded(
+                    child: NoteTagChips(
+                      names: _tagNames,
+                      ids: _tagIds,
+                      onRemoved: _busy ? null : _removeTag,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Expanded(

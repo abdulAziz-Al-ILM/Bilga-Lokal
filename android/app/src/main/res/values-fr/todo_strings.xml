@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Widget de tâches</string>
+    <string name="tw_todos">À faire</string>
+    <string name="tw_task">Tâche</string>
+    <string name="tw_new">Nouvelle tâche</string>
+    <string name="tw_done">Terminées</string>
+    <string name="tw_snooze">Reporter</string>
+    <string name="tw_empty">Rien ici pour l\'instant</string>
+    <string name="tw_reminders">Rappels</string>
+    <string name="tw_limits">Android peut retarder les rappels ou masquer les panneaux. Vérifiez notifications, alarmes précises et batterie ; l’affichage flottant n’est pas garanti.</string>
+    <string name="tw_custom">Choisir l’heure</string>
+    <string name="tw_save">Enregistrer</string>
+    <string name="tw_cancel">Annuler</string>
+    <string name="tw_future">Choisissez une heure de rappel future.</string>
+</resources>

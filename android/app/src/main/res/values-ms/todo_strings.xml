@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Widget tugasan</string>
+    <string name="tw_todos">Buat</string>
+    <string name="tw_task">Tugasan</string>
+    <string name="tw_new">Tugas baru</string>
+    <string name="tw_done">Selesai</string>
+    <string name="tw_snooze">Tangguh</string>
+    <string name="tw_empty">Tiada apa-apa lagi di sini</string>
+    <string name="tw_reminders">Peringatan</string>
+    <string name="tw_limits">Android mungkin melambatkan peringatan atau menyembunyikan panel. Semak pemberitahuan, penggera tepat dan bateri; paparan timbul tidak dijamin.</string>
+    <string name="tw_custom">Pilih masa</string>
+    <string name="tw_save">Jimat</string>
+    <string name="tw_cancel">Batal</string>
+    <string name="tw_future">Pilih masa peringatan pada masa hadapan.</string>
+</resources>

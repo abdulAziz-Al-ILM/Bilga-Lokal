@@ -2,16 +2,9 @@ package com.ilmmizan.bilga
 
 import android.view.WindowManager
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
-import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
 import android.util.Base64
 import org.json.JSONObject
 import java.security.KeyFactory
@@ -20,15 +13,12 @@ import java.security.spec.X509EncodedKeySpec
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : AudioServiceFragmentActivity() {
+open class MainActivity : AudioServiceFragmentActivity() {
     private var files: FilesBridge? = null
     private var assistant: MethodChannel? = null
     private var launchAgent = false
-    private var recognizer: SpeechRecognizer? = null
-    private var voiceResult: MethodChannel.Result? = null
-    private var voiceArgs: Map<String, Any?> = emptyMap()
-    private val handler = Handler(Looper.getMainLooper())
-    private val timeout = Runnable { finishVoice(null, "timeout") }
+    private var todoBridge: TodoBridge? = null
+    private var notesWidget: NotesWidgetBridge? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         launchAgent = intent?.action == "com.ilmmizan.bilga.OPEN_AGENT"
@@ -38,6 +28,8 @@ class MainActivity : AudioServiceFragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         files?.receive(intent)
+        notesWidget?.receive(intent)
+        todoBridge?.receive(intent)
         if (intent.action == "com.ilmmizan.bilga.OPEN_AGENT") {
             launchAgent = true
             assistant?.invokeMethod("openAgent", null)
@@ -45,7 +37,11 @@ class MainActivity : AudioServiceFragmentActivity() {
     }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        WidgetTheme.bind(this,flutterEngine.dartExecutor.binaryMessenger)
+        todoBridge = TodoBridge(this, flutterEngine.dartExecutor.binaryMessenger)
+        notesWidget = NotesWidgetBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         VaultBridge(this, flutterEngine.dartExecutor.binaryMessenger)
+        TrialBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         files = FilesBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         files?.receive(intent)
         assistant = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "bilga/assistant")
@@ -54,22 +50,6 @@ class MainActivity : AudioServiceFragmentActivity() {
                 result.success(launchAgent)
                 launchAgent = false
             } else result.notImplemented()
-        }
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "bilga/voice").setMethodCallHandler { call, result ->
-            when (call.method) {
-                "cancel" -> { finishVoice(null, "cancelled"); result.success(null) }
-                "listen" -> {
-                    if (voiceResult != null) result.error("busy", "Already listening", null)
-                    else {
-                        voiceResult = result
-                        voiceArgs = mapOf("language" to call.argument<String>("language"), "online" to call.argument<Boolean>("online"))
-                        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 711)
-                        } else startVoice()
-                    }
-                }
-                else -> result.notImplemented()
-            }
         }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "bilga/purchase").setMethodCallHandler { call, result ->
             if (call.method != "verify") { result.notImplemented(); return@setMethodCallHandler }
@@ -98,58 +78,18 @@ class MainActivity : AudioServiceFragmentActivity() {
                 result.success(null)
             } else result.notImplemented()
         }
+        // Cached audio-service engines may have attempted their first sync before
+        // these Activity channels (including Vault) existed. Retry only after all
+        // handlers are installed; cold Dart still performs its normal first sync.
+        notesWidget?.ready()
+        todoBridge?.ready()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 711) {
-            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED && voiceResult != null) startVoice()
-            else finishVoice(null, "permission")
-        }
-    }
-    private fun startVoice() {
-        try {
-            val online = voiceArgs["online"] == true
-            if (!online && (Build.VERSION.SDK_INT < 31 || !SpeechRecognizer.isOnDeviceRecognitionAvailable(this))) {
-                finishVoice(null, "offline_unavailable"); return
-            }
-            recognizer = if (!online && Build.VERSION.SDK_INT >= 31) SpeechRecognizer.createOnDeviceSpeechRecognizer(this)
-                else SpeechRecognizer.createSpeechRecognizer(this)
-            recognizer?.setRecognitionListener(object : RecognitionListener {
-                override fun onReadyForSpeech(params: Bundle?) {}
-                override fun onBeginningOfSpeech() {}
-                override fun onRmsChanged(rmsdB: Float) {}
-                override fun onBufferReceived(buffer: ByteArray?) {}
-                override fun onEndOfSpeech() {}
-                override fun onError(error: Int) { finishVoice(null, "speech_$error") }
-                override fun onResults(results: Bundle?) {
-                    finishVoice(results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull(), null)
-                }
-                override fun onPartialResults(partialResults: Bundle?) {}
-                override fun onEvent(eventType: Int, params: Bundle?) {}
-            })
-            val request = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, voiceArgs["language"] as? String ?: "en-US")
-                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-            }
-            handler.postDelayed(timeout, 30000)
-            recognizer?.startListening(request)
-        } catch (_: Exception) { finishVoice(null, "unavailable") }
-    }
-    private fun finishVoice(text: String?, error: String?) {
-        val result = voiceResult
-        voiceResult = null
-        handler.removeCallbacks(timeout)
-        recognizer?.destroy()
-        recognizer = null
-        if (error != null) result?.error(error, "Speech session ended", null) else result?.success(text)
-    }
-    override fun onStop() { finishVoice(null, "cancelled"); super.onStop() }
+    override fun onStart() { super.onStart(); TodoReminders.foreground=true; stopService(Intent(this,TodoOverlayService::class.java)) }
+    override fun onStop() { TodoReminders.foreground=false; super.onStop() }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (files?.activityResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
     }
-    override fun onDestroy() { files?.close(); files = null; finishVoice(null, "cancelled"); assistant = null; super.onDestroy() }
+    override fun onDestroy() { todoBridge?.close(); todoBridge=null; notesWidget?.close(); notesWidget = null; files?.close(); files = null; assistant = null; super.onDestroy() }
 }

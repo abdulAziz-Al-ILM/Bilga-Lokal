@@ -22,19 +22,34 @@ void main() {
     'priority': priority,
     'due_at': left == null ? null : now.add(left).toIso8601String(),
   };
-  test('Priority color is independent of the selected palette', () {
-    for (var p = 0; p < 4; p++) {
-      expect(todoColor(task(priority: p), now), todoPriorityColors[p]);
-    }
-    expect(
-      todoColor(task(left: Duration.zero, priority: 3), now),
-      const Color(0xFF17191C),
-    );
-    expect(
-      todoColor(task(left: const Duration(days: -1), done: true), now),
-      todoPriorityColors.first,
-    );
-  });
+  test(
+    'Deadline colors use local calendar dates and ignore persisted priority',
+    () {
+      final local = DateTime(2026, 9, 18, 23, 59);
+      Map<String, Object?> due(int days) => {
+        'due_at': DateTime(2026, 9, 18 + days, 23, 59, 30).toIso8601String(),
+      };
+      for (var p = 0; p < 4; p++) {
+        expect(
+          todoColor({...due(3), 'priority': p}, local),
+          const Color(0xFF32A66A),
+        );
+      }
+      expect(todoColor(due(2), local), const Color(0xFFE5B82F));
+      expect(todoColor(due(1), local), const Color(0xFFE45458));
+      expect(todoColor(due(0), local), const Color(0xFFE45458));
+      expect(
+        todoColor({'due_at': local.toIso8601String()}, local),
+        const Color(0xFF17191C),
+      );
+      expect(
+        todoColor({...due(-1), 'is_done': 1}, local),
+        const Color(0xFF9AA2AD),
+      );
+      expect(todoColor({}, local), const Color(0xFF9AA2AD));
+      expect(todoColor(due(-1), local, dark: true), const Color(0xFF6B727E));
+    },
+  );
   test('Exactly four pulse rates with explicit deadline boundaries', () {
     expect(todoPulseMilliseconds(task(), now), 0);
     expect(
@@ -166,7 +181,7 @@ void main() {
         )).items.single['id'],
         'nested',
       );
-      expect(await db.getVersion(), 6);
+      expect(await db.getVersion(), 9);
     } finally {
       await db.close();
       await dir.delete(recursive: true);

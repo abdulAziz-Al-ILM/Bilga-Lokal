@@ -1,0 +1,494 @@
+import '../todo/todo_changes.dart';
+import '../todo/reminders/todo_reminder_store.dart';
+import '../../core/private_database.dart';
+import '../habits/habit_plan.dart';
+import '../private_space/record_store.dart';
+
+import 'dart:convert';
+
+import 'package:cryptography/cryptography.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../notes/note_database.dart';
+import '../notes/notes_changes.dart';
+import '../notes/note_tag_store.dart';
+import '../todo/todo_database.dart';
+
+/// The databases retain their filenames. Rollback journals make the attached
+/// multi-database restore atomic, including on process interruption.
+class BackupStore {
+  final Database? notesDb;
+  final Database? todoDb;
+  BackupStore({this.notesDb, this.todoDb});
+  Future<Database> get _notes async => notesDb ?? await NoteDatabase.database;
+  Future<Database> get _todo async => todoDb ?? await TodoDatabase.database;
+  static const tableColumns = <String, Set<String>>{
+    'private_records': {
+      'id',
+      'kind',
+      'payload',
+      'revision',
+      'created_at',
+      'updated_at',
+    },
+    'habits': {
+      'details',
+      'id',
+      'title',
+      'days',
+      'is_archived',
+      'created_at',
+      'updated_at',
+    },
+    'folders': {
+      'id',
+      'name',
+      'parent_id',
+      'created_at',
+      'updated_at',
+      'is_deleted',
+      'trash_batch',
+    },
+    'notes': {
+      'id',
+      'title',
+      'body',
+      'folder_id',
+      'created_at',
+      'updated_at',
+      'is_deleted',
+      'trash_batch',
+      'is_favorite',
+      'is_archived',
+      'tags',
+    },
+    'note_versions': {'version_id', 'note_id', 'title', 'body', 'created_at'},
+    'note_tags': {'id', 'name', 'normalized_name', 'created_at', 'updated_at'},
+    'note_tag_links': {'note_id', 'tag_id'},
+    'todo_folders': {
+      'id',
+      'name',
+      'parent_id',
+      'created_at',
+      'updated_at',
+      'is_deleted',
+      'trash_batch',
+    },
+    'todo_reminders': {'todo_id', 'enabled', 'remind_at', 'revision', 'fired'},
+    'todos': {
+      'id',
+      'title',
+      'is_done',
+      'priority',
+      'due_at',
+      'folder_id',
+      'is_deleted',
+      'created_at',
+      'updated_at',
+      'trash_batch',
+      'description',
+      'completed_at',
+    },
+  };
+
+  Future<Map<String, dynamic>> snapshot({String? ownerId}) async {
+    final notes = await _notes, todo = await _todo;
+    // UI keeps this operation exclusive; no editor is open during a backup.
+    final data = <String, dynamic>{};
+    await notes.transaction((txn) async {
+      for (final table in [
+        'folders',
+        'notes',
+        'note_versions',
+        'note_tags',
+        'note_tag_links',
+        'habits',
+        'private_records',
+      ]) {
+        data[table] = await txn.query(table);
+      }
+    });
+    await todo.transaction((txn) async {
+      for (final table in ['todo_folders', 'todos', 'todo_reminders']) {
+        data[table] = await txn.query(table);
+      }
+    });
+    return {
+      'format': 'bilga-data',
+      'version': 1,
+      // Portable content schema. Device-local widget consent (DB v13) is excluded.
+      'notesSchema': 12,
+      'todoSchema': 7,
+      'createdAt': DateTime.now().toUtc().toIso8601String(),
+      'ownerId': ownerId,
+      'data': data,
+    };
+  }
+
+  static Map<String, List<Map<String, Object?>>> validate(
+    Map<String, dynamic> payload,
+  ) {
+    if (payload['format'] != 'bilga-data' ||
+        payload['version'] != 1 ||
+        ![8, 9, 10, 11, 12].contains(payload['notesSchema']) ||
+        ![6, 7].contains(payload['todoSchema']) ||
+        DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
+      throw const FormatException('backup_invalid');
+    }
+    final raw = payload['data'];
+    if (raw is! Map) throw const FormatException('backup_invalid');
+    final result = <String, List<Map<String, Object?>>>{};
+    var count = 0;
+    for (final entry in tableColumns.entries) {
+      final list =
+          (entry.key == 'todo_reminders' && payload['todoSchema'] == 6) ||
+              (entry.key == 'habits' && payload['notesSchema'] == 8) ||
+              (entry.key == 'private_records' &&
+                  (payload['notesSchema'] as int) < 10) ||
+              (['note_tags', 'note_tag_links'].contains(entry.key) &&
+                  (payload['notesSchema'] as int) < 12)
+          ? const <dynamic>[]
+          : raw[entry.key];
+      if (list is! List || (count += list.length) > 100000) {
+        throw const FormatException('backup_invalid');
+      }
+      final rows = <Map<String, Object?>>[];
+      final ids = <Object>{};
+      for (final value in list) {
+        if (value is! Map || value.keys.any((k) => !entry.value.contains(k))) {
+          throw const FormatException('backup_invalid');
+        }
+        final row = Map<String, Object?>.from(value);
+        if (entry.key == 'todo_reminders') {
+          if (row['todo_id'] is! String ||
+              !ids.add(row['todo_id']!) ||
+              ![0, 1].contains(row['enabled']) ||
+              ![0, 1].contains(row['fired']) ||
+              row['revision'] is! String ||
+              (row['revision'] as String).isEmpty ||
+              row['remind_at'] is! String ||
+              DateTime.tryParse(row['remind_at'] as String) == null) {
+            throw const FormatException('backup_invalid');
+          }
+          rows.add(row);
+          continue;
+        }
+        if (entry.key == 'note_tag_links') {
+          if (row['note_id'] is! String ||
+              row['tag_id'] is! String ||
+              !ids.add(jsonEncode([row['note_id'], row['tag_id']]))) {
+            throw const FormatException('backup_invalid');
+          }
+          rows.add(row);
+          continue;
+        }
+        if (entry.key == 'note_tags' &&
+            (row['name'] is! String ||
+                (row['name'] as String).trim().isEmpty ||
+                row['normalized_name'] !=
+                    NoteTagStore.normalizeName(row['name'] as String))) {
+          throw const FormatException('backup_invalid');
+        }
+        if (entry.key == 'private_records') {
+          if (row['kind'] is! String ||
+              row['payload'] is! String ||
+              row['revision'] is! int ||
+              (row['revision'] as int) < 1) {
+            throw const FormatException('record');
+          }
+          RecordStore.validate(
+            row['kind'] as String,
+            Map<String, dynamic>.from(jsonDecode(row['payload'] as String)),
+          );
+        }
+        if (entry.key == 'habits') {
+          row['details'] ??= '{}';
+          HabitPlan.decode(row['details'] as String);
+          if (row['days'] is! String) {
+            throw const FormatException('backup_invalid');
+          }
+          final days = jsonDecode(row['days'] as String);
+          if (days is! List ||
+              days.any(
+                (d) =>
+                    d is! String ||
+                    !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(d) ||
+                    DateTime.tryParse(d) == null,
+              )) {
+            throw const FormatException('backup_invalid');
+          }
+        }
+        final id = row[entry.key == 'note_versions' ? 'version_id' : 'id'];
+        if (id == null ||
+            (entry.key == 'note_versions'
+                ? id is! int
+                : id is! String || id.isEmpty) ||
+            !ids.add(id)) {
+          throw const FormatException('backup_invalid');
+        }
+        for (final field in [
+          'created_at',
+          if (entry.key != 'note_versions') 'updated_at',
+        ]) {
+          if (row[field] is! String ||
+              DateTime.tryParse(row[field] as String) == null) {
+            throw const FormatException('backup_invalid');
+          }
+        }
+        for (final field in ['name', 'title', 'body', 'description']) {
+          if (entry.value.contains(field) && row[field] is! String) {
+            throw const FormatException('backup_invalid');
+          }
+        }
+        for (final field in [
+          'parent_id',
+          'folder_id',
+          'trash_batch',
+          'due_at',
+          'completed_at',
+        ]) {
+          if (row[field] != null && row[field] is! String) {
+            throw const FormatException('backup_invalid');
+          }
+        }
+        for (final field in ['due_at', 'completed_at']) {
+          if (row[field] != null &&
+              DateTime.tryParse(row[field] as String) == null) {
+            throw const FormatException('backup_invalid');
+          }
+        }
+        for (final field in [
+          'is_deleted',
+          'is_favorite',
+          'is_archived',
+          'is_done',
+        ]) {
+          if (entry.value.contains(field) &&
+              row[field] != 0 &&
+              row[field] != 1) {
+            throw const FormatException('backup_invalid');
+          }
+        }
+        if (entry.key == 'todos' &&
+            (row['priority'] is! int ||
+                (row['priority'] as int) < 0 ||
+                (row['priority'] as int) > 3)) {
+          throw const FormatException('backup_invalid');
+        }
+        if (entry.key == 'notes') {
+          final tags = jsonDecode(row['tags'] as String? ?? 'null');
+          if (tags is! List || tags.any((t) => t is! String)) {
+            throw const FormatException('backup_invalid');
+          }
+        }
+        rows.add(row);
+      }
+      result[entry.key] = rows;
+    }
+    for (final pair in [('folders', 'notes'), ('todo_folders', 'todos')]) {
+      final byId = {for (final row in result[pair.$1]!) row['id']: row};
+      for (final row in result[pair.$1]!) {
+        final seen = <Object>{row['id']!};
+        Object? parent = row['parent_id'];
+        while (parent != null) {
+          if (!seen.add(parent)) throw const FormatException('backup_invalid');
+          // Historical orphan references are recovered to the import root.
+          parent = byId[parent]?['parent_id'];
+        }
+      }
+    }
+    final todoIds = result['todos']!.map((r) => r['id']).toSet();
+    if (result['todo_reminders']!.any((r) => !todoIds.contains(r['todo_id']))) {
+      throw const FormatException('backup_invalid');
+    }
+    final noteIds = result['notes']!.map((r) => r['id']).toSet();
+    final tagIds = result['note_tags']!.map((r) => r['id']).toSet();
+    final tagNames = result['note_tags']!
+        .map((r) => r['normalized_name'])
+        .toSet();
+    if (tagNames.length != result['note_tags']!.length ||
+        result['note_tag_links']!.any(
+          (r) =>
+              !noteIds.contains(r['note_id']) || !tagIds.contains(r['tag_id']),
+        )) {
+      throw const FormatException('backup_invalid');
+    }
+    if (result['note_versions']!.any((r) => !noteIds.contains(r['note_id']))) {
+      throw const FormatException('backup_invalid');
+    }
+    return result;
+  }
+
+  Future<bool> restore(Map<String, dynamic> payload, String folderLabel) async {
+    final tables = validate(
+      payload,
+    ); // All validation happens before attaching or writing.
+    final digest = await Sha256().hash(utf8.encode(jsonEncode(payload)));
+    final fingerprint = base64UrlEncode(digest.bytes).replaceAll('=', '');
+    final prefix = 'restore:$fingerprint:item:';
+    final root = 'restore:$fingerprint:root';
+    final stamp = DateTime.now().toIso8601String();
+    final notes = await _notes, todo = await _todo;
+    for (final db in [notes, todo]) {
+      final mode = (await db.rawQuery('PRAGMA journal_mode'))
+          .single
+          .values
+          .single;
+      if (mode.toString().toLowerCase() != 'delete') {
+        throw StateError('journal_mode');
+      }
+    }
+    if (notesDb == null && todoDb == null) {
+      await notes.execute(
+        'ATTACH DATABASE ${PrivateDatabase.quote(todo.path)} AS bilga_restore_todo KEY ${PrivateDatabase.quote(await PrivateDatabase.key())}',
+      );
+    } else {
+      await notes.execute('ATTACH DATABASE ? AS bilga_restore_todo', [
+        todo.path,
+      ]);
+    }
+    try {
+      await notes.execute('PRAGMA bilga_restore_todo.synchronous = FULL');
+      final restored = await notes.transaction((txn) async {
+        // Import marker survives renaming/moving; the same backup cannot duplicate data.
+        await txn.execute(
+          'CREATE TABLE IF NOT EXISTS bilga_imports (fingerprint TEXT PRIMARY KEY, restored_at TEXT NOT NULL)',
+        );
+        if ((await txn.query(
+          'bilga_imports',
+          where: 'fingerprint = ?',
+          whereArgs: [fingerprint],
+        )).isNotEmpty) {
+          return false;
+        }
+        final importedTags = <String, String>{};
+        for (final row in tables['note_tags']!) {
+          final tag = await NoteTagStore.ensure(
+            txn,
+            row['name'] as String,
+            id: '$prefix${row['id']}',
+            createdAt: row['created_at'] as String,
+            legacy: true,
+          );
+          importedTags[row['id'] as String] = tag.id;
+        }
+        final importedLinks = <String, List<String>>{};
+        for (final row in tables['note_tag_links']!) {
+          (importedLinks[row['note_id'] as String] ??= []).add(
+            importedTags[row['tag_id']]!,
+          );
+        }
+        for (final pair in [('folders', 'notes'), ('todo_folders', 'todos')]) {
+          final namespace = pair.$1 == 'folders' ? '' : 'bilga_restore_todo.';
+          await _insert(txn, '$namespace${pair.$1}', {
+            'id': root,
+            'name': folderLabel,
+            'parent_id': null,
+            'is_deleted': 0,
+            'created_at': stamp,
+            'updated_at': stamp,
+            'trash_batch': null,
+          });
+          final folderIds = tables[pair.$1]!.map((r) => r['id']).toSet();
+          for (final row in tables[pair.$1]!) {
+            await _insert(txn, '$namespace${pair.$1}', {
+              ...row,
+              'id': '$prefix${row['id']}',
+              'parent_id': folderIds.contains(row['parent_id'])
+                  ? '$prefix${row['parent_id']}'
+                  : root,
+              'trash_batch': row['trash_batch'] == null
+                  ? null
+                  : '$prefix${row['trash_batch']}',
+            });
+          }
+          for (final row in tables[pair.$2]!) {
+            await _insert(txn, '$namespace${pair.$2}', {
+              ...row,
+              'id': '$prefix${row['id']}',
+              'folder_id': folderIds.contains(row['folder_id'])
+                  ? '$prefix${row['folder_id']}'
+                  : root,
+              'trash_batch': row['trash_batch'] == null
+                  ? null
+                  : '$prefix${row['trash_batch']}',
+            });
+            if (pair.$2 == 'notes') {
+              if ((payload['notesSchema'] as int) < 12) {
+                final ids = <String>[];
+                for (final name in NoteTagStore.legacyNames(row['tags'])) {
+                  if (name.trim().isNotEmpty) {
+                    ids.add(
+                      (await NoteTagStore.ensure(txn, name, legacy: true)).id,
+                    );
+                  }
+                }
+                await NoteTagStore.assign(txn, '$prefix${row['id']}', ids: ids);
+              } else {
+                final ids = importedLinks[row['id']] ?? const <String>[];
+                await NoteTagStore.assign(txn, '$prefix${row['id']}', ids: ids);
+              }
+            }
+          }
+        }
+        for (final row in tables['todo_reminders']!) {
+          await _insert(txn, 'bilga_restore_todo.todo_reminders', {
+            ...row, 'todo_id': '$prefix${row['todo_id']}',
+            'revision': TodoReminderStore.revision(),
+            // A restore never emits a storm of historical reminders.
+            'fired':
+                DateTime.parse(row['remind_at'] as String)
+                    .isBefore(DateTime.now())
+                ? 1
+                : row['fired'],
+          });
+        }
+        for (final row in tables['private_records']!) {
+          final data = Map<String, dynamic>.from(
+            jsonDecode(row['payload'] as String),
+          );
+          if (row['kind'] == 'attachment') {
+            data['owner'] = '$prefix${data['owner']}';
+          }
+          await _insert(txn, 'private_records', {
+            ...row,
+            'id': '$prefix${row['id']}',
+            'payload': jsonEncode(data),
+          });
+        }
+        for (final row in tables['habits']!) {
+          await _insert(txn, 'habits', {...row, 'id': '$prefix${row['id']}'});
+        }
+        for (final row in tables['note_versions']!) {
+          final copy = {...row, 'note_id': '$prefix${row['note_id']}'}
+            ..remove('version_id');
+          await _insert(txn, 'note_versions', copy);
+        }
+        await txn.insert('bilga_imports', {
+          'fingerprint': fingerprint,
+          'restored_at': stamp,
+        });
+        return true;
+      });
+      if (restored) {
+        NotesChanges.committed();
+        TodoChanges.committed();
+      }
+      return restored;
+    } finally {
+      await notes.execute('DETACH DATABASE bilga_restore_todo');
+    }
+  }
+
+  Future<void> _insert(
+    DatabaseExecutor db,
+    String table,
+    Map<String, Object?> row,
+  ) async {
+    final keys = row.keys.toList();
+    await db.rawInsert(
+      'INSERT INTO $table (${keys.join(',')}) VALUES (${List.filled(keys.length, '?').join(',')})',
+      keys.map((k) => row[k]).toList(),
+    );
+  }
+}
