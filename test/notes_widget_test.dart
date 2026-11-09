@@ -828,11 +828,26 @@ void main() {
       await tester.tap(control);
       await tester.pumpAndSettle();
       await tester.tap(find.text(Strings.get('en', 'continue')));
-      await settleIo(tester);
+      // A visible value can update from the change stream before run() has
+      // completed its final reload. Wait for the control to accept the next
+      // interaction; otherwise a fast runner can tap a still-disabled switch.
+      await settleIo(
+        tester,
+        ready: () {
+          final tile = tester.widget<SwitchListTile>(control);
+          return tile.value && tile.onChanged != null;
+        },
+      );
       expect(tester.widget<SwitchListTile>(control).value, true);
       calls.clear();
       await tester.tap(control);
-      await settleIo(tester);
+      await settleIo(
+        tester,
+        ready: () {
+          final tile = tester.widget<SwitchListTile>(control);
+          return !tile.value && tile.onChanged != null;
+        },
+      );
       expect(tester.widget<SwitchListTile>(control).value, false);
       expect(calls.any((c) => c.method == 'invalidatePermissions'), true);
       await tester.runAsync(() async {

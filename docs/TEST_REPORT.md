@@ -36,3 +36,5 @@ Android artifact attempts:
 - No release-signing, real Play purchase/refund, actual reminder delivery, SQLCipher-on-device or Drive-account test has run here.
 
 Policy-required dependency change: in_app_purchase 3.3.1 / in_app_purchase_android 0.5.5, declaring Play Billing 9.1.0. Analyzer and the complete 158-test suite were repeated after this change and passed. See PLAY_POLICY_REVIEW.md.
+
+Hosted CI 42667262437 at source 600ebb7: analyzer, locked resolution, formatting, catalogs and Python manifest tests passed; full suite **157 PASS / 1 FAIL** (48s). Existing note-widget disclosure test tapped the switch while its callback was still disabled during an asynchronous reload. Corrected its wait to require the expected state **and** an enabled callback, keeping the database/privacy assertions. APK stages were skipped. A subsequent run is required; do not call this run successful.
