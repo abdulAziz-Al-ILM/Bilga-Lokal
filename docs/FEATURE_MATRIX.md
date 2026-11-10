@@ -20,7 +20,8 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Cross-module relationships | NOT STARTED | Note-to-task and journal-to-task durable links still required |
 | 40-day trial | IMPLEMENTED | Recovered Keystore/AtomicFile, monotonic/high-water clock protection; device tests pending |
 | Read-only access after trial | TESTED | Host reader/history/no-edit regression passes; read/export routes remain under AppLock. Native export acceptance still needs a device |
-| Lifetime purchase | BLOCKED | Product ID updated; secure grant flow recovered; real Play/verifier configuration and test purchases unavailable |
+| Lifetime purchase | IN PROGRESS | Secure client grant protocol plus Python verifier, Google API adapter, acknowledgement and hashed token ledger implemented; real Play configuration/test purchases and deployment pending |
+| Purchase verification backend | HOST TESTED | 17 Python security/failure tests and Python-to-Dart grant fixture pass; not deployed, no real Play credential validation |
 | Regional pricing | IN PROGRESS | Runtime localized price remains Play-supplied; owner approval and Console activation pending |
 | App lock and local encryption | IMPLEMENTED | Existing device authentication, SQLCipher, Keystore and encrypted attachments retained; standalone app PIN absent |
 | Local encrypted backup and merge | IMPLEMENTED | Recovered v1/v2 codecs, transactional cross-DB import and ID remapping; host content/codec regressions pass; media/device acceptance pending |

@@ -1,3 +1,9 @@
+## Purchase verifier implementation — 2026-11-10
+
+Added `backend/purchase_verifier`: receipt RSA verification, fixed-host authenticated Google Play lookup/acknowledgment, cancellation-only signed revocations, exact Ed25519 client grants, bounded WSGI endpoint, persistent hashed token ledger and explicit non-overwriting key-generation tooling. No credentials were read, no production key was generated and no service was deployed. The README distinguishes anonymous restore/replay limitations, cached offline grants and required external setup.
+
+Validation: 17 Python tests PASS in an isolated environment; dependency integrity check PASS. All 15 focused Dart verifier tests PASS, including a public fixture issued by the actual Python verifier. Static analysis has no issues. Combined full Flutter suite: **165 PASS** in 46 seconds, including the added fixture test. All seven production/review manifest gates PASS. A later audit found legacy reminder TTS still reachable; its settings and native speech path are now removed, with a first-party no-voice CI gate. Native recompilation/acceptance is pending; the earlier blanket no-TTS statement was too broad. Native tablet test harness is prepared with review-package storage guards; actual test execution is still pending the cold Android build.
+
 # 2026-11-10 continuation checkpoint
 
 Branch remains `development/global-launch`; draft PR #1 remains the review target. The new owner instruction is saved in NON_VOICE_OWNER_REVIEW_BRIEF.md. Stage A (complete non-voice implementation and verification) precedes Stage B (owner review). Voice and Play publication still require separate explicit approval.

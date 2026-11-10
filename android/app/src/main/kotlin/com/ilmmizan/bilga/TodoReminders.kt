@@ -25,11 +25,8 @@ internal object TodoReminders {
     fun exact(c: Context) = Build.VERSION.SDK_INT<31 || c.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
     fun enabled(c: Context): Boolean = c.getSystemService(NotificationManager::class.java).areNotificationsEnabled() &&
         (Build.VERSION.SDK_INT<33 || c.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)==android.content.pm.PackageManager.PERMISSION_GRANTED)
-    fun audible(c: Context,root: JSONObject): Boolean {
-        val options=settings(root)
-        val canSpeak=!private(c,root) && (foreground || exact(c)) && (Build.VERSION.SDK_INT<37 || foreground)
-        return options.optBoolean("sound",true) || (options.optBoolean("tts") && !canSpeak)
-    }
+    // Legacy stored voice settings are ignored in the non-voice release.
+    fun audible(c: Context,root: JSONObject): Boolean = settings(root).optBoolean("sound",true)
     fun permitted(c: Context,root: JSONObject): Boolean {
         if(!enabled(c)) return false
         val sound=audible(c,root)
@@ -75,8 +72,7 @@ internal object TodoReminders {
             if(foreground) bridge?.due(task.getString("id"))
             val options=settings(root)
             val wantsPanel=options.optBoolean("overlay") && !foreground && Settings.canDrawOverlays(c)
-            val wantsSpeech=options.optBoolean("tts") && (Build.VERSION.SDK_INT<37 || foreground)
-            if((foreground || exact(c)) && permitted(c,root) && !private(c,root) && (wantsPanel || wantsSpeech)) {
+            if((foreground || exact(c)) && permitted(c,root) && !private(c,root) && wantsPanel) {
                 try { c.startForegroundService(Intent(c,TodoOverlayService::class.java).putExtra("todo_id",task.getString("id"))) }
                 catch (_: Exception) { /* Normal action notification already posted. */ }
             }

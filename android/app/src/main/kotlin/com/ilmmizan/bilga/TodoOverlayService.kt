@@ -7,32 +7,22 @@ import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
-import android.media.*
 import android.provider.Settings
-import android.speech.tts.UtteranceProgressListener
-import android.speech.tts.TextToSpeech
 import android.view.*
 import android.widget.*
-import java.util.Locale
 
 /** One bounded reminder panel; never sticky, no polling, no full-screen intent. */
 class TodoOverlayService: Service() {
     private val handler=Handler(Looper.getMainLooper())
     private var panel: View?=null
-    private var speech: TextToSpeech?=null
-    private var tone: ToneGenerator?=null
     private var taskId=""
     private var picker: Dialog?=null
-    private var generation=0
     private val stop=Runnable { stopSelf() }
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?,flags: Int,startId: Int): Int {
-        // A second due task replaces the single panel and its pending speech.
-        val currentGeneration=++generation
+        // A second due task replaces the single bounded panel.
         picker?.dismiss();picker=null
         handler.removeCallbacksAndMessages(null)
-        speech?.stop(); speech?.shutdown(); speech=null
-        tone?.release(); tone=null
         try {
             val root=TodoStore.read(this) ?: error("no_state")
             taskId=intent?.getStringExtra("todo_id") ?: error("no_task")
@@ -46,7 +36,7 @@ class TodoOverlayService: Service() {
                 .setContentIntent(TodoNativeActions.pending(this,-1,task,"reminderMenu")).setOnlyAlertOnce(true).build()
             if(Build.VERSION.SDK_INT>=34) startForeground(902,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE)
             else startForeground(902,notification)
-            removePanel(); speech?.shutdown(); speech=null
+            removePanel()
             val options=TodoReminders.settings(root)
             if(options.optBoolean("overlay") && Settings.canDrawOverlays(this) && !TodoReminders.foreground) {
 
@@ -86,30 +76,6 @@ class TodoOverlayService: Service() {
                     PixelFormat.TRANSLUCENT).apply { gravity=Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL; y=dp(20) }
                 getSystemService(WindowManager::class.java).addView(scroll,params); panel=scroll
             }
-            if(options.optBoolean("tts") && (Build.VERSION.SDK_INT<37 || TodoReminders.foreground)) {
-                var spoken=false
-                val fallback=Runnable { if(!spoken) { spoken=true; beep() } }
-                handler.postDelayed(fallback,3000)
-                speech=TextToSpeech(this) { status ->
-                    val tts=speech
-                    if(currentGeneration==generation && status==TextToSpeech.SUCCESS && tts!=null) {
-                        tts.setOnUtteranceProgressListener(object: UtteranceProgressListener() {
-                            override fun onStart(id: String?) {}
-                            override fun onDone(id: String?) { handler.post { if(currentGeneration==generation && panel==null) stopSelf() } }
-                            @Suppress("DEPRECATION") override fun onError(id: String?) { handler.post { if(currentGeneration==generation) beep() } }
-                            override fun onError(id: String?,code: Int) { handler.post { if(currentGeneration==generation) beep() } }
-                        })
-                        val locale=Locale.forLanguageTag(root.optString("language","en"))
-                        val voice=tts.voices.orEmpty().filter { !it.isNetworkConnectionRequired && it.locale.language==locale.language &&
-                            !it.features.orEmpty().contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) }.maxByOrNull { it.quality }
-                        if(voice!=null && tts.setVoice(voice)==TextToSpeech.SUCCESS) {
-                            spoken=true; handler.removeCallbacks(fallback)
-                            val text=(options.optString("address").take(60)+" "+TodoReminders.label(root,"reminderMessage")).trim()
-                            if(tts.speak(text,TextToSpeech.QUEUE_FLUSH,Bundle().apply { putInt(TextToSpeech.Engine.KEY_PARAM_STREAM,AudioManager.STREAM_NOTIFICATION) },"bilga-todo")==TextToSpeech.ERROR) beep()
-                        }
-                    }
-                }
-            }
             handler.removeCallbacks(stop); handler.postDelayed(stop,if(panel==null) 15000 else 45000)
         } catch (_: Exception) { stopSelf() }
         return START_NOT_STICKY
@@ -140,9 +106,8 @@ class TodoOverlayService: Service() {
             },now.hour,now.minute,android.text.format.DateFormat.is24HourFormat(this)))
         },now.year,now.monthValue-1,now.dayOfMonth))
     }
-    private fun beep() { try { tone?.release(); tone=ToneGenerator(AudioManager.STREAM_NOTIFICATION,65); tone?.startTone(ToneGenerator.TONE_PROP_BEEP,250) } catch (_: Exception) {} }
     private fun removePanel() { panel?.let { try { getSystemService(WindowManager::class.java).removeView(it) } catch (_: Exception) {} }; panel=null }
     override fun onTimeout(startId: Int) { stopSelf() }
     override fun onTimeout(startId: Int,fgsType: Int) { stopSelf() }
-    override fun onDestroy() { generation++; handler.removeCallbacksAndMessages(null); picker?.dismiss();picker=null;removePanel(); speech?.stop(); speech?.shutdown(); tone?.release(); stopForeground(STOP_FOREGROUND_REMOVE); super.onDestroy() }
+    override fun onDestroy() { handler.removeCallbacksAndMessages(null); picker?.dismiss();picker=null;removePanel(); stopForeground(STOP_FOREGROUND_REMOVE); super.onDestroy() }
 }

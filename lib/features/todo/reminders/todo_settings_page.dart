@@ -15,7 +15,6 @@ class _TodoSettingsPageState extends State<TodoSettingsPage>
     with WidgetsBindingObserver {
   Map<String, dynamic>? state;
   Map<String, dynamic> options = {};
-  final address = TextEditingController();
   bool busy = false;
   @override
   void initState() {
@@ -31,7 +30,6 @@ class _TodoSettingsPageState extends State<TodoSettingsPage>
       setState(() {
         state = s;
         options = Map<String, dynamic>.from(s['settings'] as Map? ?? {});
-        address.text = options['address'] as String? ?? '';
       });
     } catch (_) {
       if (mounted) showError(context);
@@ -46,7 +44,6 @@ class _TodoSettingsPageState extends State<TodoSettingsPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    address.dispose();
     super.dispose();
   }
 
@@ -99,7 +96,6 @@ class _TodoSettingsPageState extends State<TodoSettingsPage>
               for (final spec in [
                 ('enabled', 'reminder', true),
                 ('sound', 'reminderSound', true),
-                ('tts', 'reminderVoice', false),
                 ('overlay', 'reminderOverlay', false),
                 ('showTitles', 'reminderTitles', false),
               ])
@@ -108,15 +104,6 @@ class _TodoSettingsPageState extends State<TodoSettingsPage>
                   value: options[spec.$1] as bool? ?? spec.$3,
                   onChanged: busy ? null : (v) => save(spec.$1, v),
                 ),
-              TextField(
-                controller: address,
-                maxLength: 60,
-                enableIMEPersonalizedLearning: false,
-                decoration: InputDecoration(
-                  labelText: context.tr('reminderAddress'),
-                ),
-                onSubmitted: (v) => save('address', v.trim()),
-              ),
               Text(
                 context.tr('reminderLimits'),
                 style: Theme.of(context).textTheme.bodySmall,

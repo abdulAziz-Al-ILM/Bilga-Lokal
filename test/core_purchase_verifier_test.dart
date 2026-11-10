@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:bilga/features/agent/core_purchase_verifier.dart';
 import 'package:crypto/crypto.dart';
@@ -8,6 +9,36 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test('Python backend grants verify in Dart with exact receipt and device binding', () async {
+    final fixture = jsonDecode(
+      File('test/fixtures/purchase_verifier_grant.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    final request = fixture['request'] as Map<String, dynamic>;
+    final server = CorePurchaseVerifier(
+      publicKey: fixture['publicKey'] as String,
+    );
+    for (final status in ['purchased', 'revoked']) {
+      final grant = fixture[status] as Map<String, dynamic>;
+      expect(
+        await server.check(
+          grant,
+          receipt: request['receipt'] as String,
+          product: request['productId'] as String,
+          installation: request['installation'] as String,
+        ),
+        status,
+      );
+      expect(
+        await server.check(
+          grant,
+          receipt: '${request['receipt']} ',
+          product: request['productId'] as String,
+          installation: request['installation'] as String,
+        ),
+        isNull,
+      );
+    }
+  });
   late SimpleKeyPair pair;
   late CorePurchaseVerifier verifier;
   const receipt = '{"purchaseToken":"test-token"}';

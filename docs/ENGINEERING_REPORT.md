@@ -1,3 +1,15 @@
+# Continuation checkpoint — 2026-11-10
+
+**Overall remains IN PROGRESS; Stage A is not complete.** Rich-text Notes now includes headings, lists/checklists, links, undo/redo, private keyboard input, formatting history and backup support. Notes migrates additively to schema 15; portable Notes content schema is 13 and old imports remain supported. All 165 Flutter regressions pass; analyzer has no issues; 43 catalogs contain 336 keys. New strings remain draft/fallback translations, without native-speaker certification.
+
+The Python purchase verifier is implemented with 17 passing security/failure tests and a Python-to-Dart grant fixture. It checks receipt signatures, performs Google API lookup and acknowledgment, records hashed token metadata and signs device/receipt-bound grants. It is not deployed or tested against real Play credentials. Its README documents configuration and anonymous receipt-replay limits. No private signing key or paid service was activated.
+
+The owner authorized USB debugging for Blackview Tab16, Android 12/API31. Existing production Bilga 1.4.0+9 and its certificate were inspected read-only. Its signing certificate differs from the isolated review key, so no production update, uninstall, data clear or database read was attempted. A separate debug-only `com.ilmmizan.bilga.review` package is being built for synthetic tests; native execution is still pending. The original application ID and production signing settings remain defaults. Legacy spoken-reminder controls and native TTS were discovered during the audit and removed; a source CI guard now prevents reintroduction. Earlier claims that all reachable TTS was already removed were incomplete.
+
+Historical evidence below applies to its named source revisions. Current continuation and precise remaining work are in IMPLEMENTATION_STATUS.md and FEATURE_MATRIX.md.
+
+---
+
 # Engineering checkpoint — 2026-11-09
 
 **Overall: IN PROGRESS. Bilga is not release ready.** This is an implemented and tested development checkpoint against the owner's complete master specification, not a claim that every required module is finished.
