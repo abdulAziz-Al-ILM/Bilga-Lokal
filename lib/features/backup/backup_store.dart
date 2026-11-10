@@ -1,5 +1,7 @@
 import '../notes/rich_note_codec.dart';
 import '../todo/todo_changes.dart';
+import '../todo/todo_series_store.dart';
+import '../todo/recurrence_rule.dart';
 import '../todo/reminders/todo_reminder_store.dart';
 import '../../core/private_database.dart';
 import '../habits/habit_plan.dart';
@@ -85,6 +87,18 @@ class BackupStore {
       'trash_batch',
     },
     'todo_reminders': {'todo_id', 'enabled', 'remind_at', 'revision', 'fired'},
+    'todo_series': {
+      'id',
+      'rule',
+      'anchor_at',
+      'template',
+      'head_task_id',
+      'current_sequence',
+      'active',
+      'created_at',
+      'updated_at',
+    },
+    'todo_occurrences': {'todo_id', 'series_id', 'sequence', 'nominal_at'},
     'todos': {
       'id',
       'title',
@@ -119,7 +133,13 @@ class BackupStore {
       }
     });
     await todo.transaction((txn) async {
-      for (final table in ['todo_folders', 'todos', 'todo_reminders']) {
+      for (final table in [
+        'todo_folders',
+        'todos',
+        'todo_reminders',
+        'todo_series',
+        'todo_occurrences',
+      ]) {
         data[table] = await txn.query(table);
       }
     });
@@ -128,7 +148,7 @@ class BackupStore {
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
       'notesSchema': 13,
-      'todoSchema': 7,
+      'todoSchema': 8,
       'createdAt': DateTime.now().toUtc().toIso8601String(),
       'ownerId': ownerId,
       'data': data,
@@ -141,7 +161,7 @@ class BackupStore {
     if (payload['format'] != 'bilga-data' ||
         payload['version'] != 1 ||
         ![8, 9, 10, 11, 12, 13].contains(payload['notesSchema']) ||
-        ![6, 7].contains(payload['todoSchema']) ||
+        ![6, 7, 8].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
       throw const FormatException('backup_invalid');
     }
@@ -152,6 +172,8 @@ class BackupStore {
     for (final entry in tableColumns.entries) {
       final list =
           (entry.key == 'todo_reminders' && payload['todoSchema'] == 6) ||
+              (['todo_series', 'todo_occurrences'].contains(entry.key) &&
+                  (payload['todoSchema'] as int) < 8) ||
               (entry.key == 'habits' && payload['notesSchema'] == 8) ||
               (entry.key == 'private_records' &&
                   (payload['notesSchema'] as int) < 10) ||
@@ -169,6 +191,45 @@ class BackupStore {
           throw const FormatException('backup_invalid');
         }
         final row = Map<String, Object?>.from(value);
+        if (entry.key == 'todo_series') {
+          if (row['id'] is! String ||
+              !RegExp(r'^[A-Za-z0-9:_-]{1,1024}$')
+                  .hasMatch(row['id'] as String) ||
+              !ids.add(row['id']!) ||
+              row['rule'] is! String ||
+              row['template'] is! String ||
+              row['current_sequence'] is! int ||
+              (row['current_sequence'] as int) < 0 ||
+              row['active'] is! int ||
+              ![0, 1].contains(row['active']) ||
+              (row['head_task_id'] != null && row['head_task_id'] is! String) ||
+              (row['active'] == 1 && row['head_task_id'] == null)) {
+            throw const FormatException('recurrence_invalid');
+          }
+          for (final key in ['anchor_at', 'created_at', 'updated_at']) {
+            if (row[key] is! String ||
+                DateTime.tryParse(row[key] as String) == null) {
+              throw const FormatException('recurrence_invalid');
+            }
+          }
+          RecurrenceRule.decode(row['rule'] as String);
+          TodoSeriesStore.decodeTemplate(row['template'] as String);
+          rows.add(row);
+          continue;
+        }
+        if (entry.key == 'todo_occurrences') {
+          if (row['todo_id'] is! String ||
+              !ids.add(row['todo_id']!) ||
+              row['series_id'] is! String ||
+              row['sequence'] is! int ||
+              (row['sequence'] as int) < 0 ||
+              row['nominal_at'] is! String ||
+              DateTime.tryParse(row['nominal_at'] as String) == null) {
+            throw const FormatException('recurrence_invalid');
+          }
+          rows.add(row);
+          continue;
+        }
         if (entry.key == 'todo_reminders') {
           if (row['todo_id'] is! String ||
               !ids.add(row['todo_id']!) ||
@@ -320,6 +381,34 @@ class BackupStore {
       }
     }
     final todoIds = result['todos']!.map((r) => r['id']).toSet();
+    final seriesById = {for (final r in result['todo_series']!) r['id']: r};
+    final occurrences = {
+      for (final r in result['todo_occurrences']!) r['todo_id']: r,
+    };
+    final sequences = <String>{};
+    for (final occurrence in occurrences.values) {
+      if (!todoIds.contains(occurrence['todo_id']) ||
+          !seriesById.containsKey(occurrence['series_id']) ||
+          !sequences.add(
+            jsonEncode([occurrence['series_id'], occurrence['sequence']]),
+          )) {
+        throw const FormatException('recurrence_invalid');
+      }
+    }
+    final todosById = {for (final r in result['todos']!) r['id']: r};
+    for (final series in seriesById.values) {
+      final head = series['head_task_id'];
+      if (head == null) continue;
+      final occurrence = occurrences[head], task = todosById[head];
+      if (task == null ||
+          occurrence == null ||
+          occurrence['series_id'] != series['id'] ||
+          occurrence['sequence'] != series['current_sequence'] ||
+          (series['active'] == 1 &&
+              (task['is_done'] != 0 || task['is_deleted'] != 0))) {
+        throw const FormatException('recurrence_invalid');
+      }
+    }
     if (result['todo_reminders']!.any((r) => !todoIds.contains(r['todo_id']))) {
       throw const FormatException('backup_invalid');
     }
@@ -459,6 +548,38 @@ class BackupStore {
               }
             }
           }
+        }
+        final seriesIds = <String, String>{};
+        for (var i = 0; i < tables['todo_series']!.length; i++) {
+          seriesIds[tables['todo_series']![i]['id'] as String] =
+              '${prefix}series:$i';
+        }
+        final todoFolderIds = tables['todo_folders']!
+            .map((r) => r['id'])
+            .toSet();
+        for (final row in tables['todo_series']!) {
+          final template = TodoSeriesStore.decodeTemplate(
+            row['template'] as String,
+          );
+          final folder = template['folder_id'];
+          template['folder_id'] = todoFolderIds.contains(folder)
+              ? '$prefix$folder'
+              : root;
+          await _insert(txn, 'bilga_restore_todo.todo_series', {
+            ...row,
+            'id': seriesIds[row['id']],
+            'head_task_id': row['head_task_id'] == null
+                ? null
+                : '$prefix${row['head_task_id']}',
+            'template': jsonEncode(template),
+          });
+        }
+        for (final row in tables['todo_occurrences']!) {
+          await _insert(txn, 'bilga_restore_todo.todo_occurrences', {
+            ...row,
+            'todo_id': '$prefix${row['todo_id']}',
+            'series_id': seriesIds[row['series_id']],
+          });
         }
         for (final row in tables['todo_reminders']!) {
           await _insert(txn, 'bilga_restore_todo.todo_reminders', {

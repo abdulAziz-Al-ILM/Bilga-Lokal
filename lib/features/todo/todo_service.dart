@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 import 'todo_database.dart';
 import 'todo_model.dart';
+import 'todo_series_store.dart';
 
 class TodoService {
   final Database? _providedDatabase;
@@ -62,22 +63,21 @@ class TodoService {
   Future<void> updateTodo(Todo todo) async {
     final db = await _db;
 
-    await db.update(
-      'todos',
-      todo.toMap(),
-      where: 'id = ?',
-      whereArgs: [todo.id],
-    );
+    await db.transaction((txn) async {
+      final fields = todo.toMap()..remove('is_done');
+      await txn.update('todos', fields, where: 'id=?', whereArgs: [todo.id]);
+      await TodoSeriesStore.setCompletedInTransaction(
+        txn,
+        todo.id,
+        todo.isDone,
+        at: todo.updatedAt,
+      );
+    });
     TodoChanges.committed();
   }
 
   Future<void> toggleTodo(Todo todo) async {
-    final updatedTodo = todo.copyWith(
-      isDone: !todo.isDone,
-      updatedAt: DateTime.now(),
-    );
-
-    await updateTodo(updatedTodo);
+    await TodoSeriesStore(await _db).setCompleted(todo.id, !todo.isDone);
   }
 
   Future<void> moveTodoToFolder(Todo todo, String? folderId) async {

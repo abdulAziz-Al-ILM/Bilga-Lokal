@@ -2,6 +2,9 @@ import 'reminders/todo_reminder_store.dart';
 import 'reminders/todo_bridge.dart';
 import 'reminders/todo_settings_page.dart';
 import 'todo_changes.dart';
+import 'todo_series_store.dart';
+import 'recurrence_rule.dart';
+import 'recurrence_dialog.dart';
 
 import 'package:sqflite/sqflite.dart';
 
@@ -31,6 +34,19 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
   bool reminder = false, originalEnabled = false, reminderLoaded = false;
   bool busy = false, allowPop = false;
   bool reminderExplicit = false;
+  RecurrenceRule? repeat, originalRepeat;
+  Map<String, Object?>? series;
+  bool seriesLoaded = false, applyFuture = false;
+  bool get historical =>
+      series != null && series!['head_task_id'] != widget.todo?['id'];
+  bool get repeatReadOnly => historical || widget.todo?['is_done'] == 1;
+  DateTime get seriesAnchor =>
+      DateTime.tryParse(series?['anchor_at'] as String? ?? '') ??
+      due ??
+      DateTime.now();
+  bool get repeatDirty => repeat == null || originalRepeat == null
+      ? repeat != originalRepeat
+      : !repeat!.sameSchedule(originalRepeat!, anchor: seriesAnchor);
   @override
   void initState() {
     super.initState();
@@ -41,6 +57,62 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
     priority = widget.todo?['priority'] as int? ?? 0;
     due = DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')?.toLocal();
     loadReminder();
+    loadSeries();
+  }
+
+  Future<void> loadSeries() async {
+    if (widget.todo == null) {
+      setState(() => seriesLoaded = true);
+      return;
+    }
+    try {
+      final db = widget.database ?? await TodoDatabase.database;
+      final value = await TodoSeriesStore.forTask(
+        db,
+        widget.todo!['id'] as String,
+      );
+      if (!mounted) return;
+      setState(() {
+        series = value;
+        if (value?['active'] == 1) {
+          repeat = RecurrenceRule.decode(value!['rule'] as String)
+              .canonical(DateTime.parse(value['anchor_at'] as String));
+        }
+        originalRepeat = repeat;
+        seriesLoaded = true;
+      });
+    } catch (_) {
+      if (mounted) showError(context);
+    }
+  }
+
+  Future<void> pickRepeat() async {
+    if (!seriesLoaded || repeatReadOnly) return;
+    if (due == null) await pickDue();
+    if (!mounted || due == null) return;
+    if (due!.year < 1 || due!.year > 9999) {
+      showError(context, 'repeatDueRequired');
+      return;
+    }
+    final choice = await showDialog<RecurrenceChoice>(
+      context: context,
+      builder: (_) => RecurrenceDialog(anchor: due!, initial: repeat),
+    );
+    if (choice != null && mounted) {
+      setState(() {
+        repeat = choice.rule;
+        if (repeatDirty) applyFuture = true;
+      });
+    }
+  }
+
+  String repeatSummary(BuildContext context) {
+    final value = repeat;
+    if (value == null) return context.tr('repeatNone');
+    final local = MaterialLocalizations.of(context);
+    return '${context.tr(recurrenceUnitKey(value.unit))} · ${context.tr('repeatInterval')}: ${local.formatDecimal(value.interval)}'
+        '${value.unit == RecurrenceUnit.week ? '\n${(value.canonical(seriesAnchor).weekdays.toList()..sort()).map((d) => context.tr(recurrenceWeekdayKey(d))).join(', ')}' : ''}'
+        '${value.until == null ? '' : '\n${context.tr('repeatUntil')}: ${local.formatMediumDate(value.until!)}'}';
   }
 
   Future<void> loadReminder() async {
@@ -86,7 +158,9 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
           DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')
               ?.toLocal() ||
       reminder != originalEnabled ||
-      remindAt != originalReminder;
+      remindAt != originalReminder ||
+      repeatDirty ||
+      applyFuture;
   Future<void> leave() async {
     if (busy) return;
     if (dirty && !await confirm(context, context.tr('discardChanges'))) return;
@@ -147,7 +221,11 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
   }
 
   Future<void> save() async {
-    if (busy || !reminderLoaded) return;
+    if (busy || !reminderLoaded || !seriesLoaded) return;
+    if (repeat != null && due == null) {
+      showError(context, 'repeatDueRequired');
+      return;
+    }
     if (reminder &&
         (widget.todo == null ||
             reminder != originalEnabled ||
@@ -224,6 +302,24 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
                     1,
           );
         }
+        if (!repeatReadOnly) {
+          if (repeat == null && repeatDirty) {
+            await TodoSeriesStore.stop(txn, data['id'] as String);
+          } else if (repeat != null &&
+              (widget.todo == null || repeatDirty || applyFuture)) {
+            await TodoSeriesStore.configure(
+              txn,
+              data['id'] as String,
+              repeat!,
+              updateDefaults: applyFuture || series == null,
+              resetAnchor:
+                  applyFuture &&
+                  due !=
+                      DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')
+                          ?.toLocal(),
+            );
+          }
+        }
       });
       TodoChanges.committed();
       if (!mounted) return;
@@ -270,7 +366,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
           ),
           IconButton(
             tooltip: context.tr('save'),
-            onPressed: busy ? null : save,
+            onPressed: busy || !reminderLoaded || !seriesLoaded ? null : save,
             icon: const Icon(Icons.check),
           ),
         ],
@@ -280,6 +376,8 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            if (!reminderLoaded || !seriesLoaded)
+              const LinearProgressIndicator(),
             TextField(
               autocorrect: false,
               enableSuggestions: false,
@@ -347,11 +445,46 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
               trailing: due == null
                   ? null
                   : IconButton(
-                      tooltip: context.tr('clear'),
-                      onPressed: () => setState(() => due = null),
+                      tooltip: context.tr(
+                        repeat == null ? 'clear' : 'repeatClearDue',
+                      ),
+                      onPressed: repeat != null || !seriesLoaded
+                          ? null
+                          : () => setState(() => due = null),
                       icon: const Icon(Icons.close),
                     ),
             ),
+            ListTile(
+              key: const Key('task-repeat'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.repeat),
+              title: Text(context.tr('repeat')),
+              subtitle: Text(repeatSummary(context)),
+              onTap: seriesLoaded && !repeatReadOnly ? pickRepeat : null,
+            ),
+            if (repeatReadOnly)
+              Text(
+                context.tr(historical ? 'repeatHistorical' : 'repeatReopen'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            if (series != null && series!['active'] == 0 && !historical)
+              Text(
+                context.tr('repeatStopped'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            if (series != null && repeat != null && !repeatReadOnly)
+              SwitchListTile(
+                key: const Key('task-series-scope'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.tr('repeatFuture')),
+                subtitle: Text(
+                  context.tr(applyFuture ? 'repeatExplain' : 'repeatOnly'),
+                ),
+                value: applyFuture,
+                onChanged: repeatDirty
+                    ? null
+                    : (value) => setState(() => applyFuture = value),
+              ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(context.tr('reminder')),
@@ -394,7 +527,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
             ),
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: busy ? null : save,
+              onPressed: busy || !reminderLoaded || !seriesLoaded ? null : save,
               child: Text(context.tr('save')),
             ),
           ],

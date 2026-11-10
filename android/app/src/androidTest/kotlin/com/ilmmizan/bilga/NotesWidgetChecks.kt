@@ -16,6 +16,8 @@ class NotesWidgetChecks : Instrumentation() {
     private var verifyEmpty = false
     private var fixtureSeconds: Int? = null
     override fun onCreate(arguments: Bundle?) {
+        check(targetContext.packageName=="com.ilmmizan.bilga.review" &&
+            targetContext.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE!=0)
         fixtureTodo = arguments?.getString("fixtureTodo") == "true"
         verifyTodo = arguments?.getString("todoChecks") == "true"
         verifyEmpty = arguments?.getString("verifyEmptySnapshots") == "true"
@@ -84,7 +86,12 @@ class NotesWidgetChecks : Instrumentation() {
         val second = 2147483002
         val context = targetContext
         var failure: String? = null
+        var ownsFixtures=false
         try {
+            check(listOf(first,second).none { File(context.noBackupFilesDir,"notes-widgets/$it.bin").exists() })
+            val installed=AppWidgetManager.getInstance(context).getAppWidgetIds(android.content.ComponentName(context,NotesWidget::class.java))
+            check(first !in installed && second !in installed)
+            ownsFixtures=true
             check(NotesWidget.previewLines(200,140,1f)==2 && NotesWidget.previewLines(200,180,1f)==3 && NotesWidget.previewLines(200,140,2f)==0)
             val secret = "synthetic-widget-cache-sentinel-9381"
             val value = NotesWidget.defaults(first).put("test", secret)
@@ -108,7 +115,7 @@ class NotesWidgetChecks : Instrumentation() {
             check(a != b && a != c && b != c)
             if (Build.VERSION.SDK_INT >= 31) check(a.isImmutable && b.isImmutable && c.isImmutable)
             a.cancel(); b.cancel(); c.cancel()
-            val provider = AppWidgetManager.getInstance(context).installedProviders.single { it.provider.className == NotesWidget::class.java.name }
+            val provider = AppWidgetManager.getInstance(context).installedProviders.single { it.provider.packageName==context.packageName && it.provider.className == NotesWidget::class.java.name }
             check(provider.widgetCategory == AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN)
             check(provider.resizeMode == AppWidgetProviderInfo.RESIZE_BOTH)
             check(provider.configure?.className == NotesWidgetConfigureActivity::class.java.name)
@@ -131,7 +138,7 @@ class NotesWidgetChecks : Instrumentation() {
         } catch (e: Throwable) {
             failure = e.javaClass.simpleName
         } finally {
-            NotesWidgetStore.delete(context, first); NotesWidgetStore.delete(context, second)
+            if(ownsFixtures) { NotesWidgetStore.delete(context, first); NotesWidgetStore.delete(context, second) }
         }
         finish(if (failure == null) Activity.RESULT_OK else Activity.RESULT_CANCELED,
             Bundle().apply { putString("stream", if (failure == null) "Notes widget native checks: 13 PASS (safe default, encryption, readback, ID binding, tampering, PendingIntent isolation, immutable intents, provider metadata, permission epoch, snapshot clearing)\n" else "Notes widget native checks FAILED: $failure\n") })

@@ -8,7 +8,8 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Notes persistence, folders, tags, trash, history, autosave | IMPLEMENTED | Host regressions pass; selected encrypted editor/migration/rollback scenarios pass on Tab16; complete interaction audit pending |
 | Competitive rich-text Notes | IN PROGRESS | Rich editor/history/backup implemented; editor/save/reopen/backup/rotation pass on Tab16; remaining Note import/organization details and full audit pending |
 | Tasks, dates, priorities, descriptions, filters, folders, trash | IMPLEMENTED | Existing workflows plus recovered reminder integration |
-| Recurrence, subtasks, projects and custom task templates | NOT STARTED | Prebuilt checklist templates already exist; recurrence, nested subtasks and custom templates still need complete workflows |
+| Recurring tasks | TESTED | Editor, additive Tasks 10 migration, single/future edits, atomic occurrence generation, history, backup remapping and native notification completion; 22-scenario tablet suite plus DST/calendar tests pass |
+| Subtasks, projects and custom task templates | IN PROGRESS | Prebuilt checklist templates exist; complete subtasks/projects/custom templates remain required |
 | Android task reminders, snooze and widget actions | IMPLEMENTED | Recovered SQLCipher/native actions; Tab16/API31 delivery, snooze and native completion pass; reboot/Doze/timezone and permission failure acceptance remain |
 | Standalone/note/habit reminders | NOT STARTED | Task reminders do not cover the complete reminder module |
 | Habits | IMPLEMENTED | Existing schedules, quantitative entries, history, streaks, archive; encrypted habit persistence/completion tested on Tab16; no habit reminders |
@@ -27,5 +28,5 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Local encrypted backup and merge | IMPLEMENTED | Recovered v1/v2 codecs, transactional cross-DB import and ID remapping; host content/codec regressions and Tab16 encrypted text merge/rollback/idempotence pass; real media/second-device acceptance pending |
 | Google Drive backup | IN PROGRESS | Existing content-only path; media-bearing backups require local export |
 | Localization | IN PROGRESS | All 43 catalogs retained; seven priority-language drafts, remaining new strings use English; native review pending |
-| CI and Android artifacts | IN PROGRESS | Host and current local review build verified; prior checkpoint 382c437 CI passed; next milestone CI pending |
+| CI and Android artifacts | IN PROGRESS | Host and current local review build verified; recurrence source push/CI pending |
 | Store materials and release acceptance | NOT STARTED | No publication authorized; global release acceptance criteria not met |

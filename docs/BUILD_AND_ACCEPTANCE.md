@@ -77,3 +77,12 @@ python3 tool/check_tablet_review_install.py DEVICE_SERIAL "$PWD/build/review/bil
 ```
 
 That explicit installer refuses production binaries and mismatched existing review certificates, then uses an in-place review upgrade. It has no uninstall or clear-data path. Do not edit an executing build script: Bash may read later portions at their previous file offsets.
+
+Native synthetic widget/action checks require a separately built review instrumentation APK:
+
+```sh
+./android/gradlew -p android :app:assembleDebugAndroidTest -PbilgaReview=true
+python3 tool/test_native_review.py DEVICE_SERIAL build/app/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+```
+
+Use the same Java/Android environment as the review build. The runner checks exact review test identity and instrumentation targets before device access, verifies APK signatures against installed review/test packages, installs only the test companion in place and runs only the synthetic Notes/task suites. It requires raw RESULT_OK codes and has no uninstall/clear-data path.

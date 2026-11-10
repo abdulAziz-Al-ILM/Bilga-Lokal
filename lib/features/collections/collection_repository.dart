@@ -1,4 +1,5 @@
 import '../todo/todo_changes.dart';
+import '../todo/todo_series_store.dart';
 
 import 'dart:math';
 
@@ -245,6 +246,11 @@ class CollectionRepository {
         ? {'is_favorite', 'is_archived', 'tags'}
         : {'is_done'};
     if (!allowed.contains(key)) throw ArgumentError('field');
+    if (!notes && key == 'is_done') {
+      if (value != 0 && value != 1) throw ArgumentError('completion');
+      await TodoSeriesStore(await database).setCompleted(id, value == 1);
+      return;
+    }
     if (notes && key == 'tags') {
       final names = List<String>.from(jsonDecode(value as String) as List);
       final db = await database;

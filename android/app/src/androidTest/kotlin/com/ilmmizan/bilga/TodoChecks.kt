@@ -13,7 +13,7 @@ internal object TodoChecks {
     fun run(targetContext: Context): Pair<Boolean,String> {
         var count=0
         var failure: String?=null
-        val directory=File(targetContext.cacheDir,"todo-native-checks-9381")
+        val directory=java.nio.file.Files.createTempDirectory(targetContext.cacheDir.toPath(),"todo-native-checks-").toFile()
         val c=object: ContextWrapper(targetContext) { override fun getNoBackupFilesDir()=directory }
         fun checkCase(condition: Boolean) { check(condition); count++ }
         fun task(id: String,due: String,done: Boolean=false)=JSONObject().put("id",id).put("due",due).put("done",done)
@@ -51,7 +51,7 @@ internal object TodoChecks {
             val q=TodoHandoff.pending(c,"done","synthetic-a",2147483003)
             val r=TodoHandoff.pending(c,"open","synthetic-a",2147483004)
             checkCase(p!=q && p!=r && (Build.VERSION.SDK_INT<31 || p.isImmutable)); p.cancel();q.cancel();r.cancel()
-            val provider=AppWidgetManager.getInstance(c).installedProviders.single { it.provider.className==TodoWidget::class.java.name }
+            val provider=AppWidgetManager.getInstance(c).installedProviders.single { it.provider.packageName==c.packageName && it.provider.className==TodoWidget::class.java.name }
             checkCase(provider.widgetCategory==AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN && provider.configure.className==TodoHandoff::class.java.name && provider.resizeMode==AppWidgetProviderInfo.RESIZE_BOTH)
             checkCase(c.checkSelfPermission("android.permission.USE_FULL_SCREEN_INTENT")!=android.content.pm.PackageManager.PERMISSION_GRANTED)
             count+=TodoActionChecks.run(c,directory)

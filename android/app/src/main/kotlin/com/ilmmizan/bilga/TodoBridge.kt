@@ -27,11 +27,20 @@ class TodoBridge(private val activity: Activity,messenger: BinaryMessenger) {
                         require(activity.packageName=="com.ilmmizan.bilga.review" &&
                             activity.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE!=0)
                         val tag=call.argument<String>("tag") ?: error("no_tag")
-                        require(tag.startsWith("bilga-review-notification-"))
+                        val source=call.argument<String>("sourceFixture")
+                        val cached=TodoReminders.tasks(TodoStore.read(activity) ?: JSONObject())
+                        val fixture=cached.firstOrNull { it.optString("id")==source && source?.startsWith("bilga-review-notification-")==true }
+                        val generated=cached.firstOrNull { it.optString("id")==tag }
+                        require(tag.startsWith("bilga-review-notification-") ||
+                            (fixture!=null && generated!=null && fixture.optString("series").isNotEmpty() &&
+                             generated.optString("series")==fixture.optString("series") &&
+                             generated.optLong("sequence")>fixture.optLong("sequence")))
                         val active=activity.getSystemService(NotificationManager::class.java).activeNotifications
                             .firstOrNull { it.tag==tag && it.id==901 }
                         when(call.argument<String>("operation")) {
                             "exists" -> result.success(active!=null)
+                            "metadata" -> result.success(mapOf("hasTitle" to (generated?.has("title") ?: false),
+                                "widgetAllowed" to (generated?.optBoolean("widgetAllowed") ?: false)))
                             "complete" -> {
                                 val action=active?.notification?.actions?.firstOrNull() ?: error("no_action")
                                 action.actionIntent.send()

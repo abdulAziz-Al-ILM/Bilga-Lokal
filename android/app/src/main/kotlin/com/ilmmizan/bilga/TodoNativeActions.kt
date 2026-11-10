@@ -54,7 +54,7 @@ internal object TodoNativeActions {
         } finally { key.fill(0) }
     }
     internal fun configure(db:SQLiteDatabase) {
-        check(db.version==9) { "unsupported_schema" }
+        check(db.version in 9..10) { "unsupported_schema" }
         // Result-bearing PRAGMAs require a read, not execSQL or an unopened cursor.
         db.rawQuery("PRAGMA busy_timeout=2000",emptyArray<String>()).use { check(it.moveToFirst()) }
         db.execSQL("PRAGMA foreign_keys=ON")
@@ -76,6 +76,7 @@ internal object TodoNativeActions {
                 val now=LocalDateTime.now().toString()
                 db.execSQL("UPDATE todos SET is_done=1,completed_at=?,updated_at=? WHERE id=? AND is_done=0 AND updated_at=?",arrayOf(now,now,id,updated))
                 next.put("done",true).put("version",now).remove("reminder")
+                TodoSeriesActions.advance(db,id,now)?.let { next.put("generatedOccurrence",it) }
             } else {
                 require(operation=="snooze" && (TodoTime.instant(at ?: "") ?: 0)>System.currentTimeMillis())
                 val revision=UUID.randomUUID().toString()
@@ -130,8 +131,15 @@ internal object TodoNativeActions {
         root.put("blockedTask",id).put("sqlEpoch",root.optLong("sqlEpoch")+1);TodoStore.write(c,root)
         try {
             val next=open(c).use { db -> commit(db,task,op,at) }
+            val generated=next.optJSONObject("generatedOccurrence")
+            next.remove("generatedOccurrence")
             val tasks=root.getJSONArray("tasks")
             for(i in 0 until tasks.length()) if(tasks.getJSONObject(i).optString("id")==id) tasks.put(i,next)
+            if(generated!=null) {
+                // A future occurrence has no inherited widget disclosure grant.
+                if(!TodoReminders.settings(root).optBoolean("showTitles")) generated.remove("title")
+                tasks.put(generated)
+            }
             root.optJSONObject("events")?.remove(id)
             root.optJSONObject("widgets")?.keys()?.forEach { root.getJSONObject("widgets").getJSONObject(it).remove("snoozeTask") }
             root.remove("blockedTask");root.put("sqlEpoch",root.optLong("sqlEpoch")+1)

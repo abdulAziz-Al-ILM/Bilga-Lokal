@@ -181,7 +181,7 @@ void main() {
         )).items.single['id'],
         'nested',
       );
-      expect(await db.getVersion(), 9);
+      expect(await db.getVersion(), 10);
     } finally {
       await db.close();
       await dir.delete(recursive: true);

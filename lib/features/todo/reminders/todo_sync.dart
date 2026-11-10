@@ -57,8 +57,14 @@ class TodoSync {
           state['settings'] as Map? ?? {},
         );
         final exportTitles = options['showTitles'] == true;
+        final hasSeries = await db.getVersion() >= 10;
         final tasks = await db.transaction((txn) async {
           final grants = await TodoWidgetPermissions.allowed(txn);
+          final occurrences = {
+            if (hasSeries)
+              for (final row in await txn.query('todo_occurrences'))
+                row['todo_id']: row,
+          };
           final reminders = {
             for (final r in await txn.query(
               'todo_reminders',
@@ -76,6 +82,10 @@ class TodoSync {
                 'version': task['updated_at'],
                 'due': task['due_at'],
                 'done': task['is_done'] == 1,
+                if (occurrences[task['id']] case final occurrence?) ...{
+                  'series': occurrence['series_id'],
+                  'sequence': occurrence['sequence'],
+                },
                 if (reminders[task['id']] case final r?
                     when task['is_done'] != 1)
                   'reminder': {

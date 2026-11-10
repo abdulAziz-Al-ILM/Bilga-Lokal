@@ -2,6 +2,7 @@ import unittest
 
 from verify_play_manifest import verify_manifest
 from verify_review_manifest import verify_review
+from test_native_review import verify_manifest as verify_native
 
 
 MANIFEST = '''<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ilmmizan.bilga">
@@ -47,6 +48,24 @@ class ReviewManifestChecks(unittest.TestCase):
         for tag in ['uses-permission', 'uses-permission-sdk-23']:
             with self.subTest(tag=tag), self.assertRaises(ValueError):
                 verify_review(self.manifest.replace('<uses-sdk ', f'<{tag} android:name="android.permission.RECORD_AUDIO"/><uses-sdk '))
+
+
+class NativeReviewManifestChecks(unittest.TestCase):
+    manifest = '''<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ilmmizan.bilga.review.test">
+    <instrumentation android:name="com.ilmmizan.bilga.NotesWidgetChecks" android:targetPackage="com.ilmmizan.bilga.review"/>
+    <instrumentation android:name="com.ilmmizan.bilga.WidgetUiProbe" android:targetPackage="com.ilmmizan.bilga.review.test"/>
+    </manifest>'''
+
+    def test_review_native_target(self):
+        verify_native(self.manifest)
+
+    def test_rejects_production_target_before_device_access(self):
+        for source in (self.manifest.replace('.review', ''),
+                       self.manifest.replace('targetPackage="com.ilmmizan.bilga.review"',
+                                             'targetPackage="com.ilmmizan.bilga"'),
+                       self.manifest.replace('com.ilmmizan.bilga.WidgetUiProbe', 'unknown.Runner')):
+            with self.subTest(source=source), self.assertRaises(ValueError):
+                verify_native(source)
 
 
 if __name__ == '__main__':

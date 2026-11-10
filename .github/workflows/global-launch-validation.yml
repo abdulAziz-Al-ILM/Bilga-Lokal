@@ -60,6 +60,12 @@ jobs:
           "$RUNNER_TEMP/bilga-verifier/bin/pip" install -r backend/purchase_verifier/requirements.txt
           "$RUNNER_TEMP/bilga-verifier/bin/python" -m unittest discover -s backend/purchase_verifier/tests -v
       - run: flutter analyze --no-pub
+      - name: Verify calendar recurrence across DST in both runtimes
+        run: |
+          TZ=America/New_York dart tool/check_recurrence_timezones.dart
+          mkdir -p "$RUNNER_TEMP/bilga-recurrence-java"
+          javac -d "$RUNNER_TEMP/bilga-recurrence-java" android/app/src/main/java/com/ilmmizan/bilga/TaskRecurrence.java tool/java/TaskRecurrenceCheck.java
+          java -cp "$RUNNER_TEMP/bilga-recurrence-java" TaskRecurrenceCheck
       - run: flutter test --no-pub --concurrency=2 --reporter expanded
       - run: flutter build apk --debug --no-pub
       - name: Verify debug artifact

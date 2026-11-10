@@ -4,11 +4,11 @@
 
 The source recovery and initial integrated development checkpoint are not a complete commercial release. Consult FEATURE_MATRIX.md, TEST_REPORT.md and KNOWN_LIMITATIONS.md for precise gaps.
 
-Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_todo.db`. Current derived-search upgrade targets: Notes 15 / Tasks 9. Portable backup content versions remain Notes 13 / Tasks 7 with backward-compatible import; search indexes and device-local widget consent are excluded and reconstructed.
+Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_todo.db`. Current derived-search upgrade targets: Notes 15 / Tasks 10. Portable backup content versions remain Notes 13 / Tasks 8 with backward-compatible import; search indexes and device-local widget consent are excluded and reconstructed.
 
 Business: 40-day application-managed trial, then one non-consumable lifetime product `bilga_lifetime_unlock`. No subscription or automatic billing. Price must come from Play ProductDetails; $9.99 is a planning reference only. Existing data is not removed at expiry; protected read/export/backup routes remain.
 
-Latest November 10 host checkpoint: **166 Flutter tests PASS**, analyzer no issues, **43 × 336** catalog checks, **17 Python backend tests** and **7 manifest tests** PASS. Rich Notes and the verifier are implemented; the latter is undeployed. Tab16/API31 passes **21 scenario cases** in 101 seconds, including storage/migration/backup, rotation, all ten routes, 14 theme variants, Arabic RTL and quiet reminder delivery/snooze/native completion. TABLET_TEST_REPORT.md distinguishes this scope from remaining acceptance. The remaining feature list and Stage A owner review gate still apply.
+Latest November 10 recurrence checkpoint: **183 Flutter tests PASS**, analyzer no issues, **43 × 364** catalog keys, **17 Python backend tests**, **9 manifest/target tests**, Java recurrence and real New York Dart DST checks PASS. Tab16/API31 passes **22 scenario cases** in 147 seconds and separate **13 Notes widget / 46 task native checks**. Recurrence includes editor, history-preserving atomic completion, backup and next native reminder delivery without Dart refresh. TABLET_TEST_REPORT.md records exact scope; complete non-voice Stage A and owner acceptance remain pending.
 
 Required before release:
 

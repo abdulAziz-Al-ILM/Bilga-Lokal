@@ -7,6 +7,9 @@ import 'package:bilga/core/settings.dart';
 import 'package:bilga/core/strings.dart';
 import 'package:bilga/features/todo/todo_database.dart';
 import 'package:bilga/features/todo/todo_editor_page.dart';
+import 'package:bilga/features/todo/recurrence_rule.dart';
+import 'package:bilga/features/todo/todo_series_store.dart';
+import 'package:bilga/features/collections/collection_repository.dart';
 import 'package:bilga/features/todo/reminders/todo_bridge.dart';
 import 'package:bilga/features/todo/reminders/todo_host.dart';
 import 'package:bilga/features/todo/reminders/todo_reminder_store.dart';
@@ -133,6 +136,140 @@ void main() {
       );
     }
   }
+
+  Future<void> openTask(WidgetTester tester, Map<String, Object?> row) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        key: UniqueKey(),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => TodoEditorPage(todo: row, database: db),
+                ),
+              ),
+              child: const Text('Open task'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open task'));
+    await settleIo(tester);
+  }
+
+  testWidgets(
+    'Editor saves custom repeat days and collection completion creates one successor',
+    (tester) async {
+      final row = (await tester.runAsync(() => db.query('todos')))!.single;
+      await openTask(tester, row);
+      await tester.ensureVisible(find.byKey(const Key('task-repeat')));
+      await tester.tap(find.byKey(const Key('task-repeat')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Does not repeat').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Weeks').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('repeat-interval')), '2');
+      for (final day in ['Friday', 'Monday', 'Wednesday']) {
+        final chip = find.widgetWithText(FilterChip, day);
+        await tester.ensureVisible(chip);
+        await tester.tap(chip);
+        await tester.pump();
+      }
+      final save = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'Save'),
+      );
+      await tester.ensureVisible(save);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Save'));
+      await settleIo(tester);
+      expect(find.text('Open task'), findsOneWidget);
+      await tester.runAsync(() async {
+        final state = (await TodoSeriesStore.forTask(db, 'a'))!;
+        final rule = RecurrenceRule.decode(state['rule'] as String);
+        expect(rule.interval, 2);
+        expect(rule.weekdays, {1, 3});
+        final repo = CollectionRepository(CollectionKind.todos, provided: db);
+        await repo.setField('a', 'is_done', 1);
+        expect(await db.query('todos'), hasLength(2));
+        final next = (await db.query('todos', where: 'is_done=0')).single;
+        expect(
+          DateTime.parse(next['due_at'] as String),
+          DateTime(2030, 3, 25, 10),
+        );
+      });
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'Editor occurrence edits stay local; explicit future scope updates the series template',
+    (tester) async {
+      await tester.runAsync(
+        () => db.transaction(
+          (txn) => TodoSeriesStore.configure(
+            txn,
+            'a',
+            RecurrenceRule(unit: RecurrenceUnit.day),
+          ),
+        ),
+      );
+      var row = (await tester.runAsync(() => db.query('todos')))!.single;
+      await openTask(tester, row);
+      Finder titleField() => find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.labelText == 'Title',
+      );
+      await tester.enterText(titleField(), 'One occurrence');
+      await tester.tap(find.byTooltip('Save'));
+      await settleIo(tester);
+      String? next;
+      await tester.runAsync(() async {
+        next = await TodoSeriesStore(db)
+            .setCompleted('a', true, at: DateTime(2030, 3, 15, 11));
+        row = (await db.query(
+          'todos',
+          where: 'id=?',
+          whereArgs: [next],
+        )).single;
+        expect(row['title'], 'Synthetic task');
+      });
+      await openTask(tester, row);
+      await tester.enterText(titleField(), 'Future title');
+      final scope = find.byKey(const Key('task-series-scope'));
+      await tester.ensureVisible(scope);
+      await tester.tap(scope);
+      await tester.pump();
+      await tester.tap(find.byTooltip('Save'));
+      await settleIo(tester);
+      await tester.runAsync(() async {
+        final future = await TodoSeriesStore(db)
+            .setCompleted(next!, true, at: DateTime(2030, 3, 16, 11));
+        expect(
+          (await db.query(
+            'todos',
+            where: 'id=?',
+            whereArgs: [future],
+          )).single['title'],
+          'Future title',
+        );
+        expect(
+          (await db.query(
+            'todos',
+            where: 'id=?',
+            whereArgs: ['a'],
+          )).single['title'],
+          'One occurrence',
+        );
+      });
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets(
     'Editor explicitly opts into reminders and saves original deadline separately',
