@@ -322,5 +322,17 @@
   "purchaseVerification": "Xarid tasdiqlanmadi. Keyinroq xaridni tiklashni sinang. Faol sinov davom etadi.",
   "purchaseCancelled": "Xarid bekor qilindi.",
   "purchaseAcknowledgement": "Huquq saqlandi; Google Play tasdig‘i qayta yuboriladi. Internetda xaridni tiklashni bosing.",
-  "purchaseUnavailable": "Google Play vaqtincha mavjud emas. Faol sinov va tasdiqlangan huquqlar saqlanadi."
+  "purchaseUnavailable": "Google Play vaqtincha mavjud emas. Faol sinov va tasdiqlangan huquqlar saqlanadi.",
+  "richBold": "Qalin",
+  "richItalic": "Qiya",
+  "richUnderline": "Tagiga chizish",
+  "richStrike": "Ustidan chizish",
+  "richBullets": "Belgili ro‘yxat",
+  "richNumbers": "Raqamli ro‘yxat",
+  "richChecklist": "Tekshiruv ro‘yxati",
+  "richHeading": "Sarlavha",
+  "richParagraph": "Oddiy matn",
+  "richLink": "Havola",
+  "richInvalidLink": "To‘g‘ri https, http yoki elektron pochta havolasini kiriting.",
+  "richUnsupported": "Bu formatni ushbu versiyada tahrirlab bo‘lmaydi. Asl matn va format saqlangan; yozuvni o‘qish yoki eksport qilish mumkin."
 }

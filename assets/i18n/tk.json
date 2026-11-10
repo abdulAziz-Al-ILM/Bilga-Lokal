@@ -322,5 +322,17 @@
   "purchaseVerification": "Satyn alyş tassyklanmady. Soň dikeltmegi synanyşyň. Işjeň synag dowam edýär.",
   "purchaseCancelled": "Satyn alyş ýatyryldy.",
   "purchaseAcknowledgement": "Giriş saklandy; Google Play tassyklamasy gaýtalanar. Internetde satyn alyşlary dikeltiň.",
-  "purchaseUnavailable": "Google Play wagtlaýyn elýeterli däl. Işjeň synag we tassyklanan giriş saklanýar."
+  "purchaseUnavailable": "Google Play wagtlaýyn elýeterli däl. Işjeň synag we tassyklanan giriş saklanýar.",
+  "richBold": "Galyň",
+  "richItalic": "Gyşyk",
+  "richUnderline": "Aşagyny çyzmak",
+  "richStrike": "Üstünden çyzmak",
+  "richBullets": "Belgili sanaw",
+  "richNumbers": "Sanly sanaw",
+  "richChecklist": "Barlag sanawy",
+  "richHeading": "Sözbaşy",
+  "richParagraph": "Adaty tekst",
+  "richLink": "Baglanyşyk",
+  "richInvalidLink": "Dogry https, http ýa-da e-poçta baglanyşygyny giriziň.",
+  "richUnsupported": "Bu formaty şu wersiýada üýtgedip bolmaýar. Asyl tekst we format saklanýar; belligi okap ýa-da eksport edip bilersiňiz."
 }

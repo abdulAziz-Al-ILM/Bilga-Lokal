@@ -1,3 +1,5 @@
+import 'rich_note_codec.dart';
+
 import 'package:sqflite/sqflite.dart';
 
 import 'note_database.dart';
@@ -77,6 +79,7 @@ class NoteService {
   }
 
   Future<void> addNote(Note note) async {
+    RichNoteCodec.validate(note.richBody, note.body);
     final db = await _db;
 
     await db.transaction((txn) async {
@@ -92,6 +95,7 @@ class NoteService {
   }
 
   Future<void> updateNote(Note note, {bool recordHistory = true}) async {
+    RichNoteCodec.validate(note.richBody, note.body);
     final db = await _db;
     await db.transaction((txn) async {
       final rows = await txn.query(
@@ -101,7 +105,10 @@ class NoteService {
       );
       if (rows.isEmpty) throw StateError('Yozuv topilmadi');
       final old = Note.fromMap(rows.single);
-      if (recordHistory && (old.title != note.title || old.body != note.body)) {
+      if (recordHistory &&
+          (old.title != note.title ||
+              old.body != note.body ||
+              old.richBody != note.richBody)) {
         await _saveVersion(txn, old);
       }
       await txn.update(
@@ -130,7 +137,8 @@ class NoteService {
     );
     if (latest.isNotEmpty &&
         latest.first['title'] == note.title &&
-        latest.first['body'] == note.body) {
+        latest.first['body'] == note.body &&
+        latest.first['rich_body'] == note.richBody) {
       return;
     }
     await db.insert(
@@ -139,6 +147,7 @@ class NoteService {
         noteId: note.id,
         title: note.title,
         body: note.body,
+        richBody: note.richBody,
         createdAt: DateTime.now(),
       ).toMap(),
     );
@@ -158,6 +167,7 @@ class NoteService {
   }
 
   Future<Note> restoreVersion(Note currentNote, NoteVersion version) async {
+    RichNoteCodec.validate(version.richBody, version.body);
     if (version.noteId != currentNote.id) {
       throw ArgumentError('Tarix boshqa yozuvga tegishli');
     }
@@ -174,12 +184,14 @@ class NoteService {
         // Preserve both the durable version and any editor draft.
         await _saveVersion(txn, stored);
         if (stored.title != currentNote.title ||
-            stored.body != currentNote.body) {
+            stored.body != currentNote.body ||
+            stored.richBody != currentNote.richBody) {
           await _saveVersion(txn, currentNote);
         }
         final restored = stored.copyWith(
           title: version.title,
           body: version.body,
+          richBody: version.richBody,
           updatedAt: DateTime.now(),
         );
         await txn.update(

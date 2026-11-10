@@ -6,7 +6,7 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | --- | --- | --- |
 | Source recovery | IMPLEMENTED | Four repositories and both primary branches inspected; SOURCE_RECOVERY.md |
 | Notes persistence, folders, tags, trash, history, autosave | IMPLEMENTED | Recovered latest WIP; current host regressions pass; Android acceptance pending |
-| Competitive rich-text Notes | NOT STARTED | Existing editor is plain text; rich-text/checklists/inline links remain |
+| Competitive rich-text Notes | IN PROGRESS | Rich editor/history/backup implemented and host tested; tablet acceptance and remaining Note import/organization details pending |
 | Tasks, dates, priorities, descriptions, filters, folders, trash | IMPLEMENTED | Existing workflows plus recovered reminder integration |
 | Recurrence, subtasks, projects and custom task templates | NOT STARTED | Prebuilt checklist templates already exist; recurrence, nested subtasks and custom templates still need complete workflows |
 | Android task reminders, snooze and widget actions | IMPLEMENTED | Recovered SQLCipher/native actions; require current branch platform tests |

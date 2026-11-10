@@ -4,6 +4,7 @@ class Note {
   final String id;
   final String title;
   final String body;
+  final String? richBody;
   final String? folderId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -18,6 +19,7 @@ class Note {
     required this.id,
     required this.title,
     required this.body,
+    this.richBody,
     this.folderId,
     required this.createdAt,
     required this.updatedAt,
@@ -33,6 +35,7 @@ class Note {
       'id': id,
       'title': title,
       'body': body,
+      'rich_body': richBody,
       'folder_id': folderId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -48,6 +51,7 @@ class Note {
       id: map['id'] as String,
       title: map['title'] as String,
       body: map['body'] as String,
+      richBody: map['rich_body'] as String?,
       folderId: map['folder_id'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
@@ -67,6 +71,7 @@ class Note {
     String? id,
     String? title,
     String? body,
+    Object? richBody = _noChange,
     Object? folderId = _noChange,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -80,6 +85,9 @@ class Note {
       id: id ?? this.id,
       title: title ?? this.title,
       body: body ?? this.body,
+      richBody: identical(richBody, _noChange)
+          ? (body != null && body != this.body ? null : this.richBody)
+          : richBody as String?,
       folderId: identical(folderId, _noChange)
           ? this.folderId
           : folderId as String?,

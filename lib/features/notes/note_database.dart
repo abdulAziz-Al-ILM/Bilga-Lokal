@@ -32,7 +32,7 @@ class NoteDatabase {
       secure: secure,
       verifyOnOpen: true,
       diagnostic: NotesWidgetLoading.trace,
-      version: 14,
+      version: 15,
 
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
@@ -50,6 +50,7 @@ class NoteDatabase {
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             body TEXT NOT NULL,
+            rich_body TEXT,
             folder_id TEXT,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
@@ -67,6 +68,7 @@ class NoteDatabase {
             note_id TEXT NOT NULL,
             title TEXT NOT NULL,
             body TEXT NOT NULL,
+            rich_body TEXT,
             created_at TEXT NOT NULL
           )
           ''');
@@ -168,6 +170,12 @@ class NoteDatabase {
         }
         if (oldVersion < 14) {
           await SearchIndex.create(db, notes: true);
+        }
+        if (oldVersion < 15) {
+          await db.execute('ALTER TABLE notes ADD COLUMN rich_body TEXT');
+          await db.execute(
+            'ALTER TABLE note_versions ADD COLUMN rich_body TEXT',
+          );
         }
       },
     );

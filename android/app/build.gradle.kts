@@ -13,6 +13,9 @@ if (bilgaKeyFile.exists()) {
 }
 val bilgaHasKeys = listOf("keyAlias", "keyPassword", "storeFile", "storePassword")
     .all { !bilgaKeys.getProperty(it).isNullOrBlank() }
+// Explicit opt-in for USB testing with separate Android UID, storage and keys.
+// The default/production application ID and signing configuration stay intact.
+val bilgaReview = providers.gradleProperty("bilgaReview").orNull == "true"
 
 
 android {
@@ -28,6 +31,8 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.ilmmizan.bilga"
+        if (bilgaReview) applicationIdSuffix = ".review"
+        manifestPlaceholders["bilgaAppLabel"] = if (bilgaReview) "Bilga Review" else "Bilga"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = maxOf(flutter.minSdkVersion, 26)
@@ -42,6 +47,14 @@ android {
     }
 
     signingConfigs {
+        getByName("debug") {
+            if (bilgaReview) {
+                storeFile = rootProject.file("../.bilga-tools/review-signing/debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
         create("release") {
             if (bilgaHasKeys) {
                 keyAlias = bilgaKeys.getProperty("keyAlias")
@@ -80,6 +93,7 @@ dependencies {
 tasks.configureEach {
     if (name == "preReleaseBuild") {
         doFirst {
+            if (bilgaReview) throw GradleException("Bilga Review is restricted to debug testing.")
             if (!bilgaHasKeys) {
                 throw GradleException("Bilga: android/key.properties ni sozlang. CHIQARISH.md ni o‘qing.")
             }

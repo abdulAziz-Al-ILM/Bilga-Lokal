@@ -1,3 +1,5 @@
+import 'support/rich_editor_input.dart';
+
 import 'dart:async';
 
 import 'package:bilga/core/strings.dart';
@@ -77,11 +79,11 @@ void main() {
   ) async {
     final service = MemoryNotes();
     await openEditor(tester, service);
-    await tester.enterText(find.byKey(const Key('note-body')), '  satr\n');
+    await enterNoteBody(tester, '  satr\n');
     await tester.pump(const Duration(milliseconds: 750));
     await tester.pump();
     expect(service.writes.single.body, '  satr\n');
-    await tester.enterText(find.byKey(const Key('note-body')), 'ikkinchi satr');
+    await enterNoteBody(tester, 'ikkinchi satr');
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(service.writes.last.body, 'ikkinchi satr');
@@ -94,11 +96,14 @@ void main() {
   ) async {
     final service = MemoryNotes()..fail = true;
     await openEditor(tester, service);
-    await tester.enterText(find.byKey(const Key('note-body')), 'Yo‘qolmasin');
+    await enterNoteBody(tester, 'Yo‘qolmasin');
     await tester.tap(find.byTooltip(Strings.get('en', 'back')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('note-body')), findsOneWidget);
-    expect(find.text('Yo‘qolmasin'), findsOneWidget);
+    expect(
+      find.textContaining('Yo‘qolmasin', findRichText: true),
+      findsOneWidget,
+    );
     expect(find.text(Strings.get('en', 'saveError')), findsOneWidget);
     service.fail = false;
     await tester.tap(find.byTooltip(Strings.get('en', 'save')));
@@ -113,9 +118,9 @@ void main() {
     final gate = Completer<void>();
     final service = MemoryNotes()..blocked = gate;
     await openEditor(tester, service);
-    await tester.enterText(find.byKey(const Key('note-body')), 'birinchi');
+    await enterNoteBody(tester, 'birinchi');
     await tester.pump(const Duration(milliseconds: 750));
-    await tester.enterText(find.byKey(const Key('note-body')), 'ikkinchi');
+    await enterNoteBody(tester, 'ikkinchi');
     await tester.pump(const Duration(milliseconds: 750));
     gate.complete();
     await tester.pumpAndSettle();

@@ -1,3 +1,19 @@
+# 2026-11-10 continuation checkpoint
+
+Branch remains `development/global-launch`; draft PR #1 remains the review target. The new owner instruction is saved in NON_VOICE_OWNER_REVIEW_BRIEF.md. Stage A (complete non-voice implementation and verification) precedes Stage B (owner review). Voice and Play publication still require separate explicit approval.
+
+Rich-text Notes are implemented with headings, bold/italic/underline/strikethrough, lists/checklists, links, undo/redo, existing autosave/attachments/tags/history and a read-only rich reader. Notes schema 15 adds nullable rich_body to notes/history; plain body remains searchable and compatible. Portable backup content schema 13 preserves formatting; old backup formats are still accepted. A narrowly patched MIT-licensed flutter_quill 11.6.0 is vendored to preserve disabled keyboard suggestions/autocorrect/IME learning. See vendor/flutter_quill/BILGA_PATCH.md.
+
+Current host evidence: **164 full Flutter tests PASS**, analyzer no issues; all 43 catalogs have 336 keys. New cases cover formatting-only history, restoration and backup, invalid deltas/unsafe links, Notes 14 migration, no-op legacy opening, actual TextInput privacy flags, and large-font editing above the keyboard. Review APK compilation is running locally; no new APK/device feature pass is claimed yet.
+
+The connected Blackview Tab 16 is USB-authorized, Android 12/API 31, arm64, 1200×2000. Existing production Bilga is version 1.4.0+9, target 36, debuggable, with certificate SHA-256 38ecfe0234e465924812ba3ee84ef838557a1d03d53713bd7a6d76478663bd6d (confirmed by apksigner). It has not been installed over, uninstalled, reset, launched for automation or had databases read. Test key differs. An explicitly opted-in debug-only `com.ilmmizan.bilga.review` build is being prepared, labeled Bilga Review, with a separate UID/storage/Keystore and stable local test key. The normal production ID is unchanged. No review installation existed when inspected.
+
+Local toolchains now live in ignored `.bilga-tools/` so reboot no longer loses them: pinned Flutter 3.47.8/Dart 3.13.7, Temurin 21.0.13+9, Android SDK 36/build-tools 36.0.0/NDK 28.2. The USB tool must run with host/loopback access. The review build command is `bash tool/build_tablet_review.sh`; it verifies debug label, package isolation, signature and absence of microphone permission before any separate install action.
+
+Next exact step: finish the current review APK build, verify its actual manifest and signer, install only the isolated review package after checking it remains absent or signature-compatible, then execute synthetic-data UI/integration journeys on the actual tablet. Continue other required modules and verifier backend while native builds run. The overall product remains IN PROGRESS; the historical checkpoint below is not a completion claim.
+
+---
+
 # Implementation status
 
 Checkpoint date: 2026-11-09 (Asia/Tashkent)

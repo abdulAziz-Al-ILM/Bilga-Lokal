@@ -1,3 +1,4 @@
+import '../notes/rich_note_codec.dart';
 import '../todo/todo_changes.dart';
 import '../todo/reminders/todo_reminder_store.dart';
 import '../../core/private_database.dart';
@@ -50,6 +51,7 @@ class BackupStore {
       'trash_batch',
     },
     'notes': {
+      'rich_body',
       'id',
       'title',
       'body',
@@ -62,7 +64,14 @@ class BackupStore {
       'is_archived',
       'tags',
     },
-    'note_versions': {'version_id', 'note_id', 'title', 'body', 'created_at'},
+    'note_versions': {
+      'version_id',
+      'note_id',
+      'title',
+      'body',
+      'rich_body',
+      'created_at',
+    },
     'note_tags': {'id', 'name', 'normalized_name', 'created_at', 'updated_at'},
     'note_tag_links': {'note_id', 'tag_id'},
     'todo_folders': {
@@ -117,7 +126,7 @@ class BackupStore {
       'format': 'bilga-data',
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
-      'notesSchema': 12,
+      'notesSchema': 13,
       'todoSchema': 7,
       'createdAt': DateTime.now().toUtc().toIso8601String(),
       'ownerId': ownerId,
@@ -130,7 +139,7 @@ class BackupStore {
   ) {
     if (payload['format'] != 'bilga-data' ||
         payload['version'] != 1 ||
-        ![8, 9, 10, 11, 12].contains(payload['notesSchema']) ||
+        ![8, 9, 10, 11, 12, 13].contains(payload['notesSchema']) ||
         ![6, 7].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
       throw const FormatException('backup_invalid');
@@ -188,6 +197,18 @@ class BackupStore {
                 row['normalized_name'] !=
                     NoteTagStore.normalizeName(row['name'] as String))) {
           throw const FormatException('backup_invalid');
+        }
+        if (entry.key == 'notes' || entry.key == 'note_versions') {
+          if (row['rich_body'] != null && row['rich_body'] is! String) {
+            throw const FormatException('rich_note_format');
+          }
+          if (row['body'] is! String) {
+            throw const FormatException('backup_invalid');
+          }
+          RichNoteCodec.validate(
+            row['rich_body'] as String?,
+            row['body'] as String,
+          );
         }
         if (entry.key == 'private_records') {
           if (row['kind'] is! String ||

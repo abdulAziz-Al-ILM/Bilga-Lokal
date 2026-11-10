@@ -2,7 +2,7 @@
 
 Overall product is IN PROGRESS. The master spec acceptance criteria are not yet met.
 
-1. Notes editor is plain text. Rich formatting, dedicated checklist controls and full file import workflows remain required.
+1. Rich-text Notes, checklists, links and formatting-preserving history/backups are implemented and host tested. New tablet acceptance, supported file-import workflows and the complete Notes interaction audit remain required.
 2. Tasks have no occurrence-safe recurrence, subtasks or projects yet. Prebuilt checklist templates exist; custom task templates remain incomplete.
 3. Android task reminders were recovered, but current-branch notification delivery/reboot/device tests have not run. Standalone, habit and note reminders are incomplete. Android permissions and battery policies can delay delivery.
 4. Journal still needs custom categories, calendar navigation, mood tracking and durable entry-history management. Public sharing remains disabled.

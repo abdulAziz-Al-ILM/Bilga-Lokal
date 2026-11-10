@@ -1,3 +1,5 @@
+import 'support/rich_editor_input.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -101,18 +103,15 @@ void main() {
         await NoteDatabase.createRecords(db);
         await db.insert(
           'notes',
-          entry(
-            'a',
-            folder: 'parent',
-            tags: [' Ish ', 'ISH', 'o‘qish'],
-          ).toMap(),
+          entry('a', folder: 'parent', tags: [' Ish ', 'ISH', 'o‘qish']).toMap()
+            ..remove('rich_body'),
         );
         await db.insert(
           'notes',
           entry(
             'trash',
             tags: ['ish', "O'QISH"],
-          ).copyWith(isDeleted: true).toMap(),
+          ).copyWith(isDeleted: true).toMap()..remove('rich_body'),
         );
         await db.insert('note_versions', {
           'version_id': 1,
@@ -136,9 +135,14 @@ void main() {
     await old.close();
     final migrated = await NoteDatabase.openAt(path);
     opened.add(migrated);
-    expect(await migrated.getVersion(), 14);
+    expect(await migrated.getVersion(), 15);
     for (final t in before.keys) {
-      expect(await migrated.query(t), before[t]);
+      expect(
+        (await migrated.query(t))
+            .map((r) => Map<String, Object?>.from(r)..remove('rich_body'))
+            .toList(),
+        before[t],
+      );
     }
     expect((await NoteTagStore(migrated).all()).length, 2);
     expect((await migrated.query('note_tag_links')).length, 4);
@@ -503,10 +507,7 @@ void main() {
           home: NoteEditorPage(folderId: 'child', service: notes),
         ),
       );
-      await tester.enterText(
-        find.byKey(const Key('note-body')),
-        'New tagged note',
-      );
+      await enterNoteBody(tester, 'New tagged note');
       await tester.tap(find.text('Tags'));
       await settleIo(tester);
       await tester.tap(find.text('Ish'));
@@ -566,7 +567,7 @@ void main() {
       tester.widget<InputChip>(chip).onDeleted!();
       await tester.pump(const Duration(milliseconds: 750));
       await settleIo(tester);
-      await tester.enterText(find.byKey(const Key('note-body')), 'Edited text');
+      await enterNoteBody(tester, 'Edited text');
       await tester.pump(const Duration(milliseconds: 750));
       await settleIo(tester);
       await tester.runAsync(() async {

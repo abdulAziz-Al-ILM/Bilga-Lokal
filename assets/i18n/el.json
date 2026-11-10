@@ -322,5 +322,17 @@
   "purchaseVerification": "Purchase could not be verified. Try Restore purchases later. Your active trial continues.",
   "purchaseCancelled": "Purchase cancelled.",
   "purchaseAcknowledgement": "Access is saved; Google Play acknowledgement will be retried. Use Restore purchases when online.",
-  "purchaseUnavailable": "Google Play is temporarily unavailable. Your active trial and verified access are preserved."
+  "purchaseUnavailable": "Google Play is temporarily unavailable. Your active trial and verified access are preserved.",
+  "richBold": "Bold",
+  "richItalic": "Italic",
+  "richUnderline": "Underline",
+  "richStrike": "Strikethrough",
+  "richBullets": "Bulleted list",
+  "richNumbers": "Numbered list",
+  "richChecklist": "Checklist",
+  "richHeading": "Heading",
+  "richParagraph": "Paragraph",
+  "richLink": "Link",
+  "richInvalidLink": "Enter a valid https, http or email link.",
+  "richUnsupported": "This formatting cannot be edited in this version. Your original text and formatting are preserved; you can read or export the note."
 }

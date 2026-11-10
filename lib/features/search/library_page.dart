@@ -1,3 +1,5 @@
+import '../notes/rich_note_widgets.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -403,7 +405,13 @@ class _DocumentPageState extends State<DocumentPage> {
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 12),
-              SelectableText(text),
+              if (widget.hit.kind == 'note')
+                RichNoteReader(
+                  body: row!['body'] as String,
+                  richBody: row!['rich_body'] as String?,
+                )
+              else
+                SelectableText(text),
               const SizedBox(height: 24),
               Text(
                 '${context.tr('created')}: ${date(row!['created_at'] as String)}',
