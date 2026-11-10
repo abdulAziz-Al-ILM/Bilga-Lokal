@@ -27,7 +27,7 @@ Expected debug artifact: `build/app/outputs/flutter-apk/app-debug.apk`. CI uses 
 
 ## Purchase/Drive configuration
 
-Copy `billing_config.example.json` to ignored `billing_config.json`. Its values are **public** verification configuration, not private signing/service-account credentials. The lifetime product ID is fixed in source as `bilga_lifetime_unlock`; configure that one non-consumable product in Console. The secure-verifier backend still needs implementation and a real Google Play verification integration; setting an arbitrary URL does not make purchases valid.
+Copy `billing_config.example.json` to ignored `billing_config.json`. Its values are **public** verification configuration, not private signing/service-account credentials. The lifetime product ID is fixed in source as `bilga_lifetime_unlock`; configure that one non-consumable product in Console. The secure-verifier backend is implemented in `backend/purchase_verifier`; its README covers Google API/credential/HTTPS/key configuration and limitations. It is not deployed or certified with real Play purchases. Setting an arbitrary URL does not make purchases valid.
 
 The license key is Google's RSA public licensing key; the verifier key is an Ed25519 public verification key. Private signing seeds and Play service-account credentials belong outside the APK and repository. No service deployment or recurring expenditure is authorized by these instructions.
 
@@ -53,3 +53,27 @@ Expected release outputs: `build/app/outputs/flutter-apk/app-release.apk` and `b
 - Large-font, RTL, small-phone/tablet and screen-reader journeys through every reachable control. CI host widget tests supplement these, not replace them.
 
 Keep the exact evidence and failures in TEST_REPORT.md and RELEASE_READINESS.md. Publishing, final country prices and changes to signing identity require separate owner approval.
+
+## Guarded USB development testing
+
+The owner continuation brief is saved as `NON_VOICE_OWNER_REVIEW_BRIEF.md`. The production package must never be uninstalled, cleared, downgraded or replaced with an incompatible debug signer. `bilgaReview=true` creates only the separate `com.ilmmizan.bilga.review` debug package, labeled Bilga Review. Use only synthetic content there. Its separate local development key is not a replacement for the existing release key.
+
+With the ignored local toolchain and isolated review keystore configured, run:
+
+```sh
+bash tool/build_tablet_review.sh --target-platform android-arm64 --target integration_test/tablet_review_test.dart
+cp build/review/bilga-review-debug.apk build/review/bilga-review-tests.apk
+bash tool/test_tablet_review.sh DEVICE_SERIAL "$PWD/build/review/bilga-review-tests.apk"
+```
+
+The runner verifies manifest identity/debug label/no microphone, APK signature, local review signing identity and any existing review signer before Flutter receives a prebuilt binary. It keeps the review app installed after tests. Tests refuse to open fixtures unless the native app cache path belongs to the review package. Temporary test databases are created and deleted only inside their own unique cache directories. Native app journey checks restore the review language/palette/theme settings after execution. They do not certify the production installation's data or signing upgrade.
+
+To prepare the ordinary app after testing:
+
+```sh
+bash tool/build_tablet_review.sh --target-platform android-arm64
+cp build/review/bilga-review-debug.apk build/review/bilga-review-app.apk
+python3 tool/check_tablet_review_install.py DEVICE_SERIAL "$PWD/build/review/bilga-review-app.apk" --install
+```
+
+That explicit installer refuses production binaries and mismatched existing review certificates, then uses an in-place review upgrade. It has no uninstall or clear-data path. Do not edit an executing build script: Bash may read later portions at their previous file offsets.

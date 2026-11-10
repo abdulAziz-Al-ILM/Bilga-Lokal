@@ -404,6 +404,44 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+  testWidgets('Root navigation works after the trial overlay is dismissed', (
+    tester,
+  ) async {
+    final a = make();
+    await tester.runAsync(() => ready(a));
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => CoreAccessGate(access: a, child: child!),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const Scaffold(body: Text('Opened module')),
+                ),
+              ),
+              child: const Text('Open module'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Get started'));
+      await Future<void>.delayed(Duration.zero);
+    });
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open module'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Opened module'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Open module'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('Paywall fits small screen with large text', (tester) async {
     trials.expire();
     final a = make();

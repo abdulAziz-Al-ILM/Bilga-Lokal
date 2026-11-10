@@ -30,7 +30,11 @@ class PrivateDatabase {
     }
   }
 
-  static Future<void> verify(File f, String password) async {
+  static Future<void> verify(
+    File f,
+    String password, {
+    Map<String, int> expectedCounts = const {},
+  }) async {
     final db = await cipher.openDatabase(
       f.path,
       password: password,
@@ -38,6 +42,16 @@ class PrivateDatabase {
     );
     try {
       await verifyConnection(db);
+      for (final entry in expectedCounts.entries) {
+        final table = '"${entry.key.replaceAll('"', '""')}"';
+        if ((await db.rawQuery('SELECT count(*) FROM $table'))
+                .single
+                .values
+                .single !=
+            entry.value) {
+          throw StateError('count');
+        }
+      }
     } finally {
       await db.close();
     }
@@ -61,6 +75,19 @@ class PrivateDatabase {
     void Function(String)? diagnostic,
   }) async {
     if (!secure) {
+      // Android's system SQLite varies by vendor and can omit JSON1, which
+      // current search indexes require. The bundled SQLCipher engine also
+      // opens standard plaintext SQLite when no password is provided. Keep
+      // one SQL feature set for migration fixtures and encrypted databases.
+      if (Platform.isAndroid) {
+        return cipher.openDatabase(
+          path,
+          version: version,
+          onCreate: onCreate,
+          onUpgrade: onUpgrade,
+          onConfigure: onConfigure,
+        );
+      }
       return openDatabase(
         path,
         version: version,
@@ -78,6 +105,7 @@ class PrivateDatabase {
     if (!await source.exists() && await old.exists()) await old.rename(path);
     if (await plain(source)) {
       if (await stage.exists()) await stage.delete();
+      final counts = <String, int>{};
       final db = await cipher.openDatabase(path, singleInstance: false);
       try {
         final v = await db.getVersion();
@@ -93,16 +121,12 @@ class PrivateDatabase {
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
           )) {
             final t = '"${(row['name'] as String).replaceAll('"', '""')}"';
-            if ((await db.rawQuery('SELECT count(*) FROM main.$t'))
-                    .single
-                    .values
-                    .single !=
-                (await db.rawQuery('SELECT count(*) FROM secured.$t'))
-                    .single
-                    .values
-                    .single) {
-              throw StateError('count');
-            }
+            counts[row['name'] as String] =
+                (await db.rawQuery('SELECT count(*) FROM main.$t'))
+                        .single
+                        .values
+                        .single
+                    as int;
           }
         } finally {
           await db.execute('DETACH DATABASE secured');
@@ -110,7 +134,10 @@ class PrivateDatabase {
       } finally {
         await db.close();
       }
-      await verify(stage, password);
+      // Export can leave attached virtual-table schemas stale on the source
+      // connection. Verify integrity and every table count after reopening the
+      // staged encrypted file, before touching the original plaintext file.
+      await verify(stage, password, expectedCounts: counts);
       if (await old.exists()) throw StateError('recovery_conflict');
       await source.rename(old.path);
       await stage.rename(path);

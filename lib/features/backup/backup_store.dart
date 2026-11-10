@@ -6,6 +6,7 @@ import '../habits/habit_plan.dart';
 import '../private_space/record_store.dart';
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:sqflite/sqflite.dart';
@@ -359,9 +360,16 @@ class BackupStore {
         throw StateError('journal_mode');
       }
     }
-    if (notesDb == null && todoDb == null) {
+    // Injected databases can also be encrypted. Constructor injection is not
+    // evidence about a file's cipher state. SQLCipher must receive an explicit
+    // key for each attached file; an empty key opens a plaintext legacy file.
+    final cipher = (await notes.rawQuery('PRAGMA cipher_version')).isNotEmpty;
+    if (cipher) {
+      final key = await PrivateDatabase.plain(File(todo.path))
+          ? ''
+          : await PrivateDatabase.key();
       await notes.execute(
-        'ATTACH DATABASE ${PrivateDatabase.quote(todo.path)} AS bilga_restore_todo KEY ${PrivateDatabase.quote(await PrivateDatabase.key())}',
+        'ATTACH DATABASE ${PrivateDatabase.quote(todo.path)} AS bilga_restore_todo KEY ${PrivateDatabase.quote(key)}',
       );
     } else {
       await notes.execute('ATTACH DATABASE ? AS bilga_restore_todo', [

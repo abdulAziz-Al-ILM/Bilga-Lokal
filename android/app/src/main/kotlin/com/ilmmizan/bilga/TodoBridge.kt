@@ -20,6 +20,26 @@ class TodoBridge(private val activity: Activity,messenger: BinaryMessenger) {
             try {
                 synchronized(TodoReminders) { when(call.method) {
                     "consumeLaunch" -> { result.success(launch); launch=null }
+                    "reviewNotification" -> {
+                        // Device-test probe: only this isolated debug package,
+                        // only its own synthetic notification. Never available
+                        // to production, even a production debug installation.
+                        require(activity.packageName=="com.ilmmizan.bilga.review" &&
+                            activity.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE!=0)
+                        val tag=call.argument<String>("tag") ?: error("no_tag")
+                        require(tag.startsWith("bilga-review-notification-"))
+                        val active=activity.getSystemService(NotificationManager::class.java).activeNotifications
+                            .firstOrNull { it.tag==tag && it.id==901 }
+                        when(call.argument<String>("operation")) {
+                            "exists" -> result.success(active!=null)
+                            "complete" -> {
+                                val action=active?.notification?.actions?.firstOrNull() ?: error("no_action")
+                                action.actionIntent.send()
+                                result.success(true)
+                            }
+                            else -> result.notImplemented()
+                        }
+                    }
                     "state" -> {
                         val root=TodoStore.read(activity) ?: JSONObject()
                         val settings=TodoReminders.settings(root)

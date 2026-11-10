@@ -8,7 +8,7 @@ Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_to
 
 Business: 40-day application-managed trial, then one non-consumable lifetime product `bilga_lifetime_unlock`. No subscription or automatic billing. Price must come from Play ProductDetails; $9.99 is a planning reference only. Existing data is not removed at expiry; protected read/export/backup routes remain.
 
-Latest November 10 host checkpoint: **165 Flutter tests PASS**, analyzer no issues, **43 × 336** catalog checks, **17 Python backend tests** and **7 manifest tests** PASS. Rich Notes and the verifier are implemented; the latter is undeployed. Tablet native testing is in progress, without a successful runtime result yet. The remaining feature list and Stage A owner review gate still apply.
+Latest November 10 host checkpoint: **166 Flutter tests PASS**, analyzer no issues, **43 × 336** catalog checks, **17 Python backend tests** and **7 manifest tests** PASS. Rich Notes and the verifier are implemented; the latter is undeployed. Tab16/API31 passes **21 scenario cases** in 101 seconds, including storage/migration/backup, rotation, all ten routes, 14 theme variants, Arabic RTL and quiet reminder delivery/snooze/native completion. TABLET_TEST_REPORT.md distinguishes this scope from remaining acceptance. The remaining feature list and Stage A owner review gate still apply.
 
 Required before release:
 
@@ -30,6 +30,6 @@ Historical November 9 host verification: **158 Flutter tests PASS**, analyzer no
 
 [Download private debug APK artifact](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/42668103911/artifacts/13698162381) — archive 211,606,874 bytes; expires **2026-11-16 22:58 Asia/Tashkent**. APK path within the CI artifact: `app-debug.apk`; runner build path: `build/app/outputs/flutter-apk/app-debug.apk`. APK SHA-256: `3ceb34222fc421cd2d9dde65642c63e7f33a8a2f542624fc1151b25c3e7ce4cc`.
 
-This is a disposable-signer debug build, not a signed production release or an upgrade-signing acceptance result. No release APK/AAB or device test is claimed.
+This is a disposable-signer debug build, not a signed production release or an upgrade-signing acceptance result. That November 9 CI artifact did not establish release-signing or device acceptance. The newer tablet results are recorded separately above.
 
 No release signing credentials were supplied to this work. Do not generate replacement keys or silently substitute debug artifacts.
