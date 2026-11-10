@@ -362,5 +362,14 @@
   "repeatThursday": "Бейсенбі",
   "repeatFriday": "Жұма",
   "repeatSaturday": "Сенбі",
-  "repeatSunday": "Жексенбі"
+  "repeatSunday": "Жексенбі",
+  "taskChecklist": "Ішкі тапсырмалар",
+  "taskChecklistItem": "Ішкі тапсырма атауы",
+  "taskChecklistDone": "Ішкі тапсырма орындалды",
+  "taskChecklistAdd": "Ішкі тапсырма қосу",
+  "taskChecklistRemove": "Ішкі тапсырманы жою",
+  "taskChecklistUp": "Жоғары жылжыту",
+  "taskChecklistDown": "Төмен жылжыту",
+  "taskChecklistActions": "Ішкі тапсырма әрекеттері",
+  "taskDuplicate": "Тапсырманы көшіру"
 }

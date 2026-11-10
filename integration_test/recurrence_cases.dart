@@ -6,6 +6,7 @@ import 'package:bilga/features/todo/todo_database.dart';
 import 'package:bilga/features/todo/todo_model.dart';
 import 'package:bilga/features/todo/todo_service.dart';
 import 'package:bilga/features/todo/todo_series_store.dart';
+import 'package:bilga/features/todo/todo_checklist_store.dart';
 import 'package:bilga/features/todo/widget/todo_widget_permissions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +21,7 @@ void registerRecurrenceCases(IntegrationTestWidgetsFlutterBinding binding) {
     (tester) async {
       await requireReviewPackage();
       final db = await TodoDatabase.database;
-      expect(await db.getVersion(), 10);
+      expect(await db.getVersion(), 11);
       final state = await TodoBridge.state();
       final original = Map<String, dynamic>.from(state['settings'] as Map);
       final id =
@@ -90,6 +91,12 @@ void registerRecurrenceCases(IntegrationTestWidgetsFlutterBinding binding) {
             updatedAt: clock,
           ),
         );
+        await db.transaction(
+          (txn) => TodoChecklistStore.replace(txn, id, [
+            TodoChecklistItem('check:$id:first', 'Prepare', done: true),
+            TodoChecklistItem('check:$id:second', 'Review'),
+          ]),
+        );
         await TodoReminderStore.save(db, id, pattern);
         await db.transaction(
           (txn) => TodoSeriesStore.configure(
@@ -126,6 +133,11 @@ void registerRecurrenceCases(IntegrationTestWidgetsFlutterBinding binding) {
         final next = series['head_task_id'] as String;
         expect(next, isNot(id));
         expect(series['current_sequence'], 1);
+        final oldItems = await TodoChecklistStore.load(db, id),
+            nextItems = await TodoChecklistStore.load(db, next);
+        expect(oldItems.map((item) => item.done), [true, false]);
+        expect(nextItems.map((item) => item.title), ['Prepare', 'Review']);
+        expect(nextItems.every((item) => !item.done), true);
         expect(
           (await db.query(
             'todo_occurrences',
@@ -146,6 +158,7 @@ void registerRecurrenceCases(IntegrationTestWidgetsFlutterBinding binding) {
           ...?binding.reportData,
           'recurrence': {
             'nativeAdvance': true,
+            'checklistHistoryPreservedAndSuccessorReset': true,
             'nextReminderDeliveredWithoutDartRefresh': true,
             'futureWidgetConsentInherited': false,
           },

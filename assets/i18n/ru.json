@@ -362,5 +362,14 @@
   "repeatThursday": "Четверг",
   "repeatFriday": "Пятница",
   "repeatSaturday": "Суббота",
-  "repeatSunday": "Воскресенье"
+  "repeatSunday": "Воскресенье",
+  "taskChecklist": "Подзадачи",
+  "taskChecklistItem": "Название подзадачи",
+  "taskChecklistDone": "Подзадача выполнена",
+  "taskChecklistAdd": "Добавить подзадачу",
+  "taskChecklistRemove": "Удалить подзадачу",
+  "taskChecklistUp": "Переместить вверх",
+  "taskChecklistDown": "Переместить вниз",
+  "taskChecklistActions": "Действия с подзадачей",
+  "taskDuplicate": "Дублировать задачу"
 }

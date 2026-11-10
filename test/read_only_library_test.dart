@@ -7,6 +7,7 @@ import 'package:bilga/features/notes/note_service.dart';
 import 'package:bilga/features/search/library_page.dart';
 import 'package:bilga/features/search/search_repository.dart';
 import 'package:bilga/features/todo/todo_database.dart';
+import 'package:bilga/features/todo/todo_checklist_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -78,6 +79,72 @@ void main() {
         await tester.runAsync(() async {
           await n.close();
           await t.close();
+          await dir.delete(recursive: true);
+        });
+      }
+    },
+  );
+  testWidgets(
+    'Read-only task source includes complete subtasks without modifying progress',
+    (tester) async {
+      late Directory dir;
+      late Database notes, todos;
+      late SearchRepository repo;
+      late SearchHit hit;
+      await tester.runAsync(() async {
+        dir = await Directory.systemTemp.createTemp('bilga-reader-checklist-');
+        notes = await NoteDatabase.openAt('${dir.path}/notes.db');
+        todos = await TodoDatabase.openAt('${dir.path}/tasks.db');
+        final stamp = DateTime.now().toIso8601String();
+        await todos.insert('todos', {
+          'id': 'a',
+          'title': 'Reader task',
+          'description': 'Full description',
+          'created_at': stamp,
+          'updated_at': stamp,
+        });
+        await todos.transaction(
+          (txn) => TodoChecklistStore.replace(txn, 'a', [
+            const TodoChecklistItem('first', 'Prepare', done: true),
+            const TodoChecklistItem('second', 'Review'),
+          ]),
+        );
+        repo = SearchRepository(notesDb: notes, todoDb: todos);
+        hit = (await repo.search('Prepare')).single;
+      });
+      try {
+        await tester.runAsync(() async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: DocumentPage(hit: hit, repository: repo),
+            ),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        });
+        await tester.pumpAndSettle();
+        final text = tester
+            .widget<SelectableText>(find.byType(SelectableText))
+            .data!;
+        expect(text, contains('☑ Prepare'));
+        expect(text, contains('☐ Review'));
+        expect(find.byIcon(Icons.edit_outlined), findsNothing);
+        expect(find.byType(Checkbox), findsNothing);
+        expect(find.byIcon(Icons.ios_share), findsOneWidget);
+        await tester.runAsync(() async {
+          expect(
+            (await TodoChecklistStore.load(
+              todos,
+              'a',
+            )).map((item) => item.done),
+            [true, false],
+          );
+        });
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.runAsync(() async {
+          await notes.close();
+          await todos.close();
           await dir.delete(recursive: true);
         });
       }

@@ -79,3 +79,4 @@ build/
 
 # Persistent local SDKs and dependency caches (never source artifacts)
 /.bilga-tools/
+/android/.kotlin/

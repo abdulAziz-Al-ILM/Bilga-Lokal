@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'recurrence_rule.dart';
 import 'reminders/todo_reminder_store.dart';
 import 'todo_changes.dart';
+import 'todo_checklist_store.dart';
 
 /// One pending head per series. Completed occurrences retain their own rows.
 /// All task/head/reminder writes belong to the caller's single transaction.
@@ -70,6 +71,7 @@ class TodoSeriesStore {
             'priority',
             'folder_id',
             'reminder',
+            'checklist',
           }.contains(k),
         ) ||
         value['title'] is! String ||
@@ -81,6 +83,10 @@ class TodoSeriesStore {
         value['priority'] < 0 ||
         value['priority'] > 3 ||
         (value['folder_id'] != null && value['folder_id'] is! String)) {
+      throw const FormatException('recurrence_invalid');
+    }
+    if (value.containsKey('checklist') &&
+        !TodoChecklistStore.validTitles(value['checklist'])) {
       throw const FormatException('recurrence_invalid');
     }
     final reminder = value['reminder'];
@@ -141,6 +147,10 @@ class TodoSeriesStore {
       'priority': task['priority'] ?? 0,
       'folder_id': task['folder_id'],
       'reminder': pattern,
+      'checklist': (await TodoChecklistStore.load(
+        db,
+        task['id'] as String,
+      )).map((item) => item.title).toList(),
     });
     decodeTemplate(raw);
     return raw;
@@ -341,6 +351,11 @@ class TodoSeriesStore {
       'sequence': sequence,
       'nominal_at': next.toIso8601String(),
     });
+    await TodoChecklistStore.fromTitles(
+      db,
+      nextId,
+      List<String>.from(template['checklist'] as List? ?? const []),
+    );
     await db.update(
       'todo_series',
       {

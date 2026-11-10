@@ -362,5 +362,14 @@
   "repeatThursday": "Thursday",
   "repeatFriday": "Friday",
   "repeatSaturday": "Saturday",
-  "repeatSunday": "Sunday"
+  "repeatSunday": "Sunday",
+  "taskChecklist": "Subtasks",
+  "taskChecklistItem": "Subtask title",
+  "taskChecklistDone": "Subtask completed",
+  "taskChecklistAdd": "Add subtask",
+  "taskChecklistRemove": "Remove subtask",
+  "taskChecklistUp": "Move up",
+  "taskChecklistDown": "Move down",
+  "taskChecklistActions": "Subtask actions",
+  "taskDuplicate": "Duplicate task"
 }

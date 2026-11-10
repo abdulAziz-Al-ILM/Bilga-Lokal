@@ -177,7 +177,11 @@ class _CollectionPageState extends State<CollectionPage> {
                 folderId: widget.folderId,
                 service: notesService,
               )
-            : TodoEditorPage(todo: row, folderId: widget.folderId),
+            : TodoEditorPage(
+                todo: row,
+                folderId: widget.folderId,
+                database: repo.provided,
+              ),
       ),
     );
     await load();
@@ -302,6 +306,11 @@ class _CollectionPageState extends State<CollectionPage> {
         );
         if (text != null) await run(() => repo.renameFolder(id, text));
         break;
+      case 'taskDuplicate':
+        await run(() async {
+          await repo.duplicateTask(id);
+        });
+        break;
       case 'move':
         await move(id, isFolder);
         break;
@@ -398,6 +407,7 @@ class _CollectionPageState extends State<CollectionPage> {
               ? ['restore', 'deleteForever']
               : [
                   if (folder) 'rename',
+                  if (!folder && !repo.notes) 'taskDuplicate',
                   'move',
                   if (!folder && repo.notes) ...[
                     'favorites',
@@ -836,6 +846,20 @@ class _CollectionPageState extends State<CollectionPage> {
                                           Text(
                                             '${context.tr(['normal', 'important', 'veryImportant', 'critical'][(row['priority'] as int? ?? 0).clamp(0, 3).toInt()])}${row['is_done'] == 1 ? '' : '\n${dueText(row)}'}',
                                           ),
+                                          if (rows?.checklistProgress[row['id']]
+                                              case final progress?) ...[
+                                            Text(
+                                              '${context.tr('taskChecklist')}: ${MaterialLocalizations.of(context).formatDecimal(progress.done)} / ${MaterialLocalizations.of(context).formatDecimal(progress.total)}',
+                                            ),
+                                            LinearProgressIndicator(
+                                              value:
+                                                  progress.done /
+                                                  progress.total,
+                                              semanticsLabel: context.tr(
+                                                'taskChecklist',
+                                              ),
+                                            ),
+                                          ],
                                           if (!widget.trash)
                                             SwitchListTile.adaptive(
                                               key: ValueKey(

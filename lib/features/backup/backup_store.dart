@@ -2,6 +2,7 @@ import '../notes/rich_note_codec.dart';
 import '../todo/todo_changes.dart';
 import '../todo/todo_series_store.dart';
 import '../todo/recurrence_rule.dart';
+import '../todo/todo_checklist_store.dart';
 import '../todo/reminders/todo_reminder_store.dart';
 import '../../core/private_database.dart';
 import '../habits/habit_plan.dart';
@@ -99,6 +100,7 @@ class BackupStore {
       'updated_at',
     },
     'todo_occurrences': {'todo_id', 'series_id', 'sequence', 'nominal_at'},
+    'todo_checklist': {'id', 'todo_id', 'title', 'is_done', 'position'},
     'todos': {
       'id',
       'title',
@@ -139,6 +141,7 @@ class BackupStore {
         'todo_reminders',
         'todo_series',
         'todo_occurrences',
+        'todo_checklist',
       ]) {
         data[table] = await txn.query(table);
       }
@@ -148,7 +151,7 @@ class BackupStore {
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
       'notesSchema': 13,
-      'todoSchema': 8,
+      'todoSchema': 9,
       'createdAt': DateTime.now().toUtc().toIso8601String(),
       'ownerId': ownerId,
       'data': data,
@@ -161,7 +164,7 @@ class BackupStore {
     if (payload['format'] != 'bilga-data' ||
         payload['version'] != 1 ||
         ![8, 9, 10, 11, 12, 13].contains(payload['notesSchema']) ||
-        ![6, 7, 8].contains(payload['todoSchema']) ||
+        ![6, 7, 8, 9].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
       throw const FormatException('backup_invalid');
     }
@@ -172,6 +175,8 @@ class BackupStore {
     for (final entry in tableColumns.entries) {
       final list =
           (entry.key == 'todo_reminders' && payload['todoSchema'] == 6) ||
+              (entry.key == 'todo_checklist' &&
+                  (payload['todoSchema'] as int) < 9) ||
               (['todo_series', 'todo_occurrences'].contains(entry.key) &&
                   (payload['todoSchema'] as int) < 8) ||
               (entry.key == 'habits' && payload['notesSchema'] == 8) ||
@@ -191,6 +196,24 @@ class BackupStore {
           throw const FormatException('backup_invalid');
         }
         final row = Map<String, Object?>.from(value);
+        if (entry.key == 'todo_checklist') {
+          if (row['id'] is! String ||
+              (row['id'] as String).isEmpty ||
+              (row['id'] as String).length > 512 ||
+              !ids.add(row['id']!) ||
+              row['todo_id'] is! String ||
+              row['title'] is! String ||
+              !TodoChecklistStore.validTitles([row['title']]) ||
+              row['is_done'] is! int ||
+              ![0, 1].contains(row['is_done']) ||
+              row['position'] is! int ||
+              (row['position'] as int) < 0 ||
+              (row['position'] as int) >= TodoChecklistStore.maxItems) {
+            throw const FormatException('backup_invalid');
+          }
+          rows.add(row);
+          continue;
+        }
         if (entry.key == 'todo_series') {
           if (row['id'] is! String ||
               !RegExp(r'^[A-Za-z0-9:_-]{1,1024}$')
@@ -381,6 +404,15 @@ class BackupStore {
       }
     }
     final todoIds = result['todos']!.map((r) => r['id']).toSet();
+    final checklistPositions = <String>{};
+    for (final item in result['todo_checklist']!) {
+      if (!todoIds.contains(item['todo_id']) ||
+          !checklistPositions.add(
+            jsonEncode([item['todo_id'], item['position']]),
+          )) {
+        throw const FormatException('backup_invalid');
+      }
+    }
     final seriesById = {for (final r in result['todo_series']!) r['id']: r};
     final occurrences = {
       for (final r in result['todo_occurrences']!) r['todo_id']: r,
@@ -548,6 +580,14 @@ class BackupStore {
               }
             }
           }
+        }
+        for (var i = 0; i < tables['todo_checklist']!.length; i++) {
+          final row = tables['todo_checklist']![i];
+          await _insert(txn, 'bilga_restore_todo.todo_checklist', {
+            ...row,
+            'id': '${prefix}check:$i',
+            'todo_id': '$prefix${row['todo_id']}',
+          });
         }
         final seriesIds = <String, String>{};
         for (var i = 0; i < tables['todo_series']!.length; i++) {

@@ -54,7 +54,7 @@ internal object TodoNativeActions {
         } finally { key.fill(0) }
     }
     internal fun configure(db:SQLiteDatabase) {
-        check(db.version in 9..10) { "unsupported_schema" }
+        check(db.version in 9..11) { "unsupported_schema" }
         // Result-bearing PRAGMAs require a read, not execSQL or an unopened cursor.
         db.rawQuery("PRAGMA busy_timeout=2000",emptyArray<String>()).use { check(it.moveToFirst()) }
         db.execSQL("PRAGMA foreign_keys=ON")

@@ -9,6 +9,7 @@ import 'package:bilga/features/todo/todo_database.dart';
 import 'package:bilga/features/todo/todo_editor_page.dart';
 import 'package:bilga/features/todo/recurrence_rule.dart';
 import 'package:bilga/features/todo/todo_series_store.dart';
+import 'package:bilga/features/todo/todo_checklist_store.dart';
 import 'package:bilga/features/collections/collection_repository.dart';
 import 'package:bilga/features/todo/reminders/todo_bridge.dart';
 import 'package:bilga/features/todo/reminders/todo_host.dart';
@@ -137,6 +138,37 @@ void main() {
     }
   }
 
+  Future<List<Map<String, Object?>>> readTodos(WidgetTester tester) async {
+    List<Map<String, Object?>>? result;
+    Object? error;
+    // Keep pumping fake-time callbacks while real FFI I/O completes. Awaiting
+    // a second query inside runAsync can otherwise block behind a transaction
+    // whose continuation still needs the next widget-test pump.
+    db
+        .query('todos')
+        .then<void>(
+          (value) {
+            result = value;
+          },
+          onError: (Object failure) {
+            error = failure;
+          },
+        );
+    for (var i = 0; i < 500 && result == null && error == null; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+    }
+    if (error != null) throw error!;
+    expect(
+      result,
+      isNotNull,
+      reason: 'Task query must finish while widget callbacks are pumped',
+    );
+    return result!;
+  }
+
   Future<void> openTask(WidgetTester tester, Map<String, Object?> row) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -160,9 +192,59 @@ void main() {
   }
 
   testWidgets(
+    'Editor adds, reorders and checks subtasks; saving persists progress',
+    (tester) async {
+      final row = (await readTodos(tester)).single;
+      await openTask(tester, row);
+      final add = find.byKey(const Key('task-checklist-add'));
+      await tester.ensureVisible(add);
+      await tester.tap(add);
+      await tester.pump();
+      await tester.enterText(
+        find.byType(TextFormField).first,
+        'Prepare material',
+      );
+      await tester.pump();
+      await tester.ensureVisible(add);
+      await tester.tap(add);
+      await tester.pump();
+      await tester.enterText(find.byType(TextFormField).last, 'Review result');
+      await tester.pump();
+      await tester.ensureVisible(find.byType(Checkbox).first);
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+      await tester.tap(find.byTooltip('Subtask actions').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Move down'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Save'));
+      await settleIo(tester);
+      await tester.runAsync(() async {
+        final items = await TodoChecklistStore.load(db, 'a');
+        expect(items.map((item) => item.title), [
+          'Review result',
+          'Prepare material',
+        ]);
+        expect(items.map((item) => item.done), [false, true]);
+        final rows = await CollectionRepository(
+          CollectionKind.todos,
+          provided: db,
+        ).load();
+        expect(rows.checklistProgress['a']!.total, 2);
+        expect(rows.checklistProgress['a']!.done, 1);
+      });
+      await openTask(tester, row);
+      expect(find.text('Review result'), findsOneWidget);
+      expect(tester.widget<Checkbox>(find.byType(Checkbox).last).value, true);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
     'Editor saves custom repeat days and collection completion creates one successor',
     (tester) async {
-      final row = (await tester.runAsync(() => db.query('todos')))!.single;
+      final row = (await readTodos(tester)).single;
       await openTask(tester, row);
       await tester.ensureVisible(find.byKey(const Key('task-repeat')));
       await tester.tap(find.byKey(const Key('task-repeat')));
@@ -219,7 +301,7 @@ void main() {
           ),
         ),
       );
-      var row = (await tester.runAsync(() => db.query('todos')))!.single;
+      var row = (await readTodos(tester)).single;
       await openTask(tester, row);
       Finder titleField() => find.byWidgetPredicate(
         (w) => w is TextField && w.decoration?.labelText == 'Title',
@@ -241,7 +323,9 @@ void main() {
       await openTask(tester, row);
       await tester.enterText(titleField(), 'Future title');
       final scope = find.byKey(const Key('task-series-scope'));
+      await tester.pumpAndSettle();
       await tester.ensureVisible(scope);
+      await tester.pumpAndSettle();
       await tester.tap(scope);
       await tester.pump();
       await tester.tap(find.byTooltip('Save'));
@@ -274,7 +358,7 @@ void main() {
   testWidgets(
     'Editor explicitly opts into reminders and saves original deadline separately',
     (tester) async {
-      final row = (await tester.runAsync(() => db.query('todos')))!.single;
+      final row = (await readTodos(tester)).single;
       await tester.pumpWidget(
         MaterialApp(
           home: TodoEditorPage(todo: row, database: db),
@@ -284,15 +368,13 @@ void main() {
       final toggle = find.byType(SwitchListTile);
       expect(tester.widget<SwitchListTile>(toggle).value, false);
       await tester.ensureVisible(toggle);
+      await tester.pumpAndSettle();
       await tester.tap(toggle);
       await settleIo(tester);
       expect(tester.widget<SwitchListTile>(toggle).value, true);
       await tester.tap(find.byTooltip('Save'));
       await settleIo(tester);
-      expect(
-        (await tester.runAsync(() => db.query('todos')))!.single['due_at'],
-        row['due_at'],
-      );
+      expect((await readTodos(tester)).single['due_at'], row['due_at']);
       expect(
         (await tester.runAsync(() => db.query('todo_reminders')))!
             .single['enabled'],
@@ -304,7 +386,7 @@ void main() {
   testWidgets(
     'A stale editor never undoes completion, moves a task back or resurrects trash',
     (tester) async {
-      final row = (await tester.runAsync(() => db.query('todos')))!.single;
+      final row = (await readTodos(tester)).single;
       await tester.pumpWidget(
         MaterialApp(
           home: TodoEditorPage(todo: row, database: db),
@@ -322,7 +404,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'Edited safely');
       await tester.tap(find.byTooltip('Save'));
       await settleIo(tester);
-      final current = (await tester.runAsync(() => db.query('todos')))!.single;
+      final current = (await readTodos(tester)).single;
       expect(current['is_done'], 1);
       expect(current['folder_id'], 'moved');
       expect(current['title'], 'Edited safely');
@@ -335,7 +417,7 @@ void main() {
       await tester.runAsync(
         () => TodoReminderStore.save(db, 'a', DateTime(2030, 4, 15, 10)),
       );
-      final row = (await tester.runAsync(() => db.query('todos')))!.single;
+      final row = (await readTodos(tester)).single;
       await tester.pumpWidget(
         MaterialApp(
           home: TodoEditorPage(todo: row, database: db),
@@ -360,7 +442,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Save'));
       await settleIo(tester);
-      final after = (await tester.runAsync(() => db.query('todos')))!.single;
+      final after = (await readTodos(tester)).single;
       final reminder = (await tester.runAsync(
         () => db.query('todo_reminders'),
       ))!.single;
@@ -401,6 +483,7 @@ void main() {
       final toggle = find.byType(SwitchListTile);
       expect(tester.widget<SwitchListTile>(toggle).value, true);
       await tester.ensureVisible(toggle);
+      await tester.pumpAndSettle();
       await tester.tap(toggle);
       await settleIo(tester);
       await pickDeadline();
@@ -482,23 +565,14 @@ void main() {
       await tester.pumpWidget(app(true));
       await settleIo(tester);
       expect(find.byType(AlertDialog), findsNothing);
-      expect(
-        (await tester.runAsync(() => db.query('todos')))!.single['is_done'],
-        0,
-      );
+      expect((await readTodos(tester)).single['is_done'], 0);
       await tester.pumpWidget(app(false));
       await settleIo(tester);
       expect(find.byType(AlertDialog), findsOneWidget);
-      expect(
-        (await tester.runAsync(() => db.query('todos')))!.single['is_done'],
-        0,
-      );
+      expect((await readTodos(tester)).single['is_done'], 0);
       await tester.tap(find.text(Strings.get('en', 'continue')));
       await settleIo(tester);
-      expect(
-        (await tester.runAsync(() => db.query('todos')))!.single['is_done'],
-        1,
-      );
+      expect((await readTodos(tester)).single['is_done'], 1);
       await tester.pumpWidget(const SizedBox());
     },
   );

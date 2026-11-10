@@ -5,6 +5,8 @@ import 'todo_changes.dart';
 import 'todo_series_store.dart';
 import 'recurrence_rule.dart';
 import 'recurrence_dialog.dart';
+import 'todo_checklist_store.dart';
+import 'todo_checklist_editor.dart';
 
 import 'package:sqflite/sqflite.dart';
 
@@ -37,6 +39,16 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
   RecurrenceRule? repeat, originalRepeat;
   Map<String, Object?>? series;
   bool seriesLoaded = false, applyFuture = false;
+  List<TodoChecklistItem> checklist = [], originalChecklist = [];
+  bool checklistLoaded = false;
+  bool get checklistDirty =>
+      checklist.length != originalChecklist.length ||
+      List.generate(checklist.length, (i) => i).any(
+        (i) =>
+            checklist[i].id != originalChecklist[i].id ||
+            checklist[i].title != originalChecklist[i].title ||
+            checklist[i].done != originalChecklist[i].done,
+      );
   bool get historical =>
       series != null && series!['head_task_id'] != widget.todo?['id'];
   bool get repeatReadOnly => historical || widget.todo?['is_done'] == 1;
@@ -58,6 +70,27 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
     due = DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')?.toLocal();
     loadReminder();
     loadSeries();
+    loadChecklist();
+  }
+
+  Future<void> loadChecklist() async {
+    try {
+      final items = widget.todo == null
+          ? <TodoChecklistItem>[]
+          : await TodoChecklistStore.load(
+              widget.database ?? await TodoDatabase.database,
+              widget.todo!['id'] as String,
+            );
+      if (mounted) {
+        setState(() {
+          checklist = items;
+          originalChecklist = [...items];
+          checklistLoaded = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) showError(context);
+    }
   }
 
   Future<void> loadSeries() async {
@@ -160,6 +193,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
       reminder != originalEnabled ||
       remindAt != originalReminder ||
       repeatDirty ||
+      checklistDirty ||
       applyFuture;
   Future<void> leave() async {
     if (busy) return;
@@ -221,7 +255,13 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
   }
 
   Future<void> save() async {
-    if (busy || !reminderLoaded || !seriesLoaded) return;
+    if (busy || !reminderLoaded || !seriesLoaded || !checklistLoaded) return;
+    if (!TodoChecklistStore.validTitles(
+      checklist.map((item) => item.title).toList(),
+    )) {
+      showError(context, 'required');
+      return;
+    }
     if (repeat != null && due == null) {
       showError(context, 'repeatDueRequired');
       return;
@@ -302,6 +342,13 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
                     1,
           );
         }
+        if (checklistDirty) {
+          await TodoChecklistStore.replace(
+            txn,
+            data['id'] as String,
+            checklist,
+          );
+        }
         if (!repeatReadOnly) {
           if (repeat == null && repeatDirty) {
             await TodoSeriesStore.stop(txn, data['id'] as String);
@@ -366,7 +413,10 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
           ),
           IconButton(
             tooltip: context.tr('save'),
-            onPressed: busy || !reminderLoaded || !seriesLoaded ? null : save,
+            onPressed:
+                busy || !reminderLoaded || !seriesLoaded || !checklistLoaded
+                ? null
+                : save,
             icon: const Icon(Icons.check),
           ),
         ],
@@ -376,7 +426,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            if (!reminderLoaded || !seriesLoaded)
+            if (!reminderLoaded || !seriesLoaded || !checklistLoaded)
               const LinearProgressIndicator(),
             TextField(
               autocorrect: false,
@@ -432,6 +482,11 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
               ),
               onChanged: (v) => setState(() => priority = v ?? 0),
             ),
+            if (checklistLoaded)
+              TodoChecklistEditor(
+                items: checklist,
+                onChanged: (items) => setState(() => checklist = items),
+              ),
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.schedule),
@@ -527,7 +582,10 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
             ),
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: busy || !reminderLoaded || !seriesLoaded ? null : save,
+              onPressed:
+                  busy || !reminderLoaded || !seriesLoaded || !checklistLoaded
+                  ? null
+                  : save,
               child: Text(context.tr('save')),
             ),
           ],

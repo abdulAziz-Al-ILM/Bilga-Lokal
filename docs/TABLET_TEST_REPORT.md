@@ -40,6 +40,14 @@ The new scenario starts a synthetic daily series and completes the first real no
 
 Separate review-only native instrumentation passes **13 Notes widget checks** (encrypted cache, readback, tamper/ID binding, intents, metadata, permission epoch, clearing) and **46 task checks** (calendar/reminder claims, native SQLCipher transactions, stale actions, privacy/lease gates, intents and widget metadata). Fixture files use reserved unbound IDs or unique cache directories. Merged test-manifest targets and installed signatures are checked before installation; original production is never an instrumentation target. Initial harness checks rejected Android's absent-package exit code and then its non-raw result formatting; adding `-r` exposes the checked RESULT_OK code. Final raw logs: `/tmp/bilga-native-review-tests-3.log`; both suites return `INSTRUMENTATION_CODE: -1`.
 
+## Subtask extension
+
+The latest run passes **29 scenario cases**, **35 including hooks**, in **173 seconds** (`/tmp/bilga-checklist-tablet-tests-2.log`). Six new encrypted SQLCipher fixture cases verify Tasks 10→11 upgrade without task/series rewrites; failed-edit rollback and cross-task isolation; transactional search/trash behavior; old-progress retention and future-default reset; independent duplication/privacy; and backup ordering/progress/idempotence plus invalid-reference rejection. A real UI journey creates two subtasks, marks one complete, reorders, saves, reads 1/2 progress, then duplicates through the task menu and sees an independent unchecked 0/2 copy. Native notification completion also creates unchecked successor subtasks while preserving the completed checklist. Sanitized proof and APK hash: [checklist-tablet-2026-11-10.json](evidence/checklist-tablet-2026-11-10.json).
+
+Native instrumentation was rerun against this checklist-capable review app: **13 Notes widget checks and 46 task checks PASS**, both return raw RESULT_OK (`/tmp/bilga-checklist-native-tests.log`).
+
+The first expanded run passed the previous 22 scenarios but the seven new cases failed before fixture writes: Directory.createTemp was called on a nonexistent parent. The corrected helper creates unique directories directly inside the guarded review cache. Only that corrected run is counted as a 29-case pass. Subtasks use one-level titles/completion; independent subtask dates/reminders are not implemented.
+
 ## Failures found and corrected
 
 1. System SQLite on this tablet omits JSON1. Android plaintext opens now use the bundled SQLCipher engine with no password, retaining normal plaintext SQLite format and the required SQL feature set.

@@ -362,5 +362,14 @@
   "repeatThursday": "Панҷшанбе",
   "repeatFriday": "Ҷумъа",
   "repeatSaturday": "Шанбе",
-  "repeatSunday": "Якшанбе"
+  "repeatSunday": "Якшанбе",
+  "taskChecklist": "Зервазифаҳо",
+  "taskChecklistItem": "Номи зервазифа",
+  "taskChecklistDone": "Зервазифа иҷро шуд",
+  "taskChecklistAdd": "Иловаи зервазифа",
+  "taskChecklistRemove": "Нест кардани зервазифа",
+  "taskChecklistUp": "Ба боло кӯчондан",
+  "taskChecklistDown": "Ба поён кӯчондан",
+  "taskChecklistActions": "Амалҳои зервазифа",
+  "taskDuplicate": "Нусхабардории вазифа"
 }

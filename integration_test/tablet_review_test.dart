@@ -26,6 +26,7 @@ import 'review_guard.dart';
 import 'app_journey_cases.dart';
 import 'notification_cases.dart';
 import 'recurrence_cases.dart';
+import 'checklist_cases.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -193,4 +194,5 @@ void main() {
   registerAppJourney(binding);
   registerNotificationCases(binding);
   registerRecurrenceCases(binding);
+  registerChecklistCases(binding);
 }

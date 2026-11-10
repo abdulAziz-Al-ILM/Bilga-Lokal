@@ -3,6 +3,7 @@ import '../../core/private_database.dart';
 import 'reminders/todo_reminder_store.dart';
 import 'widget/todo_widget_permissions.dart';
 import 'todo_series_store.dart';
+import 'todo_checklist_store.dart';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -29,7 +30,7 @@ class TodoDatabase {
     return PrivateDatabase.open(
       path,
       secure: secure,
-      version: 10,
+      version: 11,
       onConfigure: (db) async {
         await db.rawQuery('PRAGMA journal_mode = DELETE');
         await db.execute('PRAGMA synchronous = FULL');
@@ -68,6 +69,7 @@ class TodoDatabase {
         await TodoWidgetPermissions.createSchema(db);
         await SearchIndex.create(db, notes: false);
         await TodoSeriesStore.createSchema(db);
+        await TodoChecklistStore.createSchema(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -128,6 +130,7 @@ class TodoDatabase {
           await SearchIndex.create(db, notes: false);
         }
         if (oldVersion < 10) await TodoSeriesStore.createSchema(db);
+        if (oldVersion < 11) await TodoChecklistStore.createSchema(db);
       },
     );
   }

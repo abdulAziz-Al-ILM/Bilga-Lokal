@@ -43,11 +43,18 @@ internal object TodoSeriesActions {
     private fun template(raw:String):JSONObject {
         require(raw.toByteArray(StandardCharsets.UTF_8).size<=4*1024*1024)
         val data=JSONObject(raw)
-        keys(data,setOf("version","title","description","priority","folder_id","reminder"))
+        keys(data,setOf("version","title","description","priority","folder_id","reminder","checklist"))
         integer(data,"version",1,1);integer(data,"priority",0,3)
         require(data.get("title") is String && data.getString("title").isNotBlank() && data.getString("title").length<=100000)
         require(data.get("description") is String && data.getString("description").length<=1000000)
         require(data.isNull("folder_id") || data.get("folder_id") is String)
+        if(data.has("checklist")) {
+            val items=data.getJSONArray("checklist");require(items.length()<=200)
+            for(i in 0 until items.length()) {
+                val item=items.get(i)
+                require(item is String && item.isNotBlank() && item.length<=2000)
+            }
+        }
         if(!data.isNull("reminder")) {
             val pattern=data.getJSONObject("reminder")
             require(pattern.length()==6)
@@ -107,6 +114,12 @@ internal object TodoSeriesActions {
         db.execSQL("""INSERT INTO todos(id,title,description,priority,due_at,folder_id,is_done,is_deleted,created_at,updated_at)
             VALUES(?,?,?,?,?,?,0,0,?,?)""",arrayOf<Any?>(nextId,data.getString("title"),data.getString("description"),data.getInt("priority"),due,destination,stamp,stamp))
         db.execSQL("INSERT INTO todo_occurrences(todo_id,series_id,sequence,nominal_at) VALUES(?,?,?,?)",arrayOf<Any?>(nextId,series,sequence,due))
+        if(db.version>=11 && data.has("checklist")) {
+            val items=data.getJSONArray("checklist")
+            for(i in 0 until items.length()) db.execSQL(
+                "INSERT INTO todo_checklist(id,todo_id,title,is_done,position) VALUES(?,?,?,0,?)",
+                arrayOf<Any?>("check:${UUID.randomUUID()}",nextId,items.getString(i),i))
+        }
         db.execSQL("UPDATE todo_series SET head_task_id=?,current_sequence=?,updated_at=? WHERE id=?",arrayOf<Any?>(nextId,sequence,stamp,series))
         val task=JSONObject().put("id",nextId).put("title",data.getString("title")).put("version",stamp)
             .put("series",series).put("sequence",sequence)

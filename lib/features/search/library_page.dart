@@ -15,6 +15,7 @@ import '../notes/note_model.dart';
 import '../private_space/record_store.dart';
 import '../private_space/space_page.dart';
 import '../todo/todo_editor_page.dart';
+import '../todo/todo_checklist_store.dart';
 import 'search_repository.dart';
 
 String kindKey(String kind) => switch (kind) {
@@ -245,6 +246,7 @@ class _DocumentPageState extends State<DocumentPage> {
   bool busy = false, failed = false;
   List<Map<String, Object?>> versions = [];
   List<PrivateRecord> attachments = [];
+  List<TodoChecklistItem> checklist = [];
   @override
   void initState() {
     super.initState();
@@ -254,6 +256,12 @@ class _DocumentPageState extends State<DocumentPage> {
   Future<void> load() async {
     try {
       final source = await widget.repository.source(widget.hit);
+      final subtasks = widget.hit.kind == 'todo'
+          ? await TodoChecklistStore.load(
+              await widget.repository.todos,
+              widget.hit.id,
+            )
+          : <TodoChecklistItem>[];
       final history = widget.hit.kind == 'note'
           ? await (await widget.repository.notes).query(
               'note_versions',
@@ -282,6 +290,7 @@ class _DocumentPageState extends State<DocumentPage> {
           failed = source == null;
           versions = history;
           attachments = owned;
+          checklist = subtasks;
         });
       }
     } catch (_) {
@@ -301,6 +310,8 @@ class _DocumentPageState extends State<DocumentPage> {
         if (r['due_at'] != null)
           '${context.tr('due')}: ${date(r['due_at'] as String)}',
         context.tr(r['is_done'] == 1 ? 'todoDone' : 'todoAll'),
+        if (checklist.isNotEmpty) context.tr('taskChecklist'),
+        for (final item in checklist) '${item.done ? '☑' : '☐'} ${item.title}',
       ].join('\n\n');
     }
     if (widget.hit.kind == 'habit') {
@@ -350,7 +361,7 @@ class _DocumentPageState extends State<DocumentPage> {
     if (widget.readOnly || row == null) return;
     final Widget? page = switch (widget.hit.kind) {
       'note' => NoteEditorPage(note: Note.fromMap(row!)),
-      'todo' => TodoEditorPage(todo: row),
+      'todo' => TodoEditorPage(todo: row, database: widget.repository.todoDb),
       'experience' || 'book' => RecordPage(PrivateRecord.row(row!)),
       _ => null,
     };

@@ -362,5 +362,14 @@
   "repeatThursday": "Payshanba",
   "repeatFriday": "Juma",
   "repeatSaturday": "Shanba",
-  "repeatSunday": "Yakshanba"
+  "repeatSunday": "Yakshanba",
+  "taskChecklist": "Kichik vazifalar",
+  "taskChecklistItem": "Kichik vazifa nomi",
+  "taskChecklistDone": "Kichik vazifa bajarildi",
+  "taskChecklistAdd": "Kichik vazifa qo‘shish",
+  "taskChecklistRemove": "Kichik vazifani olib tashlash",
+  "taskChecklistUp": "Yuqoriga ko‘chirish",
+  "taskChecklistDown": "Pastga ko‘chirish",
+  "taskChecklistActions": "Kichik vazifa amallari",
+  "taskDuplicate": "Vazifadan nusxa olish"
 }

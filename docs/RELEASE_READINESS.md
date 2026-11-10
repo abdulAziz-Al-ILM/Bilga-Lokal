@@ -4,11 +4,11 @@
 
 The source recovery and initial integrated development checkpoint are not a complete commercial release. Consult FEATURE_MATRIX.md, TEST_REPORT.md and KNOWN_LIMITATIONS.md for precise gaps.
 
-Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_todo.db`. Current derived-search upgrade targets: Notes 15 / Tasks 10. Portable backup content versions remain Notes 13 / Tasks 8 with backward-compatible import; search indexes and device-local widget consent are excluded and reconstructed.
+Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_todo.db`. Current derived-search upgrade targets: Notes 15 / Tasks 11. Portable backup content versions remain Notes 13 / Tasks 9 with backward-compatible import; search indexes and device-local widget consent are excluded and reconstructed.
 
 Business: 40-day application-managed trial, then one non-consumable lifetime product `bilga_lifetime_unlock`. No subscription or automatic billing. Price must come from Play ProductDetails; $9.99 is a planning reference only. Existing data is not removed at expiry; protected read/export/backup routes remain.
 
-Latest November 10 recurrence checkpoint: **183 Flutter tests PASS**, analyzer no issues, **43 × 364** catalog keys, **17 Python backend tests**, **9 manifest/target tests**, Java recurrence and real New York Dart DST checks PASS. Tab16/API31 passes **22 scenario cases** in 147 seconds and separate **13 Notes widget / 46 task native checks**. Recurrence includes editor, history-preserving atomic completion, backup and next native reminder delivery without Dart refresh. TABLET_TEST_REPORT.md records exact scope; complete non-voice Stage A and owner acceptance remain pending.
+Latest November 10 subtask checkpoint: **191 full Flutter tests PASS** (CI configuration), analyzer no issues, **43 × 373** catalog keys and **9 manifest/target tests** PASS. Existing 17 backend and both calendar-runtime tests remain verified. Tab16/API31 passes **29 scenario cases**, 35 including hooks, in 173 seconds. Subtasks include editor/reordering/completion, progress, duplication, recurrence reset, transactional search, reader/export and portable backup support. Recurrence checkpoint `2684629` passed hosted CI **42793370183**; subtask checkpoint CI is pending. Native widget/action evidence and precise unfinished scope remain in TABLET_TEST_REPORT.md; Stage A and owner acceptance are incomplete.
 
 Required before release:
 

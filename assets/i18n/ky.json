@@ -362,5 +362,14 @@
   "repeatThursday": "Бейшемби",
   "repeatFriday": "Жума",
   "repeatSaturday": "Ишемби",
-  "repeatSunday": "Жекшемби"
+  "repeatSunday": "Жекшемби",
+  "taskChecklist": "Кошумча тапшырмалар",
+  "taskChecklistItem": "Кошумча тапшырманын аталышы",
+  "taskChecklistDone": "Кошумча тапшырма аткарылды",
+  "taskChecklistAdd": "Кошумча тапшырма кошуу",
+  "taskChecklistRemove": "Кошумча тапшырманы алып салуу",
+  "taskChecklistUp": "Жогору жылдыруу",
+  "taskChecklistDown": "Төмөн жылдыруу",
+  "taskChecklistActions": "Кошумча тапшырма аракеттери",
+  "taskDuplicate": "Тапшырманы көчүрүү"
 }

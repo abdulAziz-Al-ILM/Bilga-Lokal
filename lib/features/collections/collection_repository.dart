@@ -1,5 +1,6 @@
 import '../todo/todo_changes.dart';
 import '../todo/todo_series_store.dart';
+import '../todo/todo_checklist_store.dart';
 
 import 'dart:math';
 
@@ -20,7 +21,8 @@ enum CollectionKind { notes, todos }
 class CollectionRows {
   final List<Map<String, Object?>> folders;
   final List<Map<String, Object?>> items;
-  CollectionRows(this.folders, this.items);
+  final Map<String, ({int total, int done})> checklistProgress;
+  CollectionRows(this.folders, this.items, {this.checklistProgress = const {}});
 }
 
 class CollectionRepository {
@@ -53,8 +55,8 @@ class CollectionRepository {
           .replaceAll('_', '\\_');
       where += notes
           ? " AND (i.title LIKE ? ESCAPE '\\' OR i.body LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM note_tag_links l JOIN note_tags t ON t.id=l.tag_id WHERE l.note_id=i.id AND t.normalized_name LIKE ? ESCAPE '\\'))"
-          : " AND (i.title LIKE ? ESCAPE '\\' OR i.description LIKE ? ESCAPE '\\')";
-      args.addAll(List.filled(2, '%$escaped%'));
+          : " AND (i.title LIKE ? ESCAPE '\\' OR i.description LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM todo_checklist c WHERE c.todo_id=i.id AND c.title LIKE ? ESCAPE '\\'))";
+      args.addAll(List.filled(notes ? 2 : 3, '%$escaped%'));
       if (notes) {
         args.add(
           '%${escaped.toLowerCase().replaceAll(RegExp('[‘’ʻʼ]'), "'")}%',
@@ -111,6 +113,16 @@ class CollectionRepository {
     return CollectionRows(
       visible,
       notes ? await NoteTagStore.hydrate(db, rows) : rows,
+      checklistProgress: {
+        if (!notes)
+          for (final row in await db.rawQuery(
+            'SELECT todo_id,count(*) AS total,sum(is_done) AS done FROM todo_checklist GROUP BY todo_id',
+          ))
+            row['todo_id'] as String: (
+              total: row['total'] as int,
+              done: row['done'] as int,
+            ),
+      },
     );
   }
 
@@ -205,6 +217,43 @@ class CollectionRepository {
       {'name': name, 'updated_at': now},
       where: 'id = ?',
       whereArgs: [id],
+    );
+  }
+
+  /// A copy is independent: no repeated series, notifications, media ownership
+  /// or private widget consent is silently transferred to a new task.
+  Future<String> duplicateTask(String id) async {
+    if (notes) throw StateError('task_required');
+    final db = await database;
+    return _changed(
+      db.transaction((txn) async {
+        final original = (await txn.query(
+          'todos',
+          where: 'id=? AND is_deleted=0',
+          whereArgs: [id],
+        )).single;
+        final next =
+            'copy:${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 32)}';
+        final stamp = now;
+        await txn.insert('todos', {
+          ...original,
+          'id': next,
+          'is_done': 0,
+          'completed_at': null,
+          'trash_batch': null,
+          'created_at': stamp,
+          'updated_at': stamp,
+        });
+        await TodoChecklistStore.fromTitles(
+          txn,
+          next,
+          (await TodoChecklistStore.load(
+            txn,
+            id,
+          )).map((item) => item.title).toList(),
+        );
+        return next;
+      }),
     );
   }
 

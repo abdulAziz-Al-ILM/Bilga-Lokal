@@ -362,5 +362,14 @@
   "repeatThursday": "Penşenbe",
   "repeatFriday": "Anna",
   "repeatSaturday": "Şenbe",
-  "repeatSunday": "Ýekşenbe"
+  "repeatSunday": "Ýekşenbe",
+  "taskChecklist": "Kiçi wezipeler",
+  "taskChecklistItem": "Kiçi wezipäniň ady",
+  "taskChecklistDone": "Kiçi wezipe tamamlandy",
+  "taskChecklistAdd": "Kiçi wezipe goşmak",
+  "taskChecklistRemove": "Kiçi wezipäni aýyrmak",
+  "taskChecklistUp": "Ýokary geçirmek",
+  "taskChecklistDown": "Aşak geçirmek",
+  "taskChecklistActions": "Kiçi wezipe hereketleri",
+  "taskDuplicate": "Wezipäni nusgalamak"
 }
