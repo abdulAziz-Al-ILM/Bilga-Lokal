@@ -371,5 +371,16 @@
   "taskChecklistUp": "Ýokary geçirmek",
   "taskChecklistDown": "Aşak geçirmek",
   "taskChecklistActions": "Kiçi wezipe hereketleri",
-  "taskDuplicate": "Wezipäni nusgalamak"
+  "taskDuplicate": "Wezipäni nusgalamak",
+  "taskTemplateNew": "Täze wezipe nusgasy",
+  "taskTemplateEdit": "Wezipe nusgasy",
+  "taskTemplateName": "Nusganyň ady",
+  "taskTemplateCustom": "Meniň nusgalarym",
+  "taskTemplateBuiltIn": "Taýýar sanawlar",
+  "taskTemplateEmpty": "Wezipäni nusga hökmünde saklaň ýa-da şu ýerde dörediň.",
+  "taskTemplateDelete": "Nusgany pozmak",
+  "taskTemplateDeleteInfo": "Nusga pozulsynmy? Döredilen wezipeler üýtgemeýär.",
+  "taskTemplateIndependent": "Her ulanyş tamamlanmadyk kiçi wezipeler bilen özbaşdak wezipe döredýär. Seneler, ýatlatmalar we widjet rugsady göçürilmeýär.",
+  "taskTemplateSave": "Nusga hökmünde saklamak",
+  "taskTemplateModify": "Nusgany üýtgetmek"
 }

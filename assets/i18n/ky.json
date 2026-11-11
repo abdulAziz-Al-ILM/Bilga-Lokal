@@ -371,5 +371,16 @@
   "taskChecklistUp": "Жогору жылдыруу",
   "taskChecklistDown": "Төмөн жылдыруу",
   "taskChecklistActions": "Кошумча тапшырма аракеттери",
-  "taskDuplicate": "Тапшырманы көчүрүү"
+  "taskDuplicate": "Тапшырманы көчүрүү",
+  "taskTemplateNew": "Жаңы тапшырма үлгүсү",
+  "taskTemplateEdit": "Тапшырма үлгүсү",
+  "taskTemplateName": "Үлгүнүн аталышы",
+  "taskTemplateCustom": "Менин үлгүлөрүм",
+  "taskTemplateBuiltIn": "Даяр тизмелер",
+  "taskTemplateEmpty": "Тапшырманы үлгү катары сактаңыз же бул жерден түзүңүз.",
+  "taskTemplateDelete": "Үлгүнү өчүрүү",
+  "taskTemplateDeleteInfo": "Үлгү өчүрүлсүнбү? Түзүлгөн тапшырмалар өзгөрбөйт.",
+  "taskTemplateIndependent": "Ар бир колдонуу аткарылбаган кошумча тапшырмалары бар өзүнчө тапшырманы түзөт. Даталар, эскертмелер жана виджет уруксаты көчүрүлбөйт.",
+  "taskTemplateSave": "Үлгү катары сактоо",
+  "taskTemplateModify": "Үлгүнү түзөтүү"
 }

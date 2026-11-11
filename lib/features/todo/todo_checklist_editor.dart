@@ -7,10 +7,12 @@ import 'todo_checklist_store.dart';
 class TodoChecklistEditor extends StatelessWidget {
   final List<TodoChecklistItem> items;
   final ValueChanged<List<TodoChecklistItem>> onChanged;
+  final bool allowCompletion;
   const TodoChecklistEditor({
     super.key,
     required this.items,
     required this.onChanged,
+    this.allowCompletion = true,
   });
 
   void update(int index, TodoChecklistItem item) =>
@@ -38,10 +40,10 @@ class TodoChecklistEditor extends StatelessWidget {
       children: [
         const SizedBox(height: 16),
         Text(
-          '${context.tr('taskChecklist')} · $progress',
+          '${context.tr('taskChecklist')} · ${allowCompletion ? progress : local.formatDecimal(items.length)}',
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        if (items.isNotEmpty)
+        if (items.isNotEmpty && allowCompletion)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: LinearProgressIndicator(
@@ -53,11 +55,17 @@ class TodoChecklistEditor extends StatelessWidget {
           Row(
             key: ValueKey('check-row-${items[i].id}'),
             children: [
-              Checkbox(
-                value: items[i].done,
-                semanticLabel: context.tr('taskChecklistDone'),
-                onChanged: (done) => update(i, items[i].copyWith(done: done)),
-              ),
+              if (allowCompletion)
+                Checkbox(
+                  value: items[i].done,
+                  semanticLabel: context.tr('taskChecklistDone'),
+                  onChanged: (done) => update(i, items[i].copyWith(done: done)),
+                )
+              else
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Icon(Icons.subdirectory_arrow_right),
+                ),
               Expanded(
                 child: TextFormField(
                   key: ValueKey('check-title-${items[i].id}'),

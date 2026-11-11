@@ -371,5 +371,16 @@
   "taskChecklistUp": "Move up",
   "taskChecklistDown": "Move down",
   "taskChecklistActions": "Subtask actions",
-  "taskDuplicate": "Duplicate task"
+  "taskDuplicate": "Duplicate task",
+  "taskTemplateNew": "New task template",
+  "taskTemplateEdit": "Task template",
+  "taskTemplateName": "Template name",
+  "taskTemplateCustom": "My templates",
+  "taskTemplateBuiltIn": "Built-in lists",
+  "taskTemplateEmpty": "Save a task as a template or create one here.",
+  "taskTemplateDelete": "Delete template",
+  "taskTemplateDeleteInfo": "Delete this template? Tasks already created from it stay unchanged.",
+  "taskTemplateIndependent": "Each use creates an independent task with unchecked subtasks. Dates, reminders and widget consent are not copied.",
+  "taskTemplateSave": "Save as template",
+  "taskTemplateModify": "Edit template"
 }

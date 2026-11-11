@@ -10,11 +10,14 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Tasks, dates, priorities, descriptions, filters, folders, trash | IMPLEMENTED | Existing workflows plus recovered reminder integration |
 | Recurring tasks | TESTED | Editor, additive Tasks 10 migration, single/future edits, atomic occurrence generation, history, backup remapping and native notification completion; 22-scenario tablet suite plus DST/calendar tests pass |
 | Subtasks/checklists, progress and duplication | TESTED | Ordered one-level subtasks, edit/save/reorder/complete, list progress, independent copies, recurrence resets, search, reader/export, additive migration and backup; host and Tab16 journeys pass |
-| Projects and custom task templates | IN PROGRESS | Nested folders and prebuilt checklist templates exist; dedicated projects/custom templates remain required |
+| Custom task templates | TESTED | Create/preview/apply/edit/delete, task snapshots, unchecked copies, stale-edit protection, Tasks 12 migration and content 10 backup; host 199 and tablet 36-scenario suites pass |
+| Projects | IN PROGRESS | Nested lists/folders work; dedicated project metadata/overview still required |
 | Android task reminders, snooze and widget actions | IMPLEMENTED | Recovered SQLCipher/native actions; Tab16/API31 delivery, snooze and native completion pass; reboot/Doze/timezone and permission failure acceptance remain |
 | Standalone/note/habit reminders | NOT STARTED | Task reminders do not cover the complete reminder module |
 | Habits | IMPLEMENTED | Existing schedules, quantitative entries, history, streaks, archive; encrypted habit persistence/completion tested on Tab16; no habit reminders |
-| Private journal | IN PROGRESS | Existing experience entries/categories/attachments/export; history/calendar/custom categories incomplete |
+| Experiences | IN PROGRESS | Private entries, basic categories, reflection fields, attachments/export exist; custom categories, calendar, durable history, tags, favorites and linked follow-up tasks remain required |
+| Finance | IN PROGRESS | Integer minor-unit ledgers, income/expenses, debts/partial repayments, monthly budgets and CSV export exist; accounts/transfers/reconciliation, transaction editing, recurring transactions, category budgets/goals and complete analytics remain required |
+| Books | IN PROGRESS | Private book records, chapters/history, reader/bookmarks and attachments exist; full library metadata/status/shelves, typed knowledge cards, reading sessions/statistics and flashcard scheduling remain required |
 | Daily/weekly planning | IN PROGRESS | Source-linked task/habit views and quick creation added; separate upcoming-reminder panel pending |
 | Unified search | TESTED | FTS4 across notes, tasks, habits, journal, books, finance and folders; archive filter and paging |
 | Text assistant | IMPLEMENTED | Source-linked offline lookup, no generated answers or automatic modifications |
@@ -29,5 +32,5 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Local encrypted backup and merge | IMPLEMENTED | Recovered v1/v2 codecs, transactional cross-DB import and ID remapping; host content/codec regressions and Tab16 encrypted text merge/rollback/idempotence pass; real media/second-device acceptance pending |
 | Google Drive backup | IN PROGRESS | Existing content-only path; media-bearing backups require local export |
 | Localization | IN PROGRESS | All 43 catalogs retained; seven priority-language drafts, remaining new strings use English; native review pending |
-| CI and Android artifacts | IN PROGRESS | Host and current local review build verified; recurrence source 2684629 CI 42793370183 passed; subtask milestone CI pending |
+| CI and Android artifacts | IN PROGRESS | Host and current local review build verified; subtask source 42cee8d CI 42796563471 passed; templates milestone CI pending |
 | Store materials and release acceptance | NOT STARTED | No publication authorized; global release acceptance criteria not met |

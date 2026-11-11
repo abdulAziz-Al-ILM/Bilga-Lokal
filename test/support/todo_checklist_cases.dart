@@ -57,6 +57,7 @@ void registerTodoChecklistTests({
       );
       final before = await db.query('todos'),
           series = await db.query('todo_series');
+      await db.execute('DROP TABLE todo_templates');
       await db.execute('DROP TABLE todo_checklist');
       await db.setVersion(10);
       await db.close();
@@ -64,7 +65,7 @@ void registerTodoChecklistTests({
         '${directory.path}/tasks.db',
         secure: secure,
       );
-      expect(await db.getVersion(), 11);
+      expect(await db.getVersion(), 12);
       expect(await db.query('todos'), before);
       expect(await db.query('todo_series'), series);
       expect(await db.query('todo_checklist'), isEmpty);
@@ -240,7 +241,7 @@ void registerTodoChecklistTests({
       ]);
       final snapshot = await BackupStore(notesDb: notes, todoDb: db).snapshot();
       final store = BackupStore(notesDb: targetNotes, todoDb: target);
-      expect(snapshot['todoSchema'], 9);
+      expect(snapshot['todoSchema'], 10);
       expect(await store.restore(snapshot, 'Restored'), true);
       final row = (await target.query(
         'todos',

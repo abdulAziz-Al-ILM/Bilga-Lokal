@@ -2,6 +2,9 @@
 # A prebuilt, verified binary is mandatory: no implicit production-app build.
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
+mkdir -p .bilga-tools
+exec 9>.bilga-tools/build.lock
+flock -n 9 || { echo 'Another Bilga build/test is active; wait for it to finish.' >&2; exit 1; }
 if [[ $# != 2 ]]; then
   echo 'Usage: bash tool/test_tablet_review.sh <device-serial> <review-test.apk>' >&2
   exit 1

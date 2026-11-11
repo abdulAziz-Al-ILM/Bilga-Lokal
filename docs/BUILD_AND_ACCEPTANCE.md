@@ -86,3 +86,7 @@ python3 tool/test_native_review.py DEVICE_SERIAL build/app/outputs/apk/androidTe
 ```
 
 Use the same Java/Android environment as the review build. The runner checks exact review test identity and instrumentation targets before device access, verifies APK signatures against installed review/test packages, installs only the test companion in place and runs only the synthetic Notes/task suites. It requires raw RESULT_OK codes and has no uninstall/clear-data path.
+
+## November 11 resource limits
+
+The owner reported a previous OOM on the 16 GiB development computer. Run expensive analysis/tests/builds sequentially. Review build/driver scripts now refuse overlapping work using `.bilga-tools/build.lock`; use the same lock around host Flutter commands. Gradle retains its 2 GiB heap, two-worker limit and disabled parallel execution. Review builds disable persistent Gradle daemons. Monitor host MemAvailable before/during expensive work; prefer the approved physical tablet, without parallel emulator builds. A temporary refusal while the prior driver is exiting is an active lock, not a passing test or an application failure.

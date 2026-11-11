@@ -23,6 +23,8 @@ import '../todo/todo_presentation.dart';
 import 'collection_repository.dart';
 import '../templates/template_catalog.dart';
 import '../templates/template_page.dart';
+import '../templates/task_templates_page.dart';
+import '../templates/task_template_store.dart';
 
 class CollectionPage extends StatefulWidget {
   final CollectionKind kind;
@@ -196,6 +198,7 @@ class _CollectionPageState extends State<CollectionPage> {
           folderId: row['id'] as String,
           folderName: row['name'] as String,
           trash: widget.trash,
+          repository: repo,
         ),
       ),
     );
@@ -204,6 +207,42 @@ class _CollectionPageState extends State<CollectionPage> {
 
   Future<void> fromTemplate() async {
     final language = Localizations.localeOf(context).languageCode;
+    if (!repo.notes) {
+      final db = await repo.database;
+      if (!mounted) return;
+      final choice = await Navigator.push<TaskTemplateChoice>(
+        context,
+        MaterialPageRoute(builder: (_) => TaskTemplatesPage(database: db)),
+      );
+      if (choice == null || !mounted) return;
+      Map<String, Object?>? created;
+      await run(() async {
+        created = choice.customId != null
+            ? await TaskTemplateStore(db)
+                  .instantiate(choice.customId!, folderId: widget.folderId)
+            : await repo.createFromTemplate(
+                choice.preset!,
+                language,
+                widget.folderId,
+              );
+        if (mounted) {
+          debounce?.cancel();
+          searchController.clear();
+          setState(() {
+            filter = 'all';
+            query = '';
+          });
+        }
+      });
+      if (created != null && mounted) {
+        if (choice.customId != null) {
+          await edit(created);
+        } else {
+          await folder(created!);
+        }
+      }
+      return;
+    }
     final template = await Navigator.push<EntryTemplate>(
       context,
       MaterialPageRoute(builder: (_) => TemplatePage(todos: !repo.notes)),
@@ -311,6 +350,22 @@ class _CollectionPageState extends State<CollectionPage> {
           await repo.duplicateTask(id);
         });
         break;
+      case 'taskTemplateSave':
+        try {
+          final store = TaskTemplateStore(await repo.database);
+          final initial = await store.fromTask(id);
+          if (!mounted) return;
+          await Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  TaskTemplateEditor(store: store, initial: initial),
+            ),
+          );
+        } catch (_) {
+          if (mounted) showError(context);
+        }
+        break;
       case 'move':
         await move(id, isFolder);
         break;
@@ -408,6 +463,7 @@ class _CollectionPageState extends State<CollectionPage> {
               : [
                   if (folder) 'rename',
                   if (!folder && !repo.notes) 'taskDuplicate',
+                  if (!folder && !repo.notes) 'taskTemplateSave',
                   'move',
                   if (!folder && repo.notes) ...[
                     'favorites',
@@ -535,8 +591,11 @@ class _CollectionPageState extends State<CollectionPage> {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        CollectionPage(kind: widget.kind, trash: true),
+                    builder: (_) => CollectionPage(
+                      kind: widget.kind,
+                      trash: true,
+                      repository: repo,
+                    ),
                   ),
                 );
                 await load();

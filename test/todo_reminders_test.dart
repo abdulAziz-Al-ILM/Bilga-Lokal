@@ -42,6 +42,7 @@ void main() {
   Future<void> removeSearchForLegacyFixture() async {
     await db.execute('DROP TRIGGER todo_series_trash');
     await db.execute('DROP TRIGGER todo_series_delete');
+    await db.execute('DROP TABLE todo_templates');
     await db.execute('DROP TABLE todo_checklist');
     await db.execute('DROP TABLE todo_occurrences');
     await db.execute('DROP TABLE todo_series');
@@ -85,7 +86,7 @@ void main() {
       await db.setVersion(6);
       await db.close();
       db = await TodoDatabase.openAt('${directory.path}/todo.db');
-      expect(await db.getVersion(), 11);
+      expect(await db.getVersion(), 12);
       expect(await db.query('todos'), tasks);
       expect(await db.query('todo_folders'), folders);
       expect(await db.query('todo_reminders'), isEmpty);
@@ -259,7 +260,7 @@ void main() {
       await add('a');
       await TodoReminderStore.save(db, 'a', due);
       final payload = await BackupStore(notesDb: notes, todoDb: db).snapshot();
-      expect(payload['todoSchema'], 9);
+      expect(payload['todoSchema'], 10);
       final store = BackupStore(notesDb: restoredNotes, todoDb: restoredTodo);
       expect(await store.restore(payload, 'Restored'), true);
       final r = (await restoredTodo.query('todo_reminders')).single;

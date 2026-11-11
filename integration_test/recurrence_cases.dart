@@ -21,7 +21,7 @@ void registerRecurrenceCases(IntegrationTestWidgetsFlutterBinding binding) {
     (tester) async {
       await requireReviewPackage();
       final db = await TodoDatabase.database;
-      expect(await db.getVersion(), 11);
+      expect(await db.getVersion(), 12);
       final state = await TodoBridge.state();
       final original = Map<String, dynamic>.from(state['settings'] as Map);
       final id =

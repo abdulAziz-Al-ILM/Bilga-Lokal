@@ -184,7 +184,7 @@ void main() {
     try {
       await configure('task', monthly);
       final snapshot = await BackupStore(notesDb: notes, todoDb: db).snapshot();
-      expect(snapshot['todoSchema'], 9);
+      expect(snapshot['todoSchema'], 10);
       final imported = BackupStore(notesDb: targetNotes, todoDb: target);
       expect(await imported.restore(snapshot, 'Imported'), isTrue);
       final head = (await target.query('todos')).single;

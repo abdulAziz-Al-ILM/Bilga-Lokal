@@ -27,6 +27,7 @@ import 'app_journey_cases.dart';
 import 'notification_cases.dart';
 import 'recurrence_cases.dart';
 import 'checklist_cases.dart';
+import 'task_template_cases.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -195,4 +196,5 @@ void main() {
   registerNotificationCases(binding);
   registerRecurrenceCases(binding);
   registerChecklistCases(binding);
+  registerTaskTemplateCases(binding);
 }

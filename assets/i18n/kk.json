@@ -371,5 +371,16 @@
   "taskChecklistUp": "Жоғары жылжыту",
   "taskChecklistDown": "Төмен жылжыту",
   "taskChecklistActions": "Ішкі тапсырма әрекеттері",
-  "taskDuplicate": "Тапсырманы көшіру"
+  "taskDuplicate": "Тапсырманы көшіру",
+  "taskTemplateNew": "Жаңа тапсырма үлгісі",
+  "taskTemplateEdit": "Тапсырма үлгісі",
+  "taskTemplateName": "Үлгі атауы",
+  "taskTemplateCustom": "Менің үлгілерім",
+  "taskTemplateBuiltIn": "Дайын тізімдер",
+  "taskTemplateEmpty": "Тапсырманы үлгі ретінде сақтаңыз немесе осында жасаңыз.",
+  "taskTemplateDelete": "Үлгіні жою",
+  "taskTemplateDeleteInfo": "Үлгі жойылсын ба? Жасалған тапсырмалар өзгермейді.",
+  "taskTemplateIndependent": "Әр қолдану орындалмаған ішкі тапсырмалары бар тәуелсіз тапсырма жасайды. Күндер, еске салғыштар және виджет рұқсаты көшірілмейді.",
+  "taskTemplateSave": "Үлгі ретінде сақтау",
+  "taskTemplateModify": "Үлгіні өңдеу"
 }

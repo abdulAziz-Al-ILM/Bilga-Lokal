@@ -2,6 +2,9 @@
 # Build only: installation is a separate, package/signature-checked action.
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
+mkdir -p .bilga-tools
+exec 9>.bilga-tools/build.lock
+flock -n 9 || { echo 'Another Bilga build/test is active; wait for it to finish.' >&2; exit 1; }
 bilga_flutter="${BILGA_FLUTTER:-$PWD/.bilga-tools/flutter/bin/flutter}"
 bilga_sdk="${ANDROID_HOME:-$PWD/.bilga-tools/android}"
 bilga_java="${JAVA_HOME:-$(printf '%s\n' "$PWD"/.bilga-tools/java/jdk-*)}"
@@ -10,6 +13,7 @@ export JAVA_HOME="$bilga_java"
 export PATH="$bilga_java/bin:$PATH"
 export PUB_CACHE="${PUB_CACHE:-$PWD/.bilga-tools/pub-cache}"
 export DART_SUPPRESS_ANALYTICS=true
+export GRADLE_OPTS="${GRADLE_OPTS:-} -Dorg.gradle.daemon=false"
 export ORG_GRADLE_PROJECT_bilgaReview=true
 test -f .bilga-tools/review-signing/debug.keystore || {
   echo 'Missing isolated development keystore. Do not replace any production signing key.' >&2

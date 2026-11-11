@@ -371,5 +371,16 @@
   "taskChecklistUp": "Переместить вверх",
   "taskChecklistDown": "Переместить вниз",
   "taskChecklistActions": "Действия с подзадачей",
-  "taskDuplicate": "Дублировать задачу"
+  "taskDuplicate": "Дублировать задачу",
+  "taskTemplateNew": "Новый шаблон задачи",
+  "taskTemplateEdit": "Шаблон задачи",
+  "taskTemplateName": "Название шаблона",
+  "taskTemplateCustom": "Мои шаблоны",
+  "taskTemplateBuiltIn": "Готовые списки",
+  "taskTemplateEmpty": "Сохраните задачу как шаблон или создайте его здесь.",
+  "taskTemplateDelete": "Удалить шаблон",
+  "taskTemplateDeleteInfo": "Удалить шаблон? Уже созданные задачи не изменятся.",
+  "taskTemplateIndependent": "Каждое применение создаёт независимую задачу с невыполненными подзадачами. Даты, напоминания и разрешения виджетов не копируются.",
+  "taskTemplateSave": "Сохранить как шаблон",
+  "taskTemplateModify": "Изменить шаблон"
 }

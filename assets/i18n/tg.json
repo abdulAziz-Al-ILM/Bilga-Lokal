@@ -371,5 +371,16 @@
   "taskChecklistUp": "Ба боло кӯчондан",
   "taskChecklistDown": "Ба поён кӯчондан",
   "taskChecklistActions": "Амалҳои зервазифа",
-  "taskDuplicate": "Нусхабардории вазифа"
+  "taskDuplicate": "Нусхабардории вазифа",
+  "taskTemplateNew": "Қолаби нави вазифа",
+  "taskTemplateEdit": "Қолаби вазифа",
+  "taskTemplateName": "Номи қолаб",
+  "taskTemplateCustom": "Қолабҳои ман",
+  "taskTemplateBuiltIn": "Рӯйхатҳои тайёр",
+  "taskTemplateEmpty": "Вазифаро ҳамчун қолаб нигоҳ доред ё дар ин ҷо созед.",
+  "taskTemplateDelete": "Нест кардани қолаб",
+  "taskTemplateDeleteInfo": "Қолаб нест карда шавад? Вазифаҳои сохташуда тағйир намеёбанд.",
+  "taskTemplateIndependent": "Ҳар истифода вазифаи мустақил бо зервазифаҳои иҷронашударо месозад. Санаҳо, ёдраскуниҳо ва иҷозати виҷет нусха намешаванд.",
+  "taskTemplateSave": "Ҳамчун қолаб нигоҳ доштан",
+  "taskTemplateModify": "Таҳрири қолаб"
 }

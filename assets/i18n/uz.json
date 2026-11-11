@@ -371,5 +371,16 @@
   "taskChecklistUp": "Yuqoriga ko‘chirish",
   "taskChecklistDown": "Pastga ko‘chirish",
   "taskChecklistActions": "Kichik vazifa amallari",
-  "taskDuplicate": "Vazifadan nusxa olish"
+  "taskDuplicate": "Vazifadan nusxa olish",
+  "taskTemplateNew": "Yangi vazifa shabloni",
+  "taskTemplateEdit": "Vazifa shabloni",
+  "taskTemplateName": "Shablon nomi",
+  "taskTemplateCustom": "Mening shablonlarim",
+  "taskTemplateBuiltIn": "Tayyor ro‘yxatlar",
+  "taskTemplateEmpty": "Vazifani shablon sifatida saqlang yoki shu yerda yangisini yarating.",
+  "taskTemplateDelete": "Shablonni o‘chirish",
+  "taskTemplateDeleteInfo": "Shablon o‘chirilsinmi? Undan yaratilgan vazifalar o‘zgarmaydi.",
+  "taskTemplateIndependent": "Har foydalanishda bajarilmagan kichik vazifalari bor mustaqil vazifa yaratiladi. Sanalar, eslatmalar va vidjet ruxsati ko‘chirilmaydi.",
+  "taskTemplateSave": "Shablon sifatida saqlash",
+  "taskTemplateModify": "Shablonni tahrirlash"
 }

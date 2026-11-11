@@ -1,3 +1,21 @@
+## Custom task templates verified — 2026-11-11
+
+Resumed `development/global-launch` from `42cee8d`, whose hosted CI **42796563471 succeeded**. The new owner directive is preserved in `FINAL_ENGINEERING_DIRECTIVE_2026-11-11.md`: six core modules, no voice before explicit owner approval, original production data preserved, no main merge/publication/paid activation. **The full product remains IN PROGRESS.** Finance and Books are explicitly included in the feature matrix with their actual gaps.
+
+Custom task templates now support creation, preview/cancel, application, editing, deletion and saving an existing task as a template. They retain title, description, priority and ordered subtask titles; each use creates independent unchecked task/checklist rows. Existing dates, recurrence, reminders, attachment ownership and widget consent are not transferred. Template edits/deletion do not change earlier tasks. Revision checks reject stale edits/deletes. Folder ancestry is validated and failed instantiation rolls back all rows. Nested collection/trash routes now preserve the injected repository used by isolated tests.
+
+Tasks schema **12** adds the encrypted template table without rewriting existing task/checklist/series rows. Portable Tasks content **10** imports versions 6–9; template IDs are remapped and repeated imports stay idempotent. **199 full Flutter tests PASS** (55 seconds), analyzer no issues, 43 × **384** catalog keys, nine manifest/target guards and non-voice source guard PASS. The reidentified USB device is Blackview Tab16/API31 with existing production and review packages. Its review-only suite passes **36 scenarios**, **42 including hooks**, in **222 seconds**, including six encrypted template fixture cases and a complete create/preview/apply/edit/snapshot/delete journey. Small-screen 2× text/RTL draft cancellation is host evidence. Proof: `docs/evidence/task-templates-tablet-2026-11-11.json`.
+
+Native instrumentation against this template-capable review app also passed **13 Notes widget and 46 task checks**, both raw RESULT_OK (`/tmp/bilga-templates-native-tests.log`).
+
+Builds/tests now use an exclusive local lock; review Gradle builds disable persistent daemons and retain the existing 2 GiB heap / two-worker / no-parallel settings. No simultaneous expensive Flutter/Gradle/emulator jobs were used. Host available memory was approximately 5.7–6.3 GiB during monitoring; no OOM occurred in this run. Build warnings remain for third-party video_player_android Kotlin migration and SDK XML version parsing; the build and binary identity/signature/no-microphone gates passed.
+
+Exact next work: projects are being implemented over existing nested task-list folders. `lib/features/todo/todo_project_store.dart` is an unreferenced, unverified working file and is excluded from this template checkpoint. Continue project metadata/overview, migration, search/backup, UI and tests together. Task tags/sorting/bulk/calendar/history work and the remaining six-module capabilities are still required; see FEATURE_MATRIX.md and KNOWN_LIMITATIONS.md. No final owner-review readiness is claimed.
+
+Earlier checkpoint evidence follows.
+
+---
+
 ## Subtasks, progress and duplication verified — 2026-11-10
 
 **Stage A remains IN PROGRESS.** Tasks now have ordered one-level subtasks/checklists with editable titles, completion, removal/reordering and progress. Draft changes save atomically with the parent, reminder and any explicit series-default edits. Recurring successors start unchecked and retain the completed occurrence's progress; current-only versus future edits remain distinct. Duplication creates independent task/checklist IDs without inheriting recurrence, reminders, media ownership or widget disclosure consent. Task and unified search index subtask titles transactionally. Read-only source display and plain-text export include complete subtask content.

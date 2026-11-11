@@ -109,7 +109,7 @@ void main() {
         throwsStateError,
       );
       expect(await db.query('todo_folders'), before);
-      expect(await db.getVersion(), 11);
+      expect(await db.getVersion(), 12);
     } finally {
       await db.close();
       await dir.delete(recursive: true);

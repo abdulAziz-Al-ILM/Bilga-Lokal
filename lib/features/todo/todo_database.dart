@@ -4,6 +4,7 @@ import 'reminders/todo_reminder_store.dart';
 import 'widget/todo_widget_permissions.dart';
 import 'todo_series_store.dart';
 import 'todo_checklist_store.dart';
+import '../templates/task_template_store.dart';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -30,7 +31,7 @@ class TodoDatabase {
     return PrivateDatabase.open(
       path,
       secure: secure,
-      version: 11,
+      version: 12,
       onConfigure: (db) async {
         await db.rawQuery('PRAGMA journal_mode = DELETE');
         await db.execute('PRAGMA synchronous = FULL');
@@ -70,6 +71,7 @@ class TodoDatabase {
         await SearchIndex.create(db, notes: false);
         await TodoSeriesStore.createSchema(db);
         await TodoChecklistStore.createSchema(db);
+        await TaskTemplateStore.createSchema(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -131,6 +133,7 @@ class TodoDatabase {
         }
         if (oldVersion < 10) await TodoSeriesStore.createSchema(db);
         if (oldVersion < 11) await TodoChecklistStore.createSchema(db);
+        if (oldVersion < 12) await TaskTemplateStore.createSchema(db);
       },
     );
   }

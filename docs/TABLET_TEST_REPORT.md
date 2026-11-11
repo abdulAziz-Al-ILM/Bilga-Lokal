@@ -48,6 +48,14 @@ Native instrumentation was rerun against this checklist-capable review app: **13
 
 The first expanded run passed the previous 22 scenarios but the seven new cases failed before fixture writes: Directory.createTemp was called on a nonexistent parent. The corrected helper creates unique directories directly inside the guarded review cache. Only that corrected run is counted as a 29-case pass. Subtasks use one-level titles/completion; independent subtask dates/reminders are not implemented.
 
+## November 11 custom-template extension
+
+USB device was reidentified as the authorized Blackview Tab16/API31; both original production and isolated review packages were present. Only the signed review package was upgraded. The suite passes **36 scenario cases**, **42 including hooks**, in **222 seconds** (`/tmp/bilga-templates-tablet-tests-1.log`). Six encrypted SQLCipher cases verify Tasks 11→12 preservation, independent repeated use, stale edit/delete rejection, atomic failure/invalid ancestry, payload validation and idempotent portable backup. The UI journey creates a template, cancels preview without writing tasks, applies it, saves the created task, snapshots it, edits future defaults and deletes a template while preserving existing tasks. Evidence/hash: [task-templates-tablet-2026-11-11.json](evidence/task-templates-tablet-2026-11-11.json).
+
+Native instrumentation was rerun against the template-capable review app: **13 Notes widget and 46 task checks PASS**, both raw RESULT_OK (`/tmp/bilga-templates-native-tests.log`).
+
+The first host UI harness attempted pumpAndSettle while real FFI loading still needed event-loop time and timed out; its settling helper now pumps real I/O before waiting for route animations. The corrected host tests and physical journey pass. A separate host test covers small viewport, 2× text, RTL and explicit draft discard; this does not certify a physical phone. Resource monitoring used one expensive process at a time, a build lock, capped Gradle workers and no persistent Gradle daemon.
+
 ## Failures found and corrected
 
 1. System SQLite on this tablet omits JSON1. Android plaintext opens now use the bundled SQLCipher engine with no password, retaining normal plaintext SQLite format and the required SQL feature set.
