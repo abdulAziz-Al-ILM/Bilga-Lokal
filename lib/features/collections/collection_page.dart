@@ -25,6 +25,8 @@ import '../templates/template_catalog.dart';
 import '../templates/template_page.dart';
 import '../templates/task_templates_page.dart';
 import '../templates/task_template_store.dart';
+import '../todo/todo_project_store.dart';
+import '../todo/todo_project_editor.dart';
 
 class CollectionPage extends StatefulWidget {
   final CollectionKind kind;
@@ -57,6 +59,7 @@ class _CollectionPageState extends State<CollectionPage> {
   List<NoteTag> tagLibrary = [];
   Map<String, bool> widgetPermissions = {};
   late String? name;
+  TodoProject? get currentProject => rows?.projects[widget.folderId];
   Timer? debounce, timer;
   StreamSubscription<void>? notesChanges;
   final searchController = TextEditingController();
@@ -277,6 +280,52 @@ class _CollectionPageState extends State<CollectionPage> {
     if (text != null) await run(() => repo.createFolder(text, widget.folderId));
   }
 
+  Future<void> editProject({
+    Map<String, Object?>? row,
+    bool create = false,
+  }) async {
+    try {
+      final db = await repo.database;
+      final id = create ? null : row?['id'] as String? ?? widget.folderId;
+      final folder = id == null
+          ? null
+          : (await db.query(
+              'todo_folders',
+              where: 'id=?',
+              whereArgs: [id],
+            )).single;
+      final project = id == null
+          ? null
+          : (await TodoProjectStore(db).all())[id];
+      if (!mounted) return;
+      final result = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TodoProjectEditor(
+            database: db,
+            project: project,
+            folder: folder,
+            parentId: create ? widget.folderId : null,
+          ),
+        ),
+      );
+      if (result == null || !mounted) return;
+      await load();
+      final saved = (await db.query(
+        'todo_folders',
+        where: 'id=?',
+        whereArgs: [result],
+      )).single;
+      if (!mounted) return;
+      if (widget.folderId == result) {
+        setState(() => name = saved['name'] as String);
+      }
+      if (create) await this.folder(saved);
+    } catch (_) {
+      if (mounted) showError(context);
+    }
+  }
+
   Future<void> move(String id, bool folder) async {
     final folders = await repo.activeFolders();
     if (!mounted) return;
@@ -337,6 +386,19 @@ class _CollectionPageState extends State<CollectionPage> {
   ) async {
     final id = row['id'] as String;
     switch (key) {
+      case 'taskProjectDetails':
+        await editProject(row: row);
+        break;
+      case 'taskProjectRemove':
+        final project = rows?.projects[id];
+        if (project != null &&
+            await confirm(context, context.tr('taskProjectRemoveInfo')) &&
+            mounted) {
+          await run(() async {
+            await TodoProjectStore(await repo.database).removeMarker(project);
+          });
+        }
+        break;
       case 'rename':
         final text = await askText(
           context,
@@ -453,6 +515,16 @@ class _CollectionPageState extends State<CollectionPage> {
     });
   }
 
+  Widget? projectSubtitle(Map<String, Object?> row) {
+    final project = rows?.projects[row['id']];
+    if (project == null) return null;
+    final progress = rows!.projectProgress[project.folderId];
+    final local = MaterialLocalizations.of(context);
+    return Text(
+      '${context.tr(taskProjectStatusKey(project.status))} · ${local.formatDecimal(progress?.done ?? 0)} / ${local.formatDecimal(progress?.total ?? 0)}',
+    );
+  }
+
   Widget menu(Map<String, Object?> row, bool folder) => PopupMenuButton<String>(
     enabled: !busy,
     onSelected: (key) => action(key, row, folder),
@@ -462,6 +534,11 @@ class _CollectionPageState extends State<CollectionPage> {
               ? ['restore', 'deleteForever']
               : [
                   if (folder) 'rename',
+                  if (folder && !repo.notes) 'taskProjectDetails',
+                  if (folder &&
+                      !repo.notes &&
+                      rows?.projects[row['id']] != null)
+                    'taskProjectRemove',
                   if (!folder && !repo.notes) 'taskDuplicate',
                   if (!folder && !repo.notes) 'taskTemplateSave',
                   'move',
@@ -603,6 +680,7 @@ class _CollectionPageState extends State<CollectionPage> {
             ),
           if (widget.folderId != null)
             PopupMenuButton<String>(
+              key: const Key('collection-folder-actions'),
               onSelected: (key) async {
                 final row = {'id': widget.folderId, 'name': name};
                 if (key == 'rename') {
@@ -642,7 +720,14 @@ class _CollectionPageState extends State<CollectionPage> {
                 for (final key
                     in widget.trash
                         ? ['restore', 'deleteForever']
-                        : ['rename', 'move', 'trash'])
+                        : [
+                            'rename',
+                            if (!repo.notes) 'taskProjectDetails',
+                            if (!repo.notes && currentProject != null)
+                              'taskProjectRemove',
+                            'move',
+                            'trash',
+                          ])
                   PopupMenuItem(value: key, child: Text(c.tr(key))),
               ],
             ),
@@ -786,21 +871,41 @@ class _CollectionPageState extends State<CollectionPage> {
                   )
                 : rows == null
                 ? const Center(child: CircularProgressIndicator())
-                : rows!.folders.isEmpty && visibleItems.isEmpty
+                : rows!.folders.isEmpty &&
+                      visibleItems.isEmpty &&
+                      currentProject == null
                 ? Center(child: Text(context.tr('empty')))
                 : RefreshIndicator(
                     onRefresh: load,
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 100),
                       children: [
+                        if (currentProject case final project?)
+                          TodoProjectSummary(
+                            project: project,
+                            progress:
+                                rows!.projectProgress[project.folderId] ??
+                                (total: 0, done: 0, overdue: 0),
+                            onEdit: widget.trash ? null : () => editProject(),
+                          ),
+                        if (currentProject != null &&
+                            rows!.folders.isEmpty &&
+                            visibleItems.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(context.tr('empty')),
+                          ),
                         ...rows!.folders.map(
                           (row) => Card(
                             child: ListTile(
                               leading: Icon(
-                                Icons.folder_outlined,
+                                rows!.projects.containsKey(row['id'])
+                                    ? Icons.work_outline
+                                    : Icons.folder_outlined,
                                 color: scheme.primary,
                               ),
                               title: Text(row['name'] as String),
+                              subtitle: projectSubtitle(row),
                               onTap: () => folder(row),
                               trailing: menu(row, true),
                             ),
@@ -987,6 +1092,12 @@ class _CollectionPageState extends State<CollectionPage> {
                                 title: Text(c.tr('newFolder')),
                                 onTap: () => Navigator.pop(c, 'folder'),
                               ),
+                              if (!repo.notes)
+                                ListTile(
+                                  leading: const Icon(Icons.work_outline),
+                                  title: Text(c.tr('taskProjectNew')),
+                                  onTap: () => Navigator.pop(c, 'project'),
+                                ),
                             ],
                           ),
                         ),
@@ -995,6 +1106,7 @@ class _CollectionPageState extends State<CollectionPage> {
                       if (choice == 'item') await edit();
                       if (choice == 'folder') await createFolder();
                       if (choice == 'template') await fromTemplate();
+                      if (choice == 'project') await editProject(create: true);
                     },
               child: const Icon(Icons.add),
             ),

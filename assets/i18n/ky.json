@@ -382,5 +382,17 @@
   "taskTemplateDeleteInfo": "Үлгү өчүрүлсүнбү? Түзүлгөн тапшырмалар өзгөрбөйт.",
   "taskTemplateIndependent": "Ар бир колдонуу аткарылбаган кошумча тапшырмалары бар өзүнчө тапшырманы түзөт. Даталар, эскертмелер жана виджет уруксаты көчүрүлбөйт.",
   "taskTemplateSave": "Үлгү катары сактоо",
-  "taskTemplateModify": "Үлгүнү түзөтүү"
+  "taskTemplateModify": "Үлгүнү түзөтүү",
+  "taskProject": "Долбоор",
+  "taskProjectNew": "Жаңы долбоор",
+  "taskProjectDetails": "Долбоордун чоо-жайы",
+  "taskProjectStatus": "Долбоордун абалы",
+  "taskProjectActive": "Активдүү",
+  "taskProjectPaused": "Токтотулган",
+  "taskProjectClosed": "Жабылган",
+  "taskProjectProgress": "Долбоордун жүрүшү",
+  "taskProjectStatusInfo": "Долбоордун абалы тапшырмалардын аткарылышын өзгөртпөйт. Мөөнөттөр жана эскертмелер сакталат.",
+  "taskProjectRemove": "Тизмеге айландыруу",
+  "taskProjectRemoveInfo": "Долбоордун чоо-жайы алынсынбы? Ички тизмелер жана тапшырмалар сакталат.",
+  "taskProjectDue": "Долбоордун мөөнөтү"
 }

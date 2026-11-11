@@ -8,6 +8,7 @@ import 'package:bilga/features/search/library_page.dart';
 import 'package:bilga/features/search/search_repository.dart';
 import 'package:bilga/features/todo/todo_database.dart';
 import 'package:bilga/features/todo/todo_checklist_store.dart';
+import 'package:bilga/features/todo/todo_project_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -146,6 +147,57 @@ void main() {
           await notes.close();
           await todos.close();
           await dir.delete(recursive: true);
+        });
+      }
+    },
+  );
+  testWidgets(
+    'Read-only project source exposes full details and due date without editing',
+    (tester) async {
+      late Directory directory;
+      late Database notes, todos;
+      late SearchRepository repo;
+      late SearchHit hit;
+      await tester.runAsync(() async {
+        directory = await Directory.systemTemp.createTemp(
+          'bilga-project-reader-',
+        );
+        notes = await NoteDatabase.openAt('${directory.path}/notes.db');
+        todos = await TodoDatabase.openAt('${directory.path}/tasks.db');
+        await TodoProjectStore(todos).save(
+          name: 'Project source',
+          description: 'Detailedproject content',
+          status: 'paused',
+          dueDate: '2030-02-15',
+        );
+        repo = SearchRepository(notesDb: notes, todoDb: todos);
+        hit = (await repo.search('Detailedproject')).single;
+      });
+      try {
+        await tester.runAsync(() async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: DocumentPage(hit: hit, repository: repo),
+            ),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        });
+        await tester.pumpAndSettle();
+        final text = tester
+            .widget<SelectableText>(find.byType(SelectableText))
+            .data!;
+        expect(text, contains('Detailedproject content'));
+        expect(text, contains('Paused'));
+        expect(text, contains('2030'));
+        expect(find.byIcon(Icons.edit_outlined), findsNothing);
+        expect(find.byIcon(Icons.ios_share), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.runAsync(() async {
+          await notes.close();
+          await todos.close();
+          await directory.delete(recursive: true);
         });
       }
     },

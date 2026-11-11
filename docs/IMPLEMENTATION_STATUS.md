@@ -1,3 +1,21 @@
+## Projects verified — 2026-11-11
+
+**The six-module product remains IN PROGRESS.** Projects now work over existing nested task-list folders: create/edit details, active/paused/closed status, a date-only deadline, nested-task progress/overdue counts, conversion from/to ordinary lists, stale-editor protection, transactional search, complete reader/export and portable backup. Status is organizational and never silently completes tasks or changes their reminders. Empty projects show 0/0 without claiming 100%. Trashed folders, hidden ancestors and unrelated projects are excluded from progress.
+
+Tasks schema **13** adds project metadata without rewriting tasks, lists, subtasks, templates or series. Portable content **11** imports older versions 6–10 and remaps project-folder ownership with idempotent restoration. Source-reader dates now retain the year and relevant timestamp time; a regression test caught the previous omission. **208 full Flutter tests PASS** after the keyboard correction (62 seconds), analyzer/formatting clean; **43 × 396** catalog keys, nine manifest guards, non-voice and static legacy-schema checks PASS.
+
+The reidentified Blackview Tab16/API31 passes **43 scenario cases**, **49 including hooks**, in **274 seconds**. Six new encrypted project cases verify migration, nested progress/hidden data, stale edits, rollback, search/trash and backup. The real UI creates a project, creates a nested list/task, completes the task, sees 1/1 progress, changes project status and converts it to a normal list while preserving all tasks. The earlier two IME/scroll failures are fixed: tests unfocus before scrolling and use a stable status key; template/project editors dismiss keyboards on drag/save. The corrected template journey passes too. Evidence: `docs/evidence/projects-tablet-2026-11-11.json`; the failed first attempt remains recorded separately.
+
+Native instrumentation against the project-capable review app also passes **13 Notes widget and 46 task checks**, both raw RESULT_OK (`/tmp/bilga-projects-native-tests.log`).
+
+The temporary approval-review usage-limit interruption is resolved; authorized host/ADB/GitHub work resumed. The exact template CI failure was fetched: **43034401498 failed before application tests because apt could not resolve azure.archive.ubuntu.com**, exit 100. Workflow setup now retries package downloads three times and fails explicitly if index refresh is incomplete; the next hosted CI result is pending. Evidence: `docs/evidence/template-ci-setup-failure-2026-11-11.json`. This is an environment correction, not a claimed application-test pass. Original production Bilga remains untouched; main was not merged and no publishing/paid activation occurred.
+
+Next source work is the remaining six-module functionality. Finance accounts/transfers/reconciliation are being prepared in the unreferenced local `lib/features/finance/account_ledger.dart`; this unverified file is excluded from the project checkpoint. Preserve integer minor units, explicit currency and atomic record revisions; never initiate bank operations or invent rates. Task tags/calendar/sorting/bulk/history, broader reminders, complete Habits/Finance/Experiences/Books workflows, durable links, app PIN, Drive media and full interaction/accessibility/performance acceptance remain required. Voice stays deferred until explicit owner approval.
+
+Earlier checkpoint evidence follows.
+
+---
+
 ## Custom task templates verified — 2026-11-11
 
 Resumed `development/global-launch` from `42cee8d`, whose hosted CI **42796563471 succeeded**. The new owner directive is preserved in `FINAL_ENGINEERING_DIRECTIVE_2026-11-11.md`: six core modules, no voice before explicit owner approval, original production data preserved, no main merge/publication/paid activation. **The full product remains IN PROGRESS.** Finance and Books are explicitly included in the feature matrix with their actual gaps.

@@ -382,5 +382,17 @@
   "taskTemplateDeleteInfo": "Shablon o‘chirilsinmi? Undan yaratilgan vazifalar o‘zgarmaydi.",
   "taskTemplateIndependent": "Har foydalanishda bajarilmagan kichik vazifalari bor mustaqil vazifa yaratiladi. Sanalar, eslatmalar va vidjet ruxsati ko‘chirilmaydi.",
   "taskTemplateSave": "Shablon sifatida saqlash",
-  "taskTemplateModify": "Shablonni tahrirlash"
+  "taskTemplateModify": "Shablonni tahrirlash",
+  "taskProject": "Loyiha",
+  "taskProjectNew": "Yangi loyiha",
+  "taskProjectDetails": "Loyiha tafsilotlari",
+  "taskProjectStatus": "Loyiha holati",
+  "taskProjectActive": "Faol",
+  "taskProjectPaused": "To‘xtatib turilgan",
+  "taskProjectClosed": "Yopilgan",
+  "taskProjectProgress": "Loyiha bajarilishi",
+  "taskProjectStatusInfo": "Loyiha holati vazifalarning bajarilishidan alohida. Vazifa muddatlari va eslatmalari o‘zgarmaydi.",
+  "taskProjectRemove": "Ro‘yxatga aylantirish",
+  "taskProjectRemoveInfo": "Loyiha tafsilotlari olib tashlansinmi? Ichki ro‘yxatlar va vazifalar o‘zgarmaydi.",
+  "taskProjectDue": "Loyiha muddati"
 }

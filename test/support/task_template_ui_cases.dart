@@ -106,6 +106,8 @@ void registerTaskTemplateUiTests({
         );
         await tester.pump();
         final add = find.byKey(const Key('task-checklist-add'));
+        FocusManager.instance.primaryFocus?.unfocus();
+        await settle(tester);
         await tester.ensureVisible(add);
         await settle(tester);
         await tester.tap(add);

@@ -1,6 +1,7 @@
 import '../todo/todo_changes.dart';
 import '../todo/todo_series_store.dart';
 import '../todo/todo_checklist_store.dart';
+import '../todo/todo_project_store.dart';
 
 import 'dart:math';
 
@@ -22,7 +23,15 @@ class CollectionRows {
   final List<Map<String, Object?>> folders;
   final List<Map<String, Object?>> items;
   final Map<String, ({int total, int done})> checklistProgress;
-  CollectionRows(this.folders, this.items, {this.checklistProgress = const {}});
+  final Map<String, TodoProject> projects;
+  final Map<String, ({int total, int done, int overdue})> projectProgress;
+  CollectionRows(
+    this.folders,
+    this.items, {
+    this.checklistProgress = const {},
+    this.projects = const {},
+    this.projectProgress = const {},
+  });
 }
 
 class CollectionRepository {
@@ -113,6 +122,10 @@ class CollectionRepository {
     return CollectionRows(
       visible,
       notes ? await NoteTagStore.hydrate(db, rows) : rows,
+      projects: notes ? const {} : await TodoProjectStore(db).all(),
+      projectProgress: notes
+          ? const {}
+          : await TodoProjectStore.progress(db, DateTime.now()),
       checklistProgress: {
         if (!notes)
           for (final row in await db.rawQuery(

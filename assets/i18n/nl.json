@@ -382,5 +382,17 @@
   "taskTemplateDeleteInfo": "Delete this template? Tasks already created from it stay unchanged.",
   "taskTemplateIndependent": "Each use creates an independent task with unchecked subtasks. Dates, reminders and widget consent are not copied.",
   "taskTemplateSave": "Save as template",
-  "taskTemplateModify": "Edit template"
+  "taskTemplateModify": "Edit template",
+  "taskProject": "Project",
+  "taskProjectNew": "New project",
+  "taskProjectDetails": "Project details",
+  "taskProjectStatus": "Project status",
+  "taskProjectActive": "Active",
+  "taskProjectPaused": "Paused",
+  "taskProjectClosed": "Closed",
+  "taskProjectProgress": "Project progress",
+  "taskProjectStatusInfo": "Project status is separate from task completion. Task deadlines and reminders stay unchanged.",
+  "taskProjectRemove": "Convert to list",
+  "taskProjectRemoveInfo": "Remove project details? Nested lists and tasks stay unchanged.",
+  "taskProjectDue": "Project deadline"
 }

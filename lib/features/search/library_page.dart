@@ -16,6 +16,8 @@ import '../private_space/record_store.dart';
 import '../private_space/space_page.dart';
 import '../todo/todo_editor_page.dart';
 import '../todo/todo_checklist_store.dart';
+import '../todo/todo_project_store.dart';
+import '../todo/todo_project_editor.dart' show taskProjectStatusKey;
 import 'search_repository.dart';
 
 String kindKey(String kind) => switch (kind) {
@@ -247,6 +249,7 @@ class _DocumentPageState extends State<DocumentPage> {
   List<Map<String, Object?>> versions = [];
   List<PrivateRecord> attachments = [];
   List<TodoChecklistItem> checklist = [];
+  TodoProject? project;
   @override
   void initState() {
     super.initState();
@@ -256,6 +259,10 @@ class _DocumentPageState extends State<DocumentPage> {
   Future<void> load() async {
     try {
       final source = await widget.repository.source(widget.hit);
+      final projectValue = widget.hit.kind == 'todoFolder'
+          ? (await TodoProjectStore(await widget.repository.todos)
+                .all())[widget.hit.id]
+          : null;
       final subtasks = widget.hit.kind == 'todo'
           ? await TodoChecklistStore.load(
               await widget.repository.todos,
@@ -291,6 +298,7 @@ class _DocumentPageState extends State<DocumentPage> {
           versions = history;
           attachments = owned;
           checklist = subtasks;
+          project = projectValue;
         });
       }
     } catch (_) {
@@ -304,6 +312,15 @@ class _DocumentPageState extends State<DocumentPage> {
   String get text {
     final r = row!;
     if (widget.hit.kind == 'note') return r['body'] as String;
+    if (project case final value?) {
+      return [
+        context.tr('taskProject'),
+        context.tr(taskProjectStatusKey(value.status)),
+        value.description,
+        if (value.dueDate != null)
+          '${context.tr('taskProjectDue')}: ${date(value.dueDate!)}',
+      ].join('\n\n');
+    }
     if (widget.hit.kind == 'todo') {
       return [
         r['description'],
@@ -341,7 +358,7 @@ class _DocumentPageState extends State<DocumentPage> {
     final d = DateTime.tryParse(raw)?.toLocal();
     return d == null
         ? raw
-        : MaterialLocalizations.of(context).formatMediumDate(d);
+        : '${MaterialLocalizations.of(context).formatFullDate(d)}${raw.contains('T') ? ' · ${TimeOfDay.fromDateTime(d).format(context)}' : ''}';
   }
 
   Future<void> export(Stream<List<int>> bytes, String name, String mime) async {

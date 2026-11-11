@@ -4,11 +4,11 @@
 
 The source recovery and initial integrated development checkpoint are not a complete commercial release. Consult FEATURE_MATRIX.md, TEST_REPORT.md and KNOWN_LIMITATIONS.md for precise gaps.
 
-Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_todo.db`. Current derived-search upgrade targets: Notes 15 / Tasks 12. Portable backup content versions remain Notes 13 / Tasks 10 with backward-compatible import; search indexes and device-local widget consent are excluded and reconstructed.
+Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_todo.db`. Current derived-search upgrade targets: Notes 15 / Tasks 13. Portable backup content versions remain Notes 13 / Tasks 11 with backward-compatible import; search indexes and device-local widget consent are excluded and reconstructed.
 
 Business: 40-day application-managed trial, then one non-consumable lifetime product `bilga_lifetime_unlock`. No subscription or automatic billing. Price must come from Play ProductDetails; $9.99 is a planning reference only. Existing data is not removed at expiry; protected read/export/backup routes remain.
 
-Latest November 11 template checkpoint: **199 full Flutter tests PASS**, clean analyzer/formatting, **43 × 384** catalog keys and nine manifest/target guards PASS. Tab16/API31 review-only tests pass **36 scenarios**, 42 including hooks, in 222 seconds, including encrypted custom templates and complete template UI routes. Subtask source `42cee8d` passed hosted CI **42796563471**; the newer template milestone CI is pending. The six-module completion and owner acceptance gates remain unmet.
+Latest November 11 project checkpoint: **208 full Flutter tests PASS**, analyzer/formatting clean, **43 × 396** catalogs and nine manifest guards PASS. Review-only Tab16/API31 tests pass **43 scenarios**, 49 including hooks, in 274 seconds after keyboard correction. Projects include nested progress, safe conversion, search/reader/export, additive migration and backup. Template CI 43034401498 failed during apt DNS resolution before application tests; bounded setup retries are added and new hosted CI is pending. All six-module completion and owner acceptance gates still apply.
 
 Required before release:
 

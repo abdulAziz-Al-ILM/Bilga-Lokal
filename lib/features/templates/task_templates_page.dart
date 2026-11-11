@@ -262,6 +262,7 @@ class _TaskTemplateEditorState extends State<TaskTemplateEditor> {
       showError(context, 'required');
       return;
     }
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() => busy = true);
     try {
       await widget.store.save(
@@ -321,6 +322,7 @@ class _TaskTemplateEditorState extends State<TaskTemplateEditor> {
         absorbing: busy,
         child: ListView(
           padding: const EdgeInsets.all(20),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           children: [
             if (busy) const LinearProgressIndicator(),
             for (final field in [

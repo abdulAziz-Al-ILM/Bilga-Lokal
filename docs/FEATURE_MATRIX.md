@@ -11,7 +11,8 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Recurring tasks | TESTED | Editor, additive Tasks 10 migration, single/future edits, atomic occurrence generation, history, backup remapping and native notification completion; 22-scenario tablet suite plus DST/calendar tests pass |
 | Subtasks/checklists, progress and duplication | TESTED | Ordered one-level subtasks, edit/save/reorder/complete, list progress, independent copies, recurrence resets, search, reader/export, additive migration and backup; host and Tab16 journeys pass |
 | Custom task templates | TESTED | Create/preview/apply/edit/delete, task snapshots, unchecked copies, stale-edit protection, Tasks 12 migration and content 10 backup; host 199 and tablet 36-scenario suites pass |
-| Projects | IN PROGRESS | Nested lists/folders work; dedicated project metadata/overview still required |
+| Projects | TESTED | Metadata/status/deadline, nested progress/overdue counts, safe list conversion, source reader/export, search/trash and backup; 208 host tests and 43-scenario tablet suite pass after keyboard correction |
+| Task tags/calendar/sorting/bulk/history audit | IN PROGRESS | Existing due-date smart folders, planner and occurrence history do not complete every required organization workflow |
 | Android task reminders, snooze and widget actions | IMPLEMENTED | Recovered SQLCipher/native actions; Tab16/API31 delivery, snooze and native completion pass; reboot/Doze/timezone and permission failure acceptance remain |
 | Standalone/note/habit reminders | NOT STARTED | Task reminders do not cover the complete reminder module |
 | Habits | IMPLEMENTED | Existing schedules, quantitative entries, history, streaks, archive; encrypted habit persistence/completion tested on Tab16; no habit reminders |
@@ -32,5 +33,5 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Local encrypted backup and merge | IMPLEMENTED | Recovered v1/v2 codecs, transactional cross-DB import and ID remapping; host content/codec regressions and Tab16 encrypted text merge/rollback/idempotence pass; real media/second-device acceptance pending |
 | Google Drive backup | IN PROGRESS | Existing content-only path; media-bearing backups require local export |
 | Localization | IN PROGRESS | All 43 catalogs retained; seven priority-language drafts, remaining new strings use English; native review pending |
-| CI and Android artifacts | IN PROGRESS | Host and current local review build verified; subtask source 42cee8d CI 42796563471 passed; templates milestone CI pending |
+| CI and Android artifacts | IN PROGRESS | Host and current local review build verified; project local build and 43 tablet scenarios pass; prior template CI failed on apt DNS, bounded retry added; project hosted CI pending |
 | Store materials and release acceptance | NOT STARTED | No publication authorized; global release acceptance criteria not met |

@@ -71,6 +71,7 @@ void registerTaskTemplateTests({
     final tasks = await db.query('todos'),
         items = await db.query('todo_checklist'),
         series = await db.query('todo_series');
+    await db.execute('DROP TABLE todo_projects');
     await db.execute('DROP TABLE todo_templates');
     await db.setVersion(11);
     await db.close();
@@ -79,7 +80,7 @@ void registerTaskTemplateTests({
       secure: secure,
     );
     store = TaskTemplateStore(db);
-    expect(await db.getVersion(), 12);
+    expect(await db.getVersion(), 13);
     expect(await db.query('todos'), tasks);
     expect(await db.query('todo_checklist'), items);
     expect(await db.query('todo_series'), series);
@@ -228,7 +229,7 @@ void registerTaskTemplateTests({
     );
     try {
       final snapshot = await BackupStore(notesDb: notes, todoDb: db).snapshot();
-      expect(snapshot['todoSchema'], 10);
+      expect(snapshot['todoSchema'], 11);
       final backup = BackupStore(notesDb: targetNotes, todoDb: target);
       expect(await backup.restore(snapshot, 'Imported'), true);
       final imported = (await TaskTemplateStore(target).all()).single;

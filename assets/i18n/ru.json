@@ -382,5 +382,17 @@
   "taskTemplateDeleteInfo": "Удалить шаблон? Уже созданные задачи не изменятся.",
   "taskTemplateIndependent": "Каждое применение создаёт независимую задачу с невыполненными подзадачами. Даты, напоминания и разрешения виджетов не копируются.",
   "taskTemplateSave": "Сохранить как шаблон",
-  "taskTemplateModify": "Изменить шаблон"
+  "taskTemplateModify": "Изменить шаблон",
+  "taskProject": "Проект",
+  "taskProjectNew": "Новый проект",
+  "taskProjectDetails": "Сведения о проекте",
+  "taskProjectStatus": "Статус проекта",
+  "taskProjectActive": "Активен",
+  "taskProjectPaused": "Приостановлен",
+  "taskProjectClosed": "Закрыт",
+  "taskProjectProgress": "Прогресс проекта",
+  "taskProjectStatusInfo": "Статус проекта не меняет выполнение задач. Сроки и напоминания задач сохраняются.",
+  "taskProjectRemove": "Преобразовать в список",
+  "taskProjectRemoveInfo": "Удалить сведения о проекте? Вложенные списки и задачи сохранятся.",
+  "taskProjectDue": "Срок проекта"
 }

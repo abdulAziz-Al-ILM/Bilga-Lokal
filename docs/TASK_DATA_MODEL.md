@@ -21,3 +21,7 @@ Native notification completion uses the same series/calendar contract through SQ
 ## Custom task templates
 
 Schema 12 adds `todo_templates`; portable content 10 includes it and accepts older versions. Versioned payloads contain ordinary task fields and subtask titles, with strict types/limits and no device consent, dates, reminders, recurrence or attachment ownership. Saving from a task is a snapshot. Instantiation rechecks the selected folder and its ancestry and creates task/checklist rows in one transaction. Template revision checks prevent stale updates/deletes. Imported templates receive independent IDs and remain usable after restore. Updating or deleting a template preserves all previously created tasks.
+
+## Projects
+
+Tasks schema 13 adds metadata keyed to existing task-list folders; portable content 11 includes it. Projects can contain ordinary nested lists or nested projects. Progress derives from original non-deleted tasks in the active subtree, excluding hidden ancestors and unrelated folders. Empty projects report 0/0. Project status and date-only deadline do not mutate task completion or schedules. Conversion back to a list removes project metadata after confirmation while preserving folders/tasks. Revision and folder timestamp checks reject stale edits. Source triggers update project description search in the same transaction, and restore remaps project-folder IDs before reconstruction. Read/export retains full project details and the deadline year.

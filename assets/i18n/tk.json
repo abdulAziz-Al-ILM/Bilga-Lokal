@@ -382,5 +382,17 @@
   "taskTemplateDeleteInfo": "Nusga pozulsynmy? Döredilen wezipeler üýtgemeýär.",
   "taskTemplateIndependent": "Her ulanyş tamamlanmadyk kiçi wezipeler bilen özbaşdak wezipe döredýär. Seneler, ýatlatmalar we widjet rugsady göçürilmeýär.",
   "taskTemplateSave": "Nusga hökmünde saklamak",
-  "taskTemplateModify": "Nusgany üýtgetmek"
+  "taskTemplateModify": "Nusgany üýtgetmek",
+  "taskProject": "Taslama",
+  "taskProjectNew": "Täze taslama",
+  "taskProjectDetails": "Taslama maglumatlary",
+  "taskProjectStatus": "Taslamanyň ýagdaýy",
+  "taskProjectActive": "Işjeň",
+  "taskProjectPaused": "Saklanan",
+  "taskProjectClosed": "Ýapylan",
+  "taskProjectProgress": "Taslamanyň ýerine ýetirilişi",
+  "taskProjectStatusInfo": "Taslamanyň ýagdaýy wezipeleriň tamamlanmagyny üýtgetmeýär. Möhletler we ýatlatmalar saklanýar.",
+  "taskProjectRemove": "Sanawa öwürmek",
+  "taskProjectRemoveInfo": "Taslama maglumatlary aýrylsynmy? Içki sanawlar we wezipeler saklanar.",
+  "taskProjectDue": "Taslamanyň möhleti"
 }

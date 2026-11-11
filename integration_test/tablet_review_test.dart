@@ -28,6 +28,7 @@ import 'notification_cases.dart';
 import 'recurrence_cases.dart';
 import 'checklist_cases.dart';
 import 'task_template_cases.dart';
+import 'todo_project_cases.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -197,4 +198,5 @@ void main() {
   registerRecurrenceCases(binding);
   registerChecklistCases(binding);
   registerTaskTemplateCases(binding);
+  registerTodoProjectCases(binding);
 }

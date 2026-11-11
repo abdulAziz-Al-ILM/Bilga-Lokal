@@ -159,6 +159,7 @@ void main() {
       if (db == todos) {
         await db.execute('DROP TRIGGER todo_series_trash');
         await db.execute('DROP TRIGGER todo_series_delete');
+        await db.execute('DROP TABLE todo_projects');
         await db.execute('DROP TABLE todo_templates');
         await db.execute('DROP TABLE todo_checklist');
         await db.execute('DROP TABLE todo_occurrences');
@@ -171,7 +172,7 @@ void main() {
     todos = await TodoDatabase.openAt('${dir.path}/todos.db');
     search = SearchRepository(notesDb: notes, todoDb: todos);
     expect(await notes.getVersion(), 15);
-    expect(await todos.getVersion(), 12);
+    expect(await todos.getVersion(), 13);
     expect((await search.search('Orchid')).map((h) => h.id).toSet(), {
       'legacy-note',
       'legacy-task',

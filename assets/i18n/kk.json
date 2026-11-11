@@ -382,5 +382,17 @@
   "taskTemplateDeleteInfo": "Үлгі жойылсын ба? Жасалған тапсырмалар өзгермейді.",
   "taskTemplateIndependent": "Әр қолдану орындалмаған ішкі тапсырмалары бар тәуелсіз тапсырма жасайды. Күндер, еске салғыштар және виджет рұқсаты көшірілмейді.",
   "taskTemplateSave": "Үлгі ретінде сақтау",
-  "taskTemplateModify": "Үлгіні өңдеу"
+  "taskTemplateModify": "Үлгіні өңдеу",
+  "taskProject": "Жоба",
+  "taskProjectNew": "Жаңа жоба",
+  "taskProjectDetails": "Жоба мәліметтері",
+  "taskProjectStatus": "Жоба күйі",
+  "taskProjectActive": "Белсенді",
+  "taskProjectPaused": "Кідіртілген",
+  "taskProjectClosed": "Жабылған",
+  "taskProjectProgress": "Жоба барысы",
+  "taskProjectStatusInfo": "Жоба күйі тапсырмалардың орындалуын өзгертпейді. Мерзімдер мен еске салғыштар сақталады.",
+  "taskProjectRemove": "Тізімге айналдыру",
+  "taskProjectRemoveInfo": "Жоба мәліметтері жойылсын ба? Ішкі тізімдер мен тапсырмалар сақталады.",
+  "taskProjectDue": "Жоба мерзімі"
 }

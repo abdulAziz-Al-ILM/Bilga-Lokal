@@ -4,6 +4,7 @@ import '../todo/todo_series_store.dart';
 import '../todo/recurrence_rule.dart';
 import '../todo/todo_checklist_store.dart';
 import '../templates/task_template_store.dart';
+import '../todo/todo_project_store.dart';
 import '../todo/reminders/todo_reminder_store.dart';
 import '../../core/private_database.dart';
 import '../habits/habit_plan.dart';
@@ -110,6 +111,15 @@ class BackupStore {
       'created_at',
       'updated_at',
     },
+    'todo_projects': {
+      'folder_id',
+      'description',
+      'status',
+      'due_date',
+      'revision',
+      'created_at',
+      'updated_at',
+    },
     'todos': {
       'id',
       'title',
@@ -152,6 +162,7 @@ class BackupStore {
         'todo_occurrences',
         'todo_checklist',
         'todo_templates',
+        'todo_projects',
       ]) {
         data[table] = await txn.query(table);
       }
@@ -161,7 +172,7 @@ class BackupStore {
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
       'notesSchema': 13,
-      'todoSchema': 10,
+      'todoSchema': 11,
       'createdAt': DateTime.now().toUtc().toIso8601String(),
       'ownerId': ownerId,
       'data': data,
@@ -174,7 +185,7 @@ class BackupStore {
     if (payload['format'] != 'bilga-data' ||
         payload['version'] != 1 ||
         ![8, 9, 10, 11, 12, 13].contains(payload['notesSchema']) ||
-        ![6, 7, 8, 9, 10].contains(payload['todoSchema']) ||
+        ![6, 7, 8, 9, 10, 11].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
       throw const FormatException('backup_invalid');
     }
@@ -185,6 +196,8 @@ class BackupStore {
     for (final entry in tableColumns.entries) {
       final list =
           (entry.key == 'todo_reminders' && payload['todoSchema'] == 6) ||
+              (entry.key == 'todo_projects' &&
+                  (payload['todoSchema'] as int) < 11) ||
               (entry.key == 'todo_templates' &&
                   (payload['todoSchema'] as int) < 10) ||
               (entry.key == 'todo_checklist' &&
@@ -208,6 +221,19 @@ class BackupStore {
           throw const FormatException('backup_invalid');
         }
         final row = Map<String, Object?>.from(value);
+        if (entry.key == 'todo_projects') {
+          TodoProject.validate(row);
+          if (!ids.add(row['folder_id']!) ||
+              ['created_at', 'updated_at'].any(
+                (key) =>
+                    row[key] is! String ||
+                    DateTime.tryParse(row[key] as String) == null,
+              )) {
+            throw const FormatException('backup_invalid');
+          }
+          rows.add(row);
+          continue;
+        }
         if (entry.key == 'todo_templates') {
           TaskTemplate.row(row);
           if (!ids.add(row['id']!) ||
@@ -429,6 +455,12 @@ class BackupStore {
       }
     }
     final todoIds = result['todos']!.map((r) => r['id']).toSet();
+    final todoFolders = result['todo_folders']!.map((row) => row['id']).toSet();
+    if (result['todo_projects']!.any(
+      (row) => !todoFolders.contains(row['folder_id']),
+    )) {
+      throw const FormatException('backup_invalid');
+    }
     final checklistPositions = <String>{};
     for (final item in result['todo_checklist']!) {
       if (!todoIds.contains(item['todo_id']) ||
@@ -618,6 +650,12 @@ class BackupStore {
           await _insert(txn, 'bilga_restore_todo.todo_templates', {
             ...tables['todo_templates']![i],
             'id': '${prefix}template:$i',
+          });
+        }
+        for (final project in tables['todo_projects']!) {
+          await _insert(txn, 'bilga_restore_todo.todo_projects', {
+            ...project,
+            'folder_id': '$prefix${project['folder_id']}',
           });
         }
         final seriesIds = <String, String>{};

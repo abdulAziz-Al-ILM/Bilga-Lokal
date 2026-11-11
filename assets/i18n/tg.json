@@ -382,5 +382,17 @@
   "taskTemplateDeleteInfo": "Қолаб нест карда шавад? Вазифаҳои сохташуда тағйир намеёбанд.",
   "taskTemplateIndependent": "Ҳар истифода вазифаи мустақил бо зервазифаҳои иҷронашударо месозад. Санаҳо, ёдраскуниҳо ва иҷозати виҷет нусха намешаванд.",
   "taskTemplateSave": "Ҳамчун қолаб нигоҳ доштан",
-  "taskTemplateModify": "Таҳрири қолаб"
+  "taskTemplateModify": "Таҳрири қолаб",
+  "taskProject": "Лоиҳа",
+  "taskProjectNew": "Лоиҳаи нав",
+  "taskProjectDetails": "Тафсилоти лоиҳа",
+  "taskProjectStatus": "Ҳолати лоиҳа",
+  "taskProjectActive": "Фаъол",
+  "taskProjectPaused": "Таваққуфшуда",
+  "taskProjectClosed": "Басташуда",
+  "taskProjectProgress": "Пешрафти лоиҳа",
+  "taskProjectStatusInfo": "Ҳолати лоиҳа иҷрои вазифаҳоро тағйир намедиҳад. Муҳлатҳо ва ёдраскуниҳо нигоҳ дошта мешаванд.",
+  "taskProjectRemove": "Ба рӯйхат табдил додан",
+  "taskProjectRemoveInfo": "Тафсилоти лоиҳа нест карда шавад? Рӯйхатҳои дохилӣ ва вазифаҳо нигоҳ дошта мешаванд.",
+  "taskProjectDue": "Муҳлати лоиҳа"
 }
