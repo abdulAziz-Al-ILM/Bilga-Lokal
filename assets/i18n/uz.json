@@ -434,5 +434,21 @@
   "fDebtHasRepayments": "Bu qarz bo‘yicha to‘lovlar bor. Qarzni bekor qilishdan oldin ularni bekor qiling.",
   "fRepayment": "Qarz to‘lovini yozish",
   "fTransactionUndoInfo": "Ushbu tranzaksiyaning balansga ta’siri o‘zgartirilsinmi? Saqlangan holatlar tarixda qoladi.",
-  "fTransactionVoid": "Tranzaksiyani bekor qilish"
+  "fTransactionVoid": "Tranzaksiyani bekor qilish",
+  "fReportThisWeek": "Bu hafta",
+  "fReportThisMonth": "Bu oy",
+  "fReportLastYear": "Oxirgi 12 oy",
+  "fReportCustom": "Sanalarni tanlash",
+  "fReportSurplus": "Daromad va xarajat farqi",
+  "fReportCashFlow": "Pul oqimi",
+  "fReportOtherCash": "Qarzlar, to‘lovlar va tuzatishlar",
+  "fReportOpeningChanges": "Davrdagi boshlang‘ich balanslar",
+  "fReportInfo": "Hisoblar orasidagi o‘tkazmalar umumiy summani o‘zgartirmaydi. Qarz, qaytarilgan to‘lov va balans tuzatishlari daromad yoki xarajat hisoblanmaydi. Boshlang‘ich balanslar alohida ko‘rsatiladi.",
+  "fReportDaily": "Kunlik",
+  "fReportWeekly": "Haftalik",
+  "fReportMonthly": "Oylik",
+  "fReportUncategorized": "Toifasiz",
+  "fReportRangeError": "Qisqaroq davr tanlang (3 660 kungacha).",
+  "fReportStartBalance": "Davrdan oldingi balans",
+  "fReportEndBalance": "Davr oxiridagi balans"
 }

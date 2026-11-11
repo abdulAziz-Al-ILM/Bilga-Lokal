@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bilga/core/strings.dart';
 import 'package:bilga/features/finance/account_ledger.dart';
 import 'package:bilga/features/finance/ledger.dart';
+import 'package:bilga/features/finance/finance_reports_page.dart';
 import 'package:bilga/features/finance/transaction_edits.dart';
 import 'package:bilga/features/private_space/record_store.dart';
 import 'package:bilga/features/notes/note_database.dart';
@@ -278,6 +279,13 @@ void main() {
         expect(text, contains('Voided'));
         expect(find.byType(TextField), findsNothing);
         expect(find.byIcon(Icons.edit_outlined), findsNothing);
+        await tester.tap(find.byKey(const Key('finance-reader-reports-open')));
+        await tester.pumpAndSettle();
+        expect(find.byType(FinanceReportsPage), findsOneWidget);
+        expect(find.byType(TextField), findsNothing);
+        expect(find.byType(FloatingActionButton), findsNothing);
+        await tester.pageBack();
+        await tester.pumpAndSettle();
         await tester.runAsync(
           () async => expect(await notes.query('private_records'), before),
         );

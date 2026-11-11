@@ -434,5 +434,21 @@
   "fDebtHasRepayments": "This debt has repayments. Undo those repayments before undoing the debt.",
   "fRepayment": "Record repayment",
   "fTransactionUndoInfo": "Update this transaction’s effect on balances? Its saved states remain in history.",
-  "fTransactionVoid": "Void transaction"
+  "fTransactionVoid": "Void transaction",
+  "fReportThisWeek": "This week",
+  "fReportThisMonth": "This month",
+  "fReportLastYear": "Last 12 months",
+  "fReportCustom": "Choose dates",
+  "fReportSurplus": "Income minus expenses",
+  "fReportCashFlow": "Cash flow",
+  "fReportOtherCash": "Loans, repayments and adjustments",
+  "fReportOpeningChanges": "Opening balances in period",
+  "fReportInfo": "Transfers cancel out. Loans, repayments and balance adjustments do not count as income or expenses. Opening balances are shown separately.",
+  "fReportDaily": "Daily",
+  "fReportWeekly": "Weekly",
+  "fReportMonthly": "Monthly",
+  "fReportUncategorized": "Uncategorized",
+  "fReportRangeError": "Choose a shorter period (up to 3,660 days).",
+  "fReportStartBalance": "Balance before period",
+  "fReportEndBalance": "Balance at period end"
 }

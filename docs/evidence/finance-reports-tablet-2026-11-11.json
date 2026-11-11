@@ -1,0 +1,76 @@
+{
+  "deviceSuite": "isolated Bilga Review",
+  "visitedModules": [
+    "notes",
+    "todos",
+    "xHabits",
+    "textAssistant",
+    "xFinance",
+    "xExperience",
+    "xBooks",
+    "today",
+    "search",
+    "settings"
+  ],
+  "themeVariants": 14,
+  "rtl": "Arabic",
+  "realEditorRotation": "portrait-landscape-portrait",
+  "notification": {
+    "realDelivery": true,
+    "snoozeDelivery": true,
+    "nativePendingIntentCompletion": true,
+    "exactPermission": true,
+    "sound": false
+  },
+  "recurrence": {
+    "nativeAdvance": true,
+    "checklistHistoryPreservedAndSuccessorReset": true,
+    "nextReminderDeliveredWithoutDartRefresh": true,
+    "futureWidgetConsentInherited": false
+  },
+  "checklist": {
+    "encryptedFixtures": true,
+    "realEditorReorderAndCompletion": true,
+    "listProgress": true,
+    "independentDuplication": true
+  },
+  "taskTemplates": {
+    "encryptedFixtures": true,
+    "realCreatePreviewApplyEditSnapshotDelete": true
+  },
+  "projects": {
+    "encryptedFixtures": true,
+    "realNestedListsAndTaskProgress": true,
+    "statusEditAndConvertPreserveTasks": true
+  },
+  "financeAccounts": {
+    "encryptedFixtures": true,
+    "createTransferReconcileArchiveRestore": true,
+    "immutableAuditAndConservedTransferTotal": true,
+    "syntheticEntitlementOnly": true
+  },
+  "financeTransactionHistory": {
+    "encryptedFixtures": true,
+    "realEditRestoreVoidRestore": true,
+    "otherTransactionsPreserved": true,
+    "syntheticEntitlementOnly": true
+  },
+  "financeReports": {
+    "encryptedFixtures": true,
+    "realMainRouteFiltersChartAndRefresh": true,
+    "futureAndVoidedEntriesExcluded": true,
+    "noReportWrites": true
+  },
+  "date": "2026-11-11",
+  "deviceModel": "Blackview Tab16",
+  "androidApi": 31,
+  "scenarioCasesPassed": 51,
+  "runnerCountIncludingHooks": 57,
+  "durationSeconds": 429,
+  "productionPackageModified": false,
+  "testApkSha256": "abc6aac59cbb67353a9a9f592e012cf63b0655c22f4830e743f182db489cd12d",
+  "notesDatabaseSchema": 16,
+  "tasksDatabaseSchema": 13,
+  "source": "Finance reports milestone; see containing commit history",
+  "localLog": "/tmp/bilga-finance-reports-tablet-tests-1.log"
+}

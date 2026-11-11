@@ -434,5 +434,21 @@
   "fDebtHasRepayments": "По этому долгу есть платежи. Сначала отмените их, затем сам долг.",
   "fRepayment": "Записать платёж по долгу",
   "fTransactionUndoInfo": "Изменить влияние операции на баланс? Сохранённые состояния останутся в истории.",
-  "fTransactionVoid": "Отменить операцию"
+  "fTransactionVoid": "Отменить операцию",
+  "fReportThisWeek": "Эта неделя",
+  "fReportThisMonth": "Этот месяц",
+  "fReportLastYear": "Последние 12 месяцев",
+  "fReportCustom": "Выбрать даты",
+  "fReportSurplus": "Доходы минус расходы",
+  "fReportCashFlow": "Денежный поток",
+  "fReportOtherCash": "Долги, платежи и корректировки",
+  "fReportOpeningChanges": "Начальные остатки за период",
+  "fReportInfo": "Переводы между счетами взаимно погашаются. Долги, их погашение и корректировки баланса не считаются доходами или расходами. Начальные остатки показаны отдельно.",
+  "fReportDaily": "По дням",
+  "fReportWeekly": "По неделям",
+  "fReportMonthly": "По месяцам",
+  "fReportUncategorized": "Без категории",
+  "fReportRangeError": "Выберите период короче (до 3 660 дней).",
+  "fReportStartBalance": "Баланс до начала периода",
+  "fReportEndBalance": "Баланс на конец периода"
 }

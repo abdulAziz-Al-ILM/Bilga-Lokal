@@ -1,0 +1,12 @@
+{
+  "runId": 43059176688,
+  "url": "https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/43059176688",
+  "headSha": "121d876075e595d7a786ae4b2d095bbf996f60e5",
+  "status": "completed",
+  "conclusion": "success",
+  "applicationTestsStarted": true,
+  "scope": "history checkpoint: dependency setup, formatting/catalogs/non-voice/manifests, purchase backend, analyzer, calendar/DST, full 234 Flutter tests, Android debug build, artifact manifest verification and upload",
+  "desktopGluSetupCorrectionVerified": true,
+  "reportsCheckpointIncluded": false,
+  "productionAppInstalled": false
+}

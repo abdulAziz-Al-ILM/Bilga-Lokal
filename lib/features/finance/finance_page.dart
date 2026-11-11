@@ -15,6 +15,7 @@ import 'account_ledger.dart';
 import 'finance_accounts_page.dart';
 import 'finance_transaction_page.dart';
 import 'transaction_edits.dart';
+import 'finance_reports_page.dart';
 
 class FinancePage extends StatefulWidget {
   final RecordStore? store;
@@ -408,6 +409,21 @@ class _FinanceState extends State<FinancePage> {
                             );
                             if (mounted) await run(load);
                           },
+                  ),
+                  ListTile(
+                    key: const Key('finance-reports-open'),
+                    leading: const Icon(Icons.insert_chart_outlined),
+                    title: Text(context.tr('xReport')),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: busy
+                        ? null
+                        : () => Navigator.push<void>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  FinanceReportsPage(ledger: r, store: store),
+                            ),
+                          ),
                   ),
                   Text(context.tr('fBalance')),
                   Text(

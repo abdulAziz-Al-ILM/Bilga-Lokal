@@ -1,3 +1,21 @@
+## Finance reports — 2026-11-11
+
+**The six-module product remains IN PROGRESS.** Finance now has date-range income/expense comparison, category spending breakdown, daily/weekly/monthly cash-flow trends, an interactive chart with exact accessible row values, presets/custom periods and current-record refresh. Both main Finance and the read-only library open reports. No report action edits records. Presets and date selection stop at today, excluding future recorded entries from current reports.
+
+All monetary calculations use integer minor units. Debt/repayment/adjustment movements remain separate from ordinary income/expense; whole-ledger transfers cancel. Account openings are itemized separately, and each report verifies closing balance minus pre-period balance equals cash flow plus openings in the period. Zero days are retained. Calendar grouping uses UTC date-only arithmetic to avoid DST gaps, Monday-based weeks, leap days and year transitions; partial boundary buckets retain the explicit selected range. Floating point is used only for chart geometry. No exchange rate or bank operation is invented.
+
+**241 full Flutter tests PASS** (97 seconds), analyzer/format clean, **43 × 452** catalog keys, nine manifest guards and non-voice source guard PASS. Five new arithmetic tests cover the balance identity, precise large sums, calendar boundaries, future openings and invalid ranges. The report/refresh/chart host journey passes; compact 2× text/RTL/dark tests retain large money readability, and the expired-trial reader opens reports without mutation. Evidence: `docs/evidence/finance-reports-host-2026-11-11.json`. Blackview Tab16/API31 passes **51 physical scenario cases**, **57 including hooks**, in **429 seconds**, including real report presets, grouping, chart selection and current-data refresh with unchanged database revision. All 50 earlier scenarios pass in the same run. Evidence: `docs/evidence/finance-reports-tablet-2026-11-11.json`.
+
+The ordinary transaction-history APK at **121d876** was signer-checked, installed in place and launched (5629 ms debug cold Activity, not a release benchmark). Its binary includes transaction history and excludes these then-unverified reports. Metadata: `docs/evidence/finance-history-review-apk-2026-11-11.json`. Hosted CI **43059176688 succeeded** at history source **121d876**, including all 234 host tests, backend, analyzer, DST, Android debug build, manifest verification and artifact upload. The unnecessary desktop GLU dependency is removed and the previous apt setup failure is resolved for this run. Evidence: `docs/evidence/finance-history-ci-2026-11-11.json`. The new report checkpoint still requires its own hosted result.
+
+No schema, backup framing or dependency changes are required for reporting. Notes DB 16, Tasks DB 13 and portable account-bearing content 14 remain intact. Category trees/budgets, financial goals, recurring entries, debt due dates/reminders and savings-goal progress remain required. Complete Books/Experiences/Habits, remaining Notes/Tasks organization, links, broader reminders, app PIN, Drive media, translation review and full device/accessibility/performance acceptance also remain required. Production is preserved; no main merge/publication/paid activation/voice work occurred.
+
+Next source work moves to Books library metadata/status/shelves and knowledge workflows. The unreferenced local `lib/features/books/book_library.dart` is being prepared and is excluded from this report checkpoint until it is wired and verified.
+
+Earlier checkpoints follow.
+
+---
+
 ## Finance transaction edits and history — 2026-11-11
 
 **The six-module product remains IN PROGRESS.** Finance now has transaction details, correction of income/expense/loan/repayment amount/date/category/description/account, saved prior states, per-transaction history restoration and reversible voids. A change preserves transaction identity/type/currency/parent, appends its prior state with a UTC change time and commits both in one optimistic record write. Restore changes only the chosen transaction and preserves unrelated later work. Transfers/reconciliation adjustments use void/restore rather than the ordinary income/expense editor. Active repayments must be undone before voiding a debt.

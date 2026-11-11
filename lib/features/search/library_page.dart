@@ -9,6 +9,7 @@ import '../../core/dialogs.dart';
 import '../../core/strings.dart';
 import '../attachments/attachment_store.dart';
 import '../finance/ledger.dart';
+import '../finance/finance_reports_page.dart';
 import '../finance/account_ledger.dart';
 import '../habits/habit_store.dart';
 import '../notes/note_editor_page.dart';
@@ -260,6 +261,12 @@ class _DocumentPageState extends State<DocumentPage> {
   Future<void> load() async {
     try {
       final source = await widget.repository.source(widget.hit);
+      if (source != null && widget.hit.kind == 'finance') {
+        RecordStore.validate(
+          'finance',
+          jsonDecode(source['payload'] as String) as Map<String, dynamic>,
+        );
+      }
       final projectValue = widget.hit.kind == 'todoFolder'
           ? (await TodoProjectStore(await widget.repository.todos)
                 .all())[widget.hit.id]
@@ -435,6 +442,23 @@ class _DocumentPageState extends State<DocumentPage> {
     appBar: AppBar(
       title: Text(widget.hit.title),
       actions: [
+        if (widget.hit.kind == 'finance')
+          IconButton(
+            key: const Key('finance-reader-reports-open'),
+            tooltip: context.tr('xReport'),
+            icon: const Icon(Icons.insert_chart_outlined),
+            onPressed: row == null || busy || failed
+                ? null
+                : () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FinanceReportsPage(
+                        ledger: PrivateRecord.row(row!),
+                        store: RecordStore(database: widget.repository.notesDb),
+                      ),
+                    ),
+                  ),
+          ),
         if (!widget.readOnly &&
             {'note', 'todo', 'experience', 'book'}.contains(widget.hit.kind))
           IconButton(
