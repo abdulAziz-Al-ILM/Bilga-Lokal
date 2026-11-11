@@ -171,7 +171,16 @@ class BackupStore {
       'format': 'bilga-data',
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
-      'notesSchema': 13,
+      'notesSchema':
+          (data['private_records'] as List).any(
+            (row) =>
+                row['kind'] == 'finance' &&
+                (jsonDecode(row['payload'] as String) as Map).containsKey(
+                  'accountsVersion',
+                ),
+          )
+          ? 14
+          : 13,
       'todoSchema': 11,
       'createdAt': DateTime.now().toUtc().toIso8601String(),
       'ownerId': ownerId,
@@ -184,7 +193,7 @@ class BackupStore {
   ) {
     if (payload['format'] != 'bilga-data' ||
         payload['version'] != 1 ||
-        ![8, 9, 10, 11, 12, 13].contains(payload['notesSchema']) ||
+        ![8, 9, 10, 11, 12, 13, 14].contains(payload['notesSchema']) ||
         ![6, 7, 8, 9, 10, 11].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
       throw const FormatException('backup_invalid');

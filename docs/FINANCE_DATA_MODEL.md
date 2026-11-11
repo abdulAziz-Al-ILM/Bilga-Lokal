@@ -1,0 +1,21 @@
+# Local finance accounts
+
+A Finance record remains one encrypted `private_records` row with an optimistic integer revision. A transfer is one entry in that row, so its source debit and destination credit commit together. Stale revisions and failed SQL writes leave both sides unchanged. No bank API or exchange-rate provider is invoked.
+
+Amounts are integer currency minor units. Each ledger has one immutable currency; materialized accounts and entries store it explicitly. Zero-, two- and three-decimal currencies retain exact parsing without rounding. Signed opening/observed balances support localized digits. Transfers require different active accounts in the same ledger. There is no cross-currency transfer or inferred exchange rate.
+
+Legacy records are read through a virtual `legacy-cash` account with zero opening balance and no invented opening date. Reads do not rewrite them. The first account operation deep-copies and explicitly materializes `accountsVersion: 1`, accounts, ownership and currency, preserving original transaction IDs and amounts. Account names/types/opening dates are validated, references cannot dangle, and future versions fail closed. Archival preserves historical balances and transactions while excluding an account from new-entry selectors.
+
+Current balances and current income/expense reports stop at today's local calendar date. Future dated openings and entries remain stored and do not inflate today's totals. Historical reconciliation computes the balance as of its selected date, then appends a separate incoming/outgoing adjustment. Adjustments and transfers never count as income or spending. Each reconciliation also appends an observation with its account, date, observed amount, reason and optional adjustment reference. A matched balance still records the observation without a zero-value transaction. Voiding an adjustment preserves its observation and displays that the adjustment was voided. Backdated changes can affect later observed balances; observations are historical checks, not promises that recalculated history can never change.
+
+Limits: 1,000 accounts, 20,000 transactions and 20,000 observations per ledger, with the existing four MiB record bound and bounded integer money totals. Gross transaction magnitude is bounded independently of openings. A ledger cannot silently mix currencies.
+
+Notes database version 16 marks this capability without rewriting Notes or legacy Finance rows. The new shared database opener explicitly rejects a lower configured version. **Older installed binaries without this guard can still silently downgrade SQLite's version; do not install an older APK over a version-16 review database.** A version increment alone is not a retroactive guarantee about old clients. Tasks remains version 13.
+
+Portable content exports Notes schema 14 only when explicit finance accounts are present; other exports remain schema 13. The current importer accepts versions 8–14, validates finance before writes, remaps the enclosing record ID, keeps account IDs scoped inside the record and retains idempotent merge behavior. Container format and encrypted media framing are unchanged. Version-13 importers reject version-14 payloads rather than interpreting account transfers as expenses.
+
+Transaction CSV includes explicit currency and account direction. Accounts CSV includes signed opening balance/date, balance as of the export date and archival state. Reconciliation CSV includes observations, full reasons and adjustment/void references. Cells are quoted and spreadsheet formula prefixes are escaped. The read-only source reader/plain-text export includes accounts, transfer directions, voided transactions and reconciliation observations, without requiring editing access.
+
+Entitlement is checked again when forms persist, so access expiring while a form is open cannot authorize a later write. Failed persistence retains the form draft. Synthetic form tests inject test entitlements only; they do not establish real billing acceptance.
+
+This checkpoint does not complete Finance. Transaction revision/edit UI, custom category trees/category budgets, savings goals, recurring transactions, debt due dates/reminders, full analytics and broad device acceptance remain separate work.

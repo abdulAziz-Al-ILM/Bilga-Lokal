@@ -1,3 +1,21 @@
+## Finance accounts — 2026-11-11
+
+**The six-module product remains IN PROGRESS.** Finance now supports local cash/bank/card/savings records, signed opening balances/dates, current date-aware balances, one-row atomic transfers, reconciliation observations/adjustments, rename, archive/restore, account selection for ordinary entries, account/audit CSV and complete read-only export. Transfers conserve total funds; transfers and adjustments are excluded from income/expense reports. A matched reconciliation still records its observation/reason. No bank operation, currency conversion or exchange rate is invented.
+
+Legacy Finance reads do not rewrite records. Account operations materialize explicit account/currency ownership with preserved transaction IDs/amounts. Notes DB **16** adds a capability boundary without changing Notes rows; Tasks stays **13**. The shared opener now explicitly refuses a lower configured database version. Older unguarded APKs are still unsafe to install over this data: a schema increment cannot retroactively fix an old binary. Portable Notes content **14** is emitted only for account-bearing finance; other snapshots stay **13**, Tasks content stays **11**. Validated merges retain idempotence. See `FINANCE_DATA_MODEL.md`.
+
+**225 full Flutter tests PASS** (80 seconds), analyzer no issues, formatting clean, **43 × 426** catalog keys, nine manifest guards and non-voice guard PASS. New coverage includes exact/localized money, conservation/voiding, dated balances, historical reconciliation, currency/references/limits/future versions, partial debts, stale revisions and simulated SQL failure rollback, backup, account forms through the main Finance route, failed-save draft recovery in compact 2× text/RTL, and complete read-only audit without mutation. Evidence: `docs/evidence/finance-host-2026-11-11.json`.
+
+Blackview Tab16/API31 passes **48 physical scenario cases**, **54 including hooks**, in **354 seconds**. Four encrypted Finance fixtures verify legacy preservation, atomic/stale/failed transfers, account/audit backup and guarded downgrade rejection. The real UI creates an account, transfers, reconciles, inspects history, renames, archives/restores and posts an expense to the selected account. This uses synthetic test entitlement only, not real purchase acceptance. Evidence: `docs/evidence/finance-accounts-tablet-2026-11-11.json`. Native review instrumentation also passes **13 Notes widget and 46 task checks**, both raw RESULT_OK (`/tmp/bilga-finance-native-tests.log`). The prior project APK was separately built, signer-checked and installed in place, with a 5213 ms debug cold Activity launch (`docs/evidence/projects-review-apk-2026-11-11.json`); that is neither a release benchmark nor the new Finance artifact.
+
+Project hosted CI **43047300447** failed before app tests because apt could not resolve azure.archive.ubuntu.com despite retries. Setup now checks installed dependencies and only installs missing packages; missing-dependency errors remain fatal. This change is not yet hosted-verified. Evidence: `docs/evidence/projects-ci-setup-failure-2026-11-11.json`.
+
+Finance transaction editing/history, categories/budgets/goals/recurrence/debt deadlines/analytics, complete Books/Experiences/Habits, remaining Notes/Tasks organization, durable links, broader reminders, app PIN, Drive media and full device/accessibility/performance acceptance remain required. Production Bilga is preserved; no main merge, publication, paid activation or voice implementation occurred.
+
+Earlier checkpoints follow.
+
+---
+
 ## Projects verified — 2026-11-11
 
 **The six-module product remains IN PROGRESS.** Projects now work over existing nested task-list folders: create/edit details, active/paused/closed status, a date-only deadline, nested-task progress/overdue counts, conversion from/to ordinary lists, stale-editor protection, transactional search, complete reader/export and portable backup. Status is organizational and never silently completes tasks or changes their reminders. Empty projects show 0/0 without claiming 100%. Trashed folders, hidden ancestors and unrelated projects are excluded from progress.

@@ -17,7 +17,8 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Standalone/note/habit reminders | NOT STARTED | Task reminders do not cover the complete reminder module |
 | Habits | IMPLEMENTED | Existing schedules, quantitative entries, history, streaks, archive; encrypted habit persistence/completion tested on Tab16; no habit reminders |
 | Experiences | IN PROGRESS | Private entries, basic categories, reflection fields, attachments/export exist; custom categories, calendar, durable history, tags, favorites and linked follow-up tasks remain required |
-| Finance | IN PROGRESS | Integer minor-unit ledgers, income/expenses, debts/partial repayments, monthly budgets and CSV export exist; accounts/transfers/reconciliation, transaction editing, recurring transactions, category budgets/goals and complete analytics remain required |
+| Finance | IN PROGRESS | Local cash/bank/card/savings accounts, exact opening/current balances, atomic transfers, dated reconciliation/audit, archival, CSV, read-only export and portable backup pass host tests. Transaction editing/history, recurring transactions, category budgets/goals, debt deadlines/reminders and full analytics remain required |
+| Finance accounts integrity and UI | TESTED | 225 full host tests and 48-scenario Tab16 suite pass, including encrypted rollback/stale/backup fixtures and main Finance → accounts → transfer/reconcile/history/archive/restore → selected-account expense journey; synthetic entitlements only |
 | Books | IN PROGRESS | Private book records, chapters/history, reader/bookmarks and attachments exist; full library metadata/status/shelves, typed knowledge cards, reading sessions/statistics and flashcard scheduling remain required |
 | Daily/weekly planning | IN PROGRESS | Source-linked task/habit views and quick creation added; separate upcoming-reminder panel pending |
 | Unified search | TESTED | FTS4 across notes, tasks, habits, journal, books, finance and folders; archive filter and paging |
@@ -33,5 +34,5 @@ Statuses are scoped to the actual feature below. IMPLEMENTED means source exists
 | Local encrypted backup and merge | IMPLEMENTED | Recovered v1/v2 codecs, transactional cross-DB import and ID remapping; host content/codec regressions and Tab16 encrypted text merge/rollback/idempotence pass; real media/second-device acceptance pending |
 | Google Drive backup | IN PROGRESS | Existing content-only path; media-bearing backups require local export |
 | Localization | IN PROGRESS | All 43 catalogs retained; seven priority-language drafts, remaining new strings use English; native review pending |
-| CI and Android artifacts | IN PROGRESS | Host and current local review build verified; project local build and 43 tablet scenarios pass; prior template CI failed on apt DNS, bounded retry added; project hosted CI pending |
+| CI and Android artifacts | IN PROGRESS | Host and current local review build verified; project local build and 43 tablet scenarios pass; both template and project hosted CI failed before app tests on apt DNS; setup now reuses installed libraries, hosted validation pending |
 | Store materials and release acceptance | NOT STARTED | No publication authorized; global release acceptance criteria not met |

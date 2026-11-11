@@ -5,6 +5,10 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' as cipher;
 
 class PrivateDatabase {
+  static Future<void> _refuseDowngrade(Database db, int old, int next) async {
+    throw StateError('database_downgrade:$old:$next');
+  }
+
   static const channel = MethodChannel('bilga/vault');
   static Future<String>? _key;
   static Future<String> key() => _key ??= channel
@@ -85,6 +89,7 @@ class PrivateDatabase {
           version: version,
           onCreate: onCreate,
           onUpgrade: onUpgrade,
+          onDowngrade: _refuseDowngrade,
           onConfigure: onConfigure,
         );
       }
@@ -93,6 +98,7 @@ class PrivateDatabase {
         version: version,
         onCreate: onCreate,
         onUpgrade: onUpgrade,
+        onDowngrade: _refuseDowngrade,
         onConfigure: onConfigure,
       );
     }
@@ -155,6 +161,7 @@ class PrivateDatabase {
       version: version,
       onCreate: onCreate,
       onUpgrade: onUpgrade,
+      onDowngrade: _refuseDowngrade,
       onConfigure: (db) async {
         if (verifyOnOpen) {
           // Notes uses this same connection for verification and normal reads.

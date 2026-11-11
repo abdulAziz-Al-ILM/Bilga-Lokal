@@ -44,10 +44,19 @@ jobs:
           "$bilga_flutter/bin/flutter" --version
       - name: Install matching Android build tools
         run: |
-          # Hosted mirrors can have transient DNS failures. Retry downloads and
-          # fail explicitly if indexes cannot refresh; never mask setup failure.
-          sudo apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any update -qq
-          sudo apt-get -o Acquire::Retries=3 install --yes --no-install-recommends libsqlite3-0 libglu1-mesa
+          # Reuse installed runner libraries; avoid an unrelated mirror outage
+          # blocking verification. Missing libraries still require a successful
+          # index refresh and package install (no ignored setup errors).
+          bilga_missing=()
+          for bilga_package in libsqlite3-0 libglu1-mesa; do
+            if [ "$(dpkg-query -W -f='${db:Status-Status}' "$bilga_package" 2>/dev/null)" != installed ]; then
+              bilga_missing+=("$bilga_package")
+            fi
+          done
+          if [ "${#bilga_missing[@]}" -gt 0 ]; then
+            sudo apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any update -qq
+            sudo apt-get -o Acquire::Retries=3 install --yes --no-install-recommends "${bilga_missing[@]}"
+          fi
           bilga_sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           "$bilga_sdkmanager" --licenses < <(yes) > /dev/null
           "$bilga_sdkmanager" 'platform-tools' 'platforms;android-34' 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'

@@ -36,6 +36,7 @@ Future<Map<String, String>?> editFields(
   Set<String> weekdayFields = const {},
   Set<String> dateFields = const {},
   Set<String> numberFields = const {},
+  Set<String> signedNumberFields = const {},
 }) => Navigator.push(
   c,
   MaterialPageRoute(
@@ -49,6 +50,7 @@ Future<Map<String, String>?> editFields(
       weekdayFields,
       dateFields,
       numberFields,
+      signedNumberFields,
     ),
   ),
 );
@@ -59,6 +61,7 @@ class _FormPage extends StatefulWidget {
   final Set<String> multiline;
   final Future<void> Function(Map<String, String>)? onSave;
   final Set<String> requiredFields, weekdayFields, dateFields, numberFields;
+  final Set<String> signedNumberFields;
   const _FormPage(
     this.title,
     this.labels,
@@ -69,6 +72,7 @@ class _FormPage extends StatefulWidget {
     this.weekdayFields,
     this.dateFields,
     this.numberFields,
+    this.signedNumberFields,
   );
   @override
   State<_FormPage> createState() => _FormState();
@@ -123,6 +127,7 @@ class _FormState extends State<_FormPage> {
                       failure(context);
                       return;
                     }
+                    FocusManager.instance.primaryFocus?.unfocus();
                     setState(() {
                       saving = true;
                       error = null;
@@ -207,7 +212,10 @@ class _FormState extends State<_FormPage> {
                   : TextField(
                       controller: e.value,
                       keyboardType: widget.numberFields.contains(e.key)
-                          ? const TextInputType.numberWithOptions(decimal: true)
+                          ? TextInputType.numberWithOptions(
+                              decimal: true,
+                              signed: widget.signedNumberFields.contains(e.key),
+                            )
                           : null,
                       readOnly: widget.dateFields.contains(e.key),
                       onTap: !widget.dateFields.contains(e.key)
@@ -218,8 +226,8 @@ class _FormState extends State<_FormPage> {
                                 initialDate:
                                     DateTime.tryParse(e.value.text) ??
                                     DateTime.now(),
-                                firstDate: DateTime(1900),
-                                lastDate: DateTime(2200),
+                                firstDate: DateTime(1),
+                                lastDate: DateTime(9999, 12, 31),
                               );
                               if (date != null && mounted) {
                                 setState(

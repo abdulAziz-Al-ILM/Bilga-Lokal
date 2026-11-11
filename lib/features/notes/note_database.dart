@@ -32,7 +32,10 @@ class NoteDatabase {
       secure: secure,
       verifyOnOpen: true,
       diagnostic: NotesWidgetLoading.trace,
-      version: 15,
+      // v16 marks versioned finance accounts. PrivateDatabase refuses a lower
+      // configured version; older binaries without that guard remain unsafe to
+      // install over this database. Existing Notes rows need no rewrite.
+      version: 16,
 
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');

@@ -1,0 +1,72 @@
+{
+  "deviceSuite": "isolated Bilga Review",
+  "visitedModules": [
+    "notes",
+    "todos",
+    "xHabits",
+    "textAssistant",
+    "xFinance",
+    "xExperience",
+    "xBooks",
+    "today",
+    "search",
+    "settings"
+  ],
+  "themeVariants": 14,
+  "rtl": "Arabic",
+  "realEditorRotation": "portrait-landscape-portrait",
+  "notification": {
+    "realDelivery": true,
+    "snoozeDelivery": true,
+    "nativePendingIntentCompletion": true,
+    "exactPermission": true,
+    "sound": false
+  },
+  "recurrence": {
+    "nativeAdvance": true,
+    "checklistHistoryPreservedAndSuccessorReset": true,
+    "nextReminderDeliveredWithoutDartRefresh": true,
+    "futureWidgetConsentInherited": false
+  },
+  "checklist": {
+    "encryptedFixtures": true,
+    "realEditorReorderAndCompletion": true,
+    "listProgress": true,
+    "independentDuplication": true
+  },
+  "taskTemplates": {
+    "encryptedFixtures": true,
+    "realCreatePreviewApplyEditSnapshotDelete": true
+  },
+  "projects": {
+    "encryptedFixtures": true,
+    "realNestedListsAndTaskProgress": true,
+    "statusEditAndConvertPreserveTasks": true
+  },
+  "financeAccounts": {
+    "encryptedFixtures": true,
+    "createTransferReconcileArchiveRestore": true,
+    "immutableAuditAndConservedTransferTotal": true,
+    "syntheticEntitlementOnly": true
+  },
+  "date": "2026-11-11",
+  "deviceModel": "Blackview Tab16",
+  "androidApi": 31,
+  "scenarioCasesPassed": 48,
+  "runnerCountIncludingHooks": 54,
+  "durationSeconds": 354,
+  "productionPackageModified": false,
+  "testApkSha256": "8a5d6b271ada3e98795164f50f7d2ab69cd99ed8602100f8e4611328dc7a5db6",
+  "notesDatabaseSchema": 16,
+  "tasksDatabaseSchema": 13,
+  "notesPortableContentWithAccounts": 14,
+  "tasksPortableContentSchema": 11,
+  "source": "Finance accounts milestone; see containing commit history",
+  "localLog": "/tmp/bilga-finance-tablet-tests-1.log",
+  "nativeChecks": {
+    "notesWidgets": 13,
+    "tasks": 46,
+    "rawInstrumentationCode": -1,
+    "localLog": "/tmp/bilga-finance-native-tests.log"
+  }
+}

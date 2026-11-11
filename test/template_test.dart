@@ -64,7 +64,7 @@ void main() {
       );
       expect(saved.single['body'], 'My own edits');
       expect(saved.single['title'], template.title('uz'));
-      expect(await db.getVersion(), 15);
+      expect(await db.getVersion(), 16);
     } finally {
       await db.close();
       await dir.delete(recursive: true);

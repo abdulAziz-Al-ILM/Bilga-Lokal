@@ -135,7 +135,7 @@ void main() {
     await old.close();
     final migrated = await NoteDatabase.openAt(path);
     opened.add(migrated);
-    expect(await migrated.getVersion(), 15);
+    expect(await migrated.getVersion(), 16);
     for (final t in before.keys) {
       expect(
         (await migrated.query(t))

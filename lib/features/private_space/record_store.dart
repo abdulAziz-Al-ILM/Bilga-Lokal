@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:sqflite/sqflite.dart';
+
 import '../notes/note_database.dart';
 import '../finance/ledger.dart';
 
@@ -23,6 +25,9 @@ class PrivateRecord {
 }
 
 class RecordStore {
+  final Database? database;
+  RecordStore({this.database});
+  Future<Database> get _db async => database ?? await NoteDatabase.database;
   static const kinds = {'experience', 'book', 'finance', 'attachment'};
   static void validate(String kind, Map<String, dynamic> data) {
     if (!kinds.contains(kind) ||
@@ -109,7 +114,7 @@ class RecordStore {
   }
 
   Future<List<PrivateRecord>> all(String kind) async =>
-      (await (await NoteDatabase.database).query(
+      (await (await _db).query(
         'private_records',
         where: 'kind = ?',
         whereArgs: [kind],
@@ -124,8 +129,7 @@ class RecordStore {
     if (previous != null && previous.kind != kind) {
       throw StateError('record_kind');
     }
-    final db = await NoteDatabase.database,
-        stamp = DateTime.now().toUtc().toIso8601String();
+    final db = await _db, stamp = DateTime.now().toUtc().toIso8601String();
     final id = previous?.id ?? localId(), rev = (previous?.revision ?? 0) + 1;
     final row = {
       'id': id,
@@ -151,7 +155,7 @@ class RecordStore {
   }
 
   Future<void> remove(PrivateRecord r) async {
-    if (await (await NoteDatabase.database).delete(
+    if (await (await _db).delete(
           'private_records',
           where: 'id = ? AND revision = ?',
           whereArgs: [r.id, r.revision],

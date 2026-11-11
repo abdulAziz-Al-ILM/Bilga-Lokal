@@ -29,6 +29,7 @@ import 'recurrence_cases.dart';
 import 'checklist_cases.dart';
 import 'task_template_cases.dart';
 import 'todo_project_cases.dart';
+import 'finance_account_cases.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -199,4 +200,5 @@ void main() {
   registerChecklistCases(binding);
   registerTaskTemplateCases(binding);
   registerTodoProjectCases(binding);
+  registerFinanceAccountCases(binding);
 }

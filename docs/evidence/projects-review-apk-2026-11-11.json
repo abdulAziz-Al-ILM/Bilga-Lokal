@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "c1f7e482b5edc94f558ffae6be6c5934bf5dc5ef",
+  "apk": "build/review/bilga-projects-review-app.apk",
+  "sha256": "a4428028c39e1c2faabec19eeae2b578e8f3abcef1f2891f6bac4c450e98ac39",
+  "bytes": 217901916,
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "signerSha256": [
+    "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0"
+  ],
+  "installedInPlace": true,
+  "launchStatus": "ok",
+  "debugColdActivityMillis": 5213,
+  "tasksDatabaseSchema": 13,
+  "notesDatabaseSchema": 15,
+  "type": "debug development; six-module completion and owner acceptance pending"
+}

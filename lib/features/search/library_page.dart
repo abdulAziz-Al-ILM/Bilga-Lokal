@@ -9,6 +9,7 @@ import '../../core/dialogs.dart';
 import '../../core/strings.dart';
 import '../attachments/attachment_store.dart';
 import '../finance/ledger.dart';
+import '../finance/account_ledger.dart';
 import '../habits/habit_store.dart';
 import '../notes/note_editor_page.dart';
 import '../notes/note_model.dart';
@@ -346,9 +347,36 @@ class _DocumentPageState extends State<DocumentPage> {
       ].join('\n\n');
     }
     if (widget.hit.kind == 'finance') {
+      final accounts = AccountLedger.accounts(payload);
+      final balances = AccountLedger.balances(
+        payload,
+        throughDate: DateTime.now().toIso8601String().substring(0, 10),
+      );
+      final names = {
+        for (final account in accounts) account['id']: account['name'],
+      };
+      final entries = {
+        for (final entry in payload['entries'] as List) entry['id']: entry,
+      };
       return [
+        context.tr('fAccounts'),
+        for (final account in accounts)
+          '${account['name']} · ${account['currency']}\n${context.tr('fAccountOpening')}: ${moneyText(account['opening'] as int, account['currency'] as String)}\n${context.tr('fAccountCurrent')}: ${moneyText(balances[account['id']]!, account['currency'] as String)}'
+              '${account['openedOn'] == null ? '' : '\n${context.tr('fAccountOpeningDate')}: ${date(account['openedOn'] as String)}'}'
+              '${account['archived'] == true ? '\n${context.tr('fAccountArchived')}' : ''}',
         for (final e in payload['entries'] as List? ?? [])
-          '${date(e['date'] as String)} · ${context.tr('x${e['type']}')}\n${moneyText(e['amount'] as int, payload['currency'] as String)}\n${e['description'] ?? ''}',
+          '${date(e['date'] as String)} · ${context.tr('x${e['type']}')}\n${moneyText(e['amount'] as int, payload['currency'] as String)}\n${e['description'] ?? ''}'
+              '${e['type'] == 'transfer' ? '\n${names[e['from']]} → ${names[e['to']]}' : '\n${names[e['account'] ?? AccountLedger.legacyId]}'}'
+              '${e['void'] == true ? '\n${context.tr('fEntryVoided')}' : ''}',
+        if ((payload['reconciliations'] as List? ?? []).isNotEmpty)
+          context.tr('fAccountReconciliationHistory'),
+        for (final event in payload['reconciliations'] as List? ?? [])
+          '${date(event['date'] as String)} · ${names[event['account']]}\n${context.tr('fAccountObserved')}: ${moneyText(event['observed'] as int, payload['currency'] as String)}\n${event['description']}'
+              '${event['adjustment'] == null
+                  ? '\n${context.tr('fAccountMatched')}'
+                  : entries[event['adjustment']]?['void'] == true
+                  ? '\n${context.tr('fEntryVoided')}'
+                  : ''}',
       ].join('\n\n');
     }
     return SearchHit.recordText(payload);

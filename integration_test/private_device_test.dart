@@ -81,7 +81,7 @@ void main() {
       );
       db = await NoteDatabase.openAt(path, secure: true);
       expect((await db.query('notes')).single['body'], 'Привет — مرحبا');
-      expect(await db.getVersion(), 15);
+      expect(await db.getVersion(), 16);
       await db.close();
       expect(
         String.fromCharCodes(await File(path).openRead(0, 16).first),
