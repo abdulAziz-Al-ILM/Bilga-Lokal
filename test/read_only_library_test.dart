@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bilga/core/strings.dart';
 import 'package:bilga/features/finance/account_ledger.dart';
 import 'package:bilga/features/finance/ledger.dart';
+import 'package:bilga/features/finance/transaction_edits.dart';
 import 'package:bilga/features/private_space/record_store.dart';
 import 'package:bilga/features/notes/note_database.dart';
 import 'package:bilga/features/notes/note_model.dart';
@@ -248,7 +249,7 @@ void main() {
           description: 'Fullaudit statement reason',
           maxMoney: maxMoney,
         );
-        data['entries'].last['void'] = true;
+        data = TransactionEdits.setVoided(data, id: 'audit', voided: true);
         await RecordStore(database: notes).save('finance', data);
         before = await notes.query('private_records');
         repo = SearchRepository(notesDb: notes, todoDb: todos);
@@ -270,6 +271,8 @@ void main() {
         expect(text, contains('Statement account → Finance source'));
         expect(text, contains('100.00 USD'));
         expect(text, contains('Reconciliation history'));
+        expect(text, contains('Transaction history'));
+        expect(text, contains('Before void'));
         expect(text, contains('Fullaudit statement reason'));
         expect(text, contains('80.00 USD'));
         expect(text, contains('Voided'));

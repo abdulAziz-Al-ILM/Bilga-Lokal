@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "6270268d92397d4037df8fa0ec7a96e6899d9638",
+  "apk": "build/review/bilga-finance-review-app.apk",
+  "sha256": "7248fb4548432c381597acc887aca4747a3f8f4698fb5b0a69a4638f2efa46dd",
+  "bytes": 217901916,
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "signerSha256": ["c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0"],
+  "installedInPlace": true,
+  "launchStatus": "ok",
+  "launchState": "COLD",
+  "debugColdActivityMillis": 5160,
+  "tasksDatabaseSchema": 13,
+  "notesDatabaseSchema": 16,
+  "type": "ordinary debug development app; six-module completion and owner acceptance pending",
+  "productionPackageModified": false
+}

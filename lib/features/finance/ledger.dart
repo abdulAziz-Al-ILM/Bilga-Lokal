@@ -1,4 +1,5 @@
 import 'account_ledger.dart';
+import 'transaction_edits.dart';
 
 const maxMoney = 900000000000000;
 const currencies = {
@@ -157,6 +158,7 @@ class Ledger {
       throw const FormatException('budget');
     }
     AccountLedger.validate(data, maxMoney: maxMoney);
+    TransactionEdits.validate(data, maxMoney: maxMoney);
   }
 
   static int balance(Map<String, dynamic> d, {String? throughDate}) =>

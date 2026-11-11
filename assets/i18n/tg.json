@@ -424,5 +424,15 @@
   "fEntryVoided": "Бекоршуда",
   "fAccountSummary": "Сабтҳои нақд, бонк ва корт",
   "fAccountReconciliationHistory": "Таърихи муқоисаи бақия",
-  "fAccountMatched": "Бақия мувофиқ буд; ислоҳи пулӣ лозим нашуд."
+  "fAccountMatched": "Бақия мувофиқ буд; ислоҳи пулӣ лозим нашуд.",
+  "fTransactionHistory": "Transaction history",
+  "fTransactionCurrent": "The current transaction is shown above. History keeps the state before each change.",
+  "fTransactionEdited": "Before edit",
+  "fTransactionVoided": "Before void",
+  "fTransactionRestored": "Before restore",
+  "fTransactionRestoreInfo": "Restore this saved transaction? Other transactions remain as they are. The current state will also be kept in history.",
+  "fDebtHasRepayments": "This debt has repayments. Undo those repayments before undoing the debt.",
+  "fRepayment": "Record repayment",
+  "fTransactionUndoInfo": "Update this transaction’s effect on balances? Its saved states remain in history.",
+  "fTransactionVoid": "Void transaction"
 }

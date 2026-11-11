@@ -424,5 +424,15 @@
   "fEntryVoided": "Bekor qilingan",
   "fAccountSummary": "Naqd pul, bank va karta yozuvlari",
   "fAccountReconciliationHistory": "Qoldiqni solishtirish tarixi",
-  "fAccountMatched": "Qoldiq mos edi; pul tuzatishi kiritilmadi."
+  "fAccountMatched": "Qoldiq mos edi; pul tuzatishi kiritilmadi.",
+  "fTransactionHistory": "Tranzaksiya tarixi",
+  "fTransactionCurrent": "Joriy tranzaksiya yuqorida ko‘rsatilgan. Tarix har bir o‘zgarishdan oldingi holatni saqlaydi.",
+  "fTransactionEdited": "Tahrirdan oldin",
+  "fTransactionVoided": "Bekor qilishdan oldin",
+  "fTransactionRestored": "Tiklashdan oldin",
+  "fTransactionRestoreInfo": "Ushbu saqlangan tranzaksiya tiklansinmi? Boshqa tranzaksiyalar o‘zgarishsiz qoladi. Joriy holat ham tarixda saqlanadi.",
+  "fDebtHasRepayments": "Bu qarz bo‘yicha to‘lovlar bor. Qarzni bekor qilishdan oldin ularni bekor qiling.",
+  "fRepayment": "Qarz to‘lovini yozish",
+  "fTransactionUndoInfo": "Ushbu tranzaksiyaning balansga ta’siri o‘zgartirilsinmi? Saqlangan holatlar tarixda qoladi.",
+  "fTransactionVoid": "Tranzaksiyani bekor qilish"
 }

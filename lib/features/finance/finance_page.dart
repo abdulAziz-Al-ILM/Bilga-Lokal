@@ -13,6 +13,8 @@ import '../attachments/attachments_page.dart';
 import 'ledger.dart';
 import 'account_ledger.dart';
 import 'finance_accounts_page.dart';
+import 'finance_transaction_page.dart';
+import 'transaction_edits.dart';
 
 class FinancePage extends StatefulWidget {
   final RecordStore? store;
@@ -268,6 +270,30 @@ class _FinanceState extends State<FinancePage> {
     );
   }
 
+  Future<void> openEntry(String id) async {
+    final ledger = selected;
+    if (ledger == null) return;
+    final action = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FinanceTransactionPage(
+          ledger: ledger,
+          entryId: id,
+          store: store,
+          access: access,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    await run(load);
+    if (action == 'repay' && mounted && !loadFailed) {
+      final debt = (selected?.data['entries'] as List? ?? [])
+          .where((row) => row['id'] == id)
+          .firstOrNull;
+      if (debt != null) await run(() => add(debt as Map));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = selected;
@@ -512,6 +538,7 @@ class _FinanceState extends State<FinancePage> {
                           )
                           .take(shown))
                     ListTile(
+                      key: ValueKey('finance-entry-${e['id']}'),
                       title: Text(
                         '${context.tr('x${e['type']}')} · ${moneyText(e['amount'], r.data['currency'])}',
                         style: e['void'] == true
@@ -525,16 +552,12 @@ class _FinanceState extends State<FinancePage> {
                         '\n${e['type'] == 'transfer' ? '${names[e['from']]} → ${names[e['to']]}' : names[e['account'] ?? AccountLedger.legacyId]}'
                         '${{'lent', 'borrowed'}.contains(e['type']) && e['void'] != true ? '\n${context.tr('fRemaining')}: ${moneyText(Ledger.outstanding(r.data, e), r.data['currency'])}' : ''}',
                       ),
-                      onTap:
-                          e['void'] == true ||
-                              (!{'lent', 'borrowed'}.contains(e['type']) ||
-                                  Ledger.outstanding(r.data, e) == 0)
-                          ? null
-                          : () => run(() => add(e)),
+                      onTap: busy ? null : () => openEntry(e['id'] as String),
                       trailing: e['void'] == true
                           ? null
                           : IconButton(
                               icon: const Icon(Icons.undo),
+                              tooltip: context.tr('fTransactionVoid'),
                               onPressed: busy
                                   ? null
                                   : () => run(() async {
@@ -544,20 +567,18 @@ class _FinanceState extends State<FinancePage> {
                                       }
                                       if (!await consent(
                                         context,
-                                        context.tr('undo'),
+                                        context.tr('fTransactionUndoInfo'),
                                       )) {
                                         return;
                                       }
-                                      selected = await save({
-                                        ...r.data,
-                                        'entries': [
-                                          for (final item in r.data['entries'])
-                                            if (item['id'] == e['id'])
-                                              {...item, 'void': true}
-                                            else
-                                              item,
-                                        ],
-                                      }, previous: r);
+                                      selected = await save(
+                                        TransactionEdits.setVoided(
+                                          r.data,
+                                          id: e['id'] as String,
+                                          voided: true,
+                                        ),
+                                        previous: r,
+                                      );
                                     }),
                             ),
                     ),

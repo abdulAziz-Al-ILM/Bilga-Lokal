@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-11",
+  "source": "Finance transaction history checkpoint; see containing commit history",
+  "flutterTestsPassed": 234,
+  "durationSeconds": 85,
+  "flutterLog": "/tmp/bilga-finance-edits-full-tests-1.log",
+  "analyzer": "No issues found",
+  "catalogLanguages": 43,
+  "catalogKeys": 436,
+  "manifestGuardsPassed": 9,
+  "voiceSourceGuard": "PASS",
+  "notesDatabaseVersion": 16,
+  "tasksDatabaseVersion": 13,
+  "notesPortableContentVersionWithAccounts": 14,
+  "tasksPortableContentVersion": 11,
+  "newCoverage": [
+    "legacy edit snapshots preserve identity/currency and original input",
+    "unchanged edits and repeated voids are no-ops",
+    "single-transaction restore preserves unrelated later work",
+    "transfer void/restore conserves both sides",
+    "debt overpayment and parent validation still apply",
+    "malformed/future/recursive history rejection and complete JSON export",
+    "atomic history/amount write rollback and stale revision preservation",
+    "portable history retention/idempotence and invalid-history rejection",
+    "main Finance detail/edit/account-change/history-restore/void/restore UI",
+    "compact 2x text RTL and fresh entitlement check with draft retry",
+    "read-only complete history without writes"
+  ],
+  "deviceAcceptance": "recorded separately after physical run",
+  "realPurchaseAcceptance": false
+}

@@ -1,3 +1,19 @@
+## Finance transaction edits and history — 2026-11-11
+
+**The six-module product remains IN PROGRESS.** Finance now has transaction details, correction of income/expense/loan/repayment amount/date/category/description/account, saved prior states, per-transaction history restoration and reversible voids. A change preserves transaction identity/type/currency/parent, appends its prior state with a UTC change time and commits both in one optimistic record write. Restore changes only the chosen transaction and preserves unrelated later work. Transfers/reconciliation adjustments use void/restore rather than the ordinary income/expense editor. Active repayments must be undone before voiding a debt.
+
+**234 full Flutter tests PASS** (85 seconds); analyzer/format clean; **43 × 436** catalog keys, nine manifest guards and no-voice guard PASS. New tests cover snapshots/no recursive history, no-op saves, isolated restoration, transfer reversal, debt constraints, malformed/future versions, failed/stale atomic saves, backup and read-only history. The real main Finance/detail/edit/history/void/restore host journey passes; compact 2× text/RTL verifies access expiring mid-form cannot authorize a write, the draft survives and one retry writes exactly once. Evidence: `docs/evidence/finance-history-host-2026-11-11.json`. Blackview Tab16/API31 passes **50 physical scenario cases**, **56 including hooks**, in **391 seconds**. The new encrypted fixture proves failed/stale history writes preserve the whole record; the backup fixture preserves transfer history and rejects future history versions. The real Finance UI edits account/amount, restores one transaction while preserving others, voids and restores. Evidence: `docs/evidence/finance-history-tablet-2026-11-11.json`.
+
+Notes DB **16**, account-bearing portable content **14** and Tasks DB **13** / content **11** remain unchanged. Transaction metadata uses explicit `historyVersion: 1`, bounded saved states and strict validation. Earlier states are not fabricated and history is not silently pruned. Explicit JSON export and the read-only plain-text reader preserve saved states. See `FINANCE_DATA_MODEL.md`.
+
+The ordinary account-capable APK at source **6270268** was installed and launched in isolated Review (5160 ms debug cold Activity; no release-performance claim). Hash/artifact metadata: `docs/evidence/finance-review-apk-2026-11-11.json`. The matching hosted CI **43055188574** failed on apt DNS before application tests; removing unnecessary desktop GLU avoids that dependency for headless tests/Android builds. Hosted verification is pending. Production remains preserved and no main merge/publication/paid activation/voice work occurred.
+
+Category trees/budgets, goals, recurring transactions, debt deadlines/reminders and full analytics remain required, along with other six-module acceptance gaps. A new unreferenced local `finance_analytics.dart` is being prepared and is excluded from this checkpoint until it is wired and verified.
+
+Earlier checkpoints follow.
+
+---
+
 ## Finance accounts — 2026-11-11
 
 **The six-module product remains IN PROGRESS.** Finance now supports local cash/bank/card/savings records, signed opening balances/dates, current date-aware balances, one-row atomic transfers, reconciliation observations/adjustments, rename, archive/restore, account selection for ordinary entries, account/audit CSV and complete read-only export. Transfers conserve total funds; transfers and adjustments are excluded from income/expense reports. A matched reconciliation still records its observation/reason. No bank operation, currency conversion or exchange rate is invented.

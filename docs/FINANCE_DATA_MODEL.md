@@ -18,4 +18,16 @@ Transaction CSV includes explicit currency and account direction. Accounts CSV i
 
 Entitlement is checked again when forms persist, so access expiring while a form is open cannot authorize a later write. Failed persistence retains the form draft. Synthetic form tests inject test entitlements only; they do not establish real billing acceptance.
 
-This checkpoint does not complete Finance. Transaction revision/edit UI, custom category trees/category budgets, savings goals, recurring transactions, debt due dates/reminders, full analytics and broad device acceptance remain separate work.
+This checkpoint does not complete Finance. Custom category trees/category budgets, savings goals, recurring transactions, debt due dates/reminders, full analytics and broad device acceptance remain separate work.
+
+## Transaction edits and saved states
+
+The transaction detail page supports corrections and history. Income, expense, loan and repayment amount/date/category/description/account can be corrected while keeping the original transaction ID, type, currency and debt-parent identity. Transfers and reconciliation adjustments use explicit void/restore and replacement operations. Their internal money directions are not exposed as an ordinary income/expense editor.
+
+Each edit, void or restore appends the complete prior transaction state, UTC change time and action to that entry's `historyVersion: 1` / `versions` payload. Snapshots exclude their own history, avoiding recursive growth. Repeated void/restore requests and unchanged edits are no-ops. History begins with the first change in this implementation; earlier states are not invented. At most 1,000 saved states per transaction and the existing record-size bound are accepted; hitting a bound fails the save and retains the draft rather than pruning old history silently.
+
+Restoring a saved state affects only the chosen transaction, preserves unrelated later work and appends the state it replaces. Debt repayment and account/currency/date validation still apply to the resulting ledger; a restore cannot bypass overpayment rules. A loan with active repayments cannot be voided before those repayments are voided. Voids retain the original entry and its history, reverse its balance effect and can be restored. Reconciliation observations remain visible if their adjustment is voided.
+
+History, current data and the optimistic revision are one JSON record write. Failed storage or a stale revision cannot commit the corrected amount without its historical snapshot. Snapshots have version/type/currency/identity/account/date validation, survive portable backup and appear in the read-only source/plain-text export. A separate explicit JSON export includes all saved states; it uses the existing plaintext-export consent. Entitlement is checked at persistence time, including when access expires with an editor open. The form retains unsaved text and can retry after access returns.
+
+This metadata extension retains Notes DB 16 / portable content 14 and Tasks DB 13 / content 11. It introduces no new monetary entry types or implicit currency conversion. Older clients that do not implement transaction history cannot provide the same audit behavior; the prohibition on installing older review builds remains in effect.

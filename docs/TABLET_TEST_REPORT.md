@@ -94,3 +94,11 @@ Four new SQLCipher fixture cases verify unchanged Notes 15→16 legacy rows, all
 All earlier navigation/theme/RTL, rich editor/rotation, notification/recurrence, checklist/template/project cases pass in the same run. Original production Bilga is not updated or used for fixtures. Notes is now version **16** and Tasks remains **13**; do not install older unguarded review APKs over this data. Compact 2× text/RTL and failed-save recovery are host evidence, not physical-phone acceptance. CSV bytes/escaping are host tested; real SAF export gestures and complete Finance/Books acceptance remain required.
 
 Native instrumentation against the Finance-capable review app also passes **13 Notes widget and 46 task checks**, both raw `INSTRUMENTATION_CODE: -1` (`/tmp/bilga-finance-native-tests.log`).
+
+## November 11 transaction history extension
+
+The review suite passes **50 scenario cases**, **56 including hooks**, in **391 seconds** (`/tmp/bilga-finance-history-tablet-tests-1.log`). APK SHA-256: `3a6de680d4951fa47933257441bd12068a004244fc3ac37f0cd58f73798a3d5e`. Evidence: [finance-history-tablet-2026-11-11.json](evidence/finance-history-tablet-2026-11-11.json).
+
+The new SQLCipher fixture proves a simulated failed update and a stale revision cannot write the new amount or its history separately; a later restore retains both previous states. Portable backup now explicitly checks transaction snapshots and rejects unsupported history versions before merge writes. The real main Finance → transaction → edit/account selector journey changes an expense, opens its complete prior state, restores only that transaction, voids it and restores it, asserting exact balances and unchanged unrelated income. Existing 48 scenarios pass in the same run. Synthetic entitlements remain confined to form tests, not real billing acceptance.
+
+Compact 2× text/RTL access-expiry draft recovery, malformed/recursive history rejection and read-only history are host evidence. Native Android source is unchanged in this extension; the separately recorded 13 widget/46 task instrumentation result belongs to account source 6270268, while native notification completion/recurrence are exercised again by this full physical suite. No new standalone native-instrumentation run is claimed here. Production Bilga is preserved.

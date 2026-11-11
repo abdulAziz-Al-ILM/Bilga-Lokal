@@ -424,5 +424,15 @@
   "fEntryVoided": "Күші жойылған",
   "fAccountSummary": "Қолма-қол ақша, банк және карта жазбалары",
   "fAccountReconciliationHistory": "Қалдықты салыстыру тарихы",
-  "fAccountMatched": "Қалдық сәйкес келді; ақшалай түзету қажет болмады."
+  "fAccountMatched": "Қалдық сәйкес келді; ақшалай түзету қажет болмады.",
+  "fTransactionHistory": "Transaction history",
+  "fTransactionCurrent": "The current transaction is shown above. History keeps the state before each change.",
+  "fTransactionEdited": "Before edit",
+  "fTransactionVoided": "Before void",
+  "fTransactionRestored": "Before restore",
+  "fTransactionRestoreInfo": "Restore this saved transaction? Other transactions remain as they are. The current state will also be kept in history.",
+  "fDebtHasRepayments": "This debt has repayments. Undo those repayments before undoing the debt.",
+  "fRepayment": "Record repayment",
+  "fTransactionUndoInfo": "Update this transaction’s effect on balances? Its saved states remain in history.",
+  "fTransactionVoid": "Void transaction"
 }

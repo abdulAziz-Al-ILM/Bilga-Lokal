@@ -368,6 +368,18 @@ class _DocumentPageState extends State<DocumentPage> {
           '${date(e['date'] as String)} · ${context.tr('x${e['type']}')}\n${moneyText(e['amount'] as int, payload['currency'] as String)}\n${e['description'] ?? ''}'
               '${e['type'] == 'transfer' ? '\n${names[e['from']]} → ${names[e['to']]}' : '\n${names[e['account'] ?? AccountLedger.legacyId]}'}'
               '${e['void'] == true ? '\n${context.tr('fEntryVoided')}' : ''}',
+        for (final entry in payload['entries'] as List)
+          if ((entry['versions'] as List? ?? []).isNotEmpty) ...[
+            '${context.tr('fTransactionHistory')} · ${context.tr('x${entry['type']}')}',
+            for (final event in entry['versions'] as List)
+              '${date(event['at'] as String)} · ${context.tr(switch (event['action']) {
+                    'void' => 'fTransactionVoided',
+                    'restore' => 'fTransactionRestored',
+                    _ => 'fTransactionEdited',
+                  })}\n${moneyText(event['before']['amount'] as int, payload['currency'] as String)} · ${date(event['before']['date'] as String)}\n${event['before']['category']}\n${event['before']['description']}'
+                  '${event['before']['type'] == 'transfer' ? '\n${names[event['before']['from']]} → ${names[event['before']['to']]}' : '\n${names[event['before']['account']]}'}'
+                  '${event['before']['void'] == true ? '\n${context.tr('fEntryVoided')}' : ''}',
+          ],
         if ((payload['reconciliations'] as List? ?? []).isNotEmpty)
           context.tr('fAccountReconciliationHistory'),
         for (final event in payload['reconciliations'] as List? ?? [])

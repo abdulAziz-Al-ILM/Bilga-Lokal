@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../test/support/finance_account_data_cases.dart';
 import '../test/support/finance_account_ui_cases.dart';
+import '../test/support/finance_transaction_ui_cases.dart';
 import 'review_guard.dart';
 
 Future<Directory> _directory() async {
@@ -31,6 +32,20 @@ void registerFinanceAccountCases(IntegrationTestWidgetsFlutterBinding binding) {
         'encryptedFixtures': true,
         'createTransferReconcileArchiveRestore': true,
         'immutableAuditAndConservedTransferTotal': true,
+        'syntheticEntitlementOnly': true,
+      },
+    },
+  );
+  registerFinanceTransactionUiTests(
+    createDirectory: _directory,
+    secure: true,
+    includeCompact: false,
+    onUiVerified: () => binding.reportData = {
+      ...?binding.reportData,
+      'financeTransactionHistory': {
+        'encryptedFixtures': true,
+        'realEditRestoreVoidRestore': true,
+        'otherTransactionsPreserved': true,
         'syntheticEntitlementOnly': true,
       },
     },

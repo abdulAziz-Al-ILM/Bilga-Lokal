@@ -5,6 +5,7 @@ import 'package:bilga/core/private_database.dart';
 import 'package:bilga/features/backup/backup_store.dart';
 import 'package:bilga/features/finance/account_ledger.dart';
 import 'package:bilga/features/finance/ledger.dart';
+import 'package:bilga/features/finance/transaction_edits.dart';
 import 'package:bilga/features/notes/note_database.dart';
 import 'package:bilga/features/private_space/record_store.dart';
 import 'package:bilga/features/todo/todo_database.dart';
@@ -154,6 +155,8 @@ void registerFinanceAccountDataTests({
       description: 'Statement checked',
       maxMoney: maxMoney,
     );
+    data = TransactionEdits.setVoided(data, id: 'move', voided: true);
+    data = TransactionEdits.setVoided(data, id: 'move', voided: false);
     await store.save('finance', data);
     final tasks = await TodoDatabase.openAt(
       '${directory.path}/tasks.db',
@@ -177,17 +180,29 @@ void registerFinanceAccountDataTests({
       expect(Ledger.balance(imported.data), 147450);
       expect(imported.data['reconciliations'], hasLength(1));
       expect(
+        imported.data['entries'].firstWhere(
+          (row) => row['id'] == 'move',
+        )['versions'],
+        hasLength(2),
+      );
+      expect(
         imported.data['accounts'].every((row) => row['currency'] == 'USD'),
         true,
       );
       expect(await restore.restore(payload, 'Again'), false);
-      for (final field in ['currency', 'accountsVersion']) {
+      for (final field in ['currency', 'accountsVersion', 'historyVersion']) {
         final bad = jsonDecode(jsonEncode(payload)) as Map<String, dynamic>;
         final row =
             ((bad['data'] as Map)['private_records'] as List).single as Map;
         final invalid =
             jsonDecode(row['payload'] as String) as Map<String, dynamic>;
-        invalid[field] = field == 'currency' ? 'EUR' : 99;
+        if (field == 'historyVersion') {
+          (invalid['entries'] as List).firstWhere(
+            (entry) => entry['id'] == 'move',
+          )['historyVersion'] = 99;
+        } else {
+          invalid[field] = field == 'currency' ? 'EUR' : 99;
+        }
         row['payload'] = jsonEncode(invalid);
         await expectLater(
           restore.restore(bad, 'Invalid'),
@@ -230,5 +245,51 @@ void registerFinanceAccountDataTests({
     expect(await db.getVersion(), 16);
     expect(await db.query('private_records'), before);
     expect(Ledger.balance((await store.all('finance')).single.data), 150000);
+  });
+  test('Transaction edit and its history commit together; failed and stale writes preserve the complete record', () async {
+    final original = await store.save('finance', withBank());
+    final changed = TransactionEdits.edit(
+      original.data,
+      id: 'income',
+      changes: {'amount': 60000, 'description': 'Corrected income'},
+    );
+    await db.execute(
+      "CREATE TRIGGER fail_history BEFORE UPDATE ON private_records BEGIN SELECT RAISE(ABORT,'synthetic history write failure'); END",
+    );
+    await expectLater(
+      store.save('finance', changed, previous: original),
+      throwsA(anything),
+    );
+    var stored = (await store.all('finance')).single;
+    expect(stored.revision, original.revision);
+    expect(jsonEncode(stored.data), jsonEncode(original.data));
+    await db.execute('DROP TRIGGER fail_history');
+    final saved = await store.save('finance', changed, previous: original);
+    expect(
+      saved.data['entries'].single['versions'].single['before']['amount'],
+      50000,
+    );
+    await expectLater(
+      store.save(
+        'finance',
+        TransactionEdits.edit(
+          original.data,
+          id: 'income',
+          changes: {'amount': 1},
+        ),
+        previous: original,
+      ),
+      throwsStateError,
+    );
+    stored = (await store.all('finance')).single;
+    expect(jsonEncode(stored.data), jsonEncode(saved.data));
+    final restored = await store.save(
+      'finance',
+      TransactionEdits.restore(stored.data, id: 'income', version: 0),
+      previous: stored,
+    );
+    expect(restored.data['entries'].single['amount'], 50000);
+    expect(restored.data['entries'].single['versions'], hasLength(2));
+    expect(Ledger.balance(restored.data), 150000);
   });
 }
