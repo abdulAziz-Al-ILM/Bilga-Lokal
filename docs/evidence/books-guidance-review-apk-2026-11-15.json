@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-15",
+  "sourceCommit": "952823461b66a5f553856da04fc96ead6fc26b5b",
+  "apk": "build/review/bilga-books-guidance-review-app.apk",
+  "sha256": "d524a0bb28fb60561fbb38cd67c055ed679a1c44901a8572788187c27025737d",
+  "bytes": 217901916,
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "signerSha256": "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0",
+  "type": "ordinary development debug app, lib/main.dart, not an integration runner",
+  "installedInPlace": true,
+  "launchStatus": "ok",
+  "launchState": "COLD",
+  "debugActivityLaunchTotalMillis": 5295,
+  "releasePerformanceAcceptance": false,
+  "kernelChecks": {
+    "BookLibraryStore": true,
+    "GuideController": true,
+    "HabitTemplatePage": true,
+    "FinanceReportsPage": true,
+    "integrationTestRunnersPresent": false,
+    "referenceImagesBundled": false
+  },
+  "notesSchemaCapability": 16,
+  "tasksSchemaCapability": 13,
+  "productionPackageModified": false,
+  "uninstallOrClearUsed": false,
+  "overallProductComplete": false,
+  "ciForThisCheckpoint": "pending separate hosted result after push"
+}
