@@ -20,118 +20,119 @@ import '../test/support/reading_fixtures.dart';
 import '../test/support/reading_data_cases.dart';
 import 'review_guard.dart';
 
-/// The driver selects only original fixture documents in Android DocumentsUI.
-/// No picker/URI/permission mock: the actual FilesBridge and SAF are exercised.
-Future<void> main() async {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+Future<void> verifyRestart(
+  WidgetTester t,
+  Directory cache,
+  File checkpoint,
+  IntegrationTestWidgetsFlutterBinding binding,
+) async {
   await requireReviewPackage();
-  final cache = await getTemporaryDirectory();
-  final checkpoint = File(
-    '${cache.path}/review-reader-reopen-20261115-r1.json',
+  await Strings.load();
+  final saved = Map<String, dynamic>.from(
+    jsonDecode(await checkpoint.readAsString()),
   );
-  if (await checkpoint.exists()) {
-    registerReadingDataCases(
-      createDirectory: () => cache.createTemp('review-reader-recovery-'),
-      secure: true,
-    );
-    testWidgets(
-      'Managed PDF page 154 and bookmark survive a real Review process restart',
-      (t) async {
-        await requireReviewPackage();
-        await Strings.load();
-        final saved = Map<String, dynamic>.from(
-          jsonDecode(await checkpoint.readAsString()),
-        );
-        final fixture = Directory(saved['directory']);
-        if (saved['v'] != 1 ||
-            !path.isWithin(cache.path, fixture.path) ||
-            !path.basename(fixture.path).startsWith('review-saf-reader-') ||
-            await FileSystemEntity.isLink(fixture.path)) {
-          throw StateError('fixture_scope');
-        }
-        final db = await NoteDatabase.openAt(
-          '${fixture.path}/notes.db',
-          secure: true,
-        );
-        final store = ReadingStore(
-          records: RecordStore(database: db),
-          vault: FixtureBookVault(Directory('${fixture.path}/vault')),
-          previewRoot: fixture,
-        );
-        final access = AgentAccess()..owned.add(AgentAccess.core);
-        try {
-          final book = await store.records.get(saved['book']);
-          expect(
-            (await store.one(book.id, 'progress'))!.data['location']['page'],
-            154,
-          );
-          expect(
-            (await store.rows(
-              book.id,
-              'bookmark',
-            )).any((r) => r.data['note'] == 'Restart bookmark'),
-            isTrue,
-          );
-          await t.pumpWidget(
-            MaterialApp(
-              home: BookReadingPage(book: book, store: store, access: access),
-            ),
-          );
-          for (
-            var i = 0;
-            i < 120 && find.text('154 / 500').evaluate().isEmpty;
-            i++
-          ) {
-            await t.pump(const Duration(milliseconds: 50));
-            await t.runAsync(
-              () => Future<void>.delayed(const Duration(milliseconds: 50)),
-            );
-          }
-          expect(find.text('154 / 500'), findsOneWidget);
-          expect(t.takeException(), isNull);
-          final reference = ReadingRow(
-            (await db.rawQuery(
-              "SELECT * FROM book_reading WHERE kind='source' AND json_extract(payload,'\$.format')='txt'",
-            )).single,
-          );
-          expect(reference.data['mode'], 'reference');
-          final linked = await BookImporter(store).materialize(reference);
-          expect(
-            await linked.readAsString(),
-            contains('Original Bilga SAF text.'),
-          );
-          await linked.parent.delete(recursive: true);
-          binding.reportData = {
-            'realProcessRestart': {
-              'page154': true,
-              'bookmark': true,
-              'persistedExternalTxtReference': true,
-              'originalManagedFileReopened': true,
-              'productionTouched': false,
-            },
-          };
-        } finally {
-          await t.pumpWidget(const SizedBox.shrink());
-          for (var i = 0; i < 20; i++) {
-            await t.pump(const Duration(milliseconds: 50));
-            await t.runAsync(
-              () => Future<void>.delayed(const Duration(milliseconds: 30)),
-            );
-          }
-          await db.close();
-          await fixture.delete(recursive: true);
-          await checkpoint.delete();
-          access.dispose();
-        }
-      },
-    );
-    return;
+  final fixture = Directory(saved['directory']);
+  if (saved['v'] != 1 ||
+      !path.isWithin(cache.path, fixture.path) ||
+      !path.basename(fixture.path).startsWith('review-saf-reader-') ||
+      await FileSystemEntity.isLink(fixture.path)) {
+    throw StateError('fixture_scope');
   }
+  final db = await NoteDatabase.openAt(
+    '${fixture.path}/notes.db',
+    secure: true,
+  );
+  final store = ReadingStore(
+    records: RecordStore(database: db),
+    vault: FixtureBookVault(Directory('${fixture.path}/vault')),
+    previewRoot: fixture,
+  );
+  final access = AgentAccess()..owned.add(AgentAccess.core);
+  try {
+    final book = await store.records.get(saved['book']);
+    expect(
+      (await store.one(book.id, 'progress'))!.data['location']['page'],
+      154,
+    );
+    expect(
+      (await store.rows(
+        book.id,
+        'bookmark',
+      )).any((r) => r.data['note'] == 'Restart bookmark'),
+      isTrue,
+    );
+    await t.pumpWidget(
+      MaterialApp(
+        home: BookReadingPage(book: book, store: store, access: access),
+      ),
+    );
+    for (var i = 0; i < 120 && find.text('154 / 500').evaluate().isEmpty; i++) {
+      await t.pump(const Duration(milliseconds: 50));
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+    }
+    expect(find.text('154 / 500'), findsOneWidget);
+    expect(t.takeException(), isNull);
+    final reference = ReadingRow(
+      (await db.rawQuery(
+        "SELECT * FROM book_reading WHERE kind='source' AND json_extract(payload,'\$.format')='txt'",
+      )).single,
+    );
+    expect(reference.data['mode'], 'reference');
+    final linked = await BookImporter(store).materialize(reference);
+    expect(await linked.readAsString(), contains('Original Bilga SAF text.'));
+    await linked.parent.delete(recursive: true);
+    debugPrint('BILGA_RESTART_VERIFIED:154');
+    binding.reportData = {
+      'realProcessRestart': {
+        'page154': true,
+        'bookmark': true,
+        'persistedExternalTxtReference': true,
+        'originalManagedFileReopened': true,
+        'productionTouched': false,
+      },
+    };
+  } finally {
+    await t.pumpWidget(const SizedBox.shrink());
+    for (var i = 0; i < 20; i++) {
+      await t.pump(const Duration(milliseconds: 50));
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 30)),
+      );
+    }
+    await db.close();
+    await fixture.delete(recursive: true);
+    await checkpoint.delete();
+    access.dispose();
+  }
+}
+
+/// Tests register synchronously; device I/O belongs inside fixtures/callbacks.
+void main() {
+  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(requireReviewPackage);
+  registerReadingDataCases(
+    createDirectory: () async {
+      await requireReviewPackage();
+      return (await getTemporaryDirectory()).createTemp(
+        'review-reader-recovery-',
+      );
+    },
+    secure: true,
+  );
   testWidgets(
     'Real Android SAF: cancel, PDF, EPUB, persistent TXT reference, duplicate and corrupt file',
     (t) async {
       await requireReviewPackage();
+      final cache = await getTemporaryDirectory();
+      final checkpoint = File(
+        '${cache.path}/review-reader-reopen-20261115-r1.json',
+      );
+      if (await checkpoint.exists()) {
+        await verifyRestart(t, cache, checkpoint, binding);
+        return;
+      }
       await Strings.load();
       final dir = await (await getTemporaryDirectory()).createTemp(
         'review-saf-reader-',

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Pair the guarded Review Flutter test with real Android DocumentsUI actions."""
 import argparse
+import os
+import signal
 import re
 import subprocess
 import time
@@ -16,6 +18,7 @@ def main():
     parser.add_argument('serial')
     parser.add_argument('apk')
     parser.add_argument('fixture_folder', help='Exact generated folder name inside Downloads')
+    parser.add_argument('--restart', action='store_true', help='Require the saved fixture to reopen after a real process restart')
     args = parser.parse_args()
     if not re.fullmatch(r'BilgaReviewReader-[A-Za-z0-9-]+', args.fixture_folder):
         raise SystemExit('Expected the isolated synthetic fixture folder name')
@@ -36,6 +39,7 @@ def main():
             return
         filename = f'BilgaReaderFixture-{kind}.{"pdf" if kind == "PDF" else "txt" if kind == "TXT" else "epub"}'
         opened_roots = False
+        inside_fixture = False
         deadline = time.monotonic() + 18
         while time.monotonic() < deadline:
             adb('shell', 'uiautomator', 'dump', '--compressed', '/data/local/tmp/bilga-review-picker.xml')
@@ -47,15 +51,16 @@ def main():
                 time.sleep(.3)
                 continue
             for n in nodes:
-                if n.attrib.get('text') == filename:
+                if inside_fixture and n.attrib.get('text') == filename:
                     tap(n)
                     print(f'SAF selected original fixture: {kind}', flush=True)
                     return
-            folder = next((n for n in nodes if n.attrib.get('text') == args.fixture_folder), None)
+            folder = next((n for n in nodes if n.attrib.get('text') == args.fixture_folder and n.attrib.get('resource-id','').endswith('/title')), None)
             if folder is not None:
                 tap(folder)
+                inside_fixture = True
                 continue
-            downloads = next((n for n in nodes if n.attrib.get('text') in ('Downloads', 'Download', 'Загрузки') and ('title' in n.attrib.get('resource-id', ''))), None)
+            downloads = next((n for n in nodes if n.attrib.get('text') in ('Downloads', 'Download', 'Загрузки') and n.attrib.get('resource-id','').endswith('/title')), None)
             if downloads is not None and opened_roots:
                 tap(downloads)
                 opened_roots = False
@@ -69,17 +74,32 @@ def main():
         raise RuntimeError(f'Could not select synthetic fixture {kind} in DocumentsUI')
 
     command = ['bash', 'tool/test_tablet_review.sh', args.serial, args.apk, 'integration_test/reading_saf_review_test.dart']
-    process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+    process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, start_new_session=True)
+    seen = []
+    restart_verified = False
     try:
         for line in process.stdout:
             print(line, end='', flush=True)
+            if 'Unhandled Exception:' in line:
+                raise RuntimeError('Unhandled Dart failure; an empty runner success is not acceptance')
+            if 'BILGA_RESTART_VERIFIED:154' in line:
+                restart_verified = True
             match = re.search(r'BILGA_SAF_READY:(CANCEL|PDF|EPUB|TXT|Invalid)', line)
             if match:
+                if args.restart:
+                    raise RuntimeError('Restart checkpoint missing; refusing to repeat the picker and call it recovery')
+                seen.append(match.group(1))
                 choose(match.group(1))
-        raise SystemExit(process.wait())
+        code = process.wait()
+        if code:
+            raise SystemExit(code)
+        if args.restart and not restart_verified:
+            raise RuntimeError('Real restart assertions did not execute')
+        if not args.restart and seen != ['CANCEL','PDF','EPUB','TXT','PDF','Invalid']:
+            raise RuntimeError('Actual SAF acceptance sequence did not execute completely')
     finally:
         if process.poll() is None:
-            process.terminate()
+            os.killpg(process.pid, signal.SIGTERM)
             process.wait(timeout=30)
 
 

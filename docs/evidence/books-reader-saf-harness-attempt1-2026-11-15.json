@@ -1,0 +1,9 @@
+{
+  "source": "cbb1600a117c2a175d1633fab06270dff1fda9a0",
+  "artifact_sha256": "27d2ee3b2f7c761954310579b3ad8cd3c86c38346554f3b4918c0fbddaa55a40",
+  "result": "invalid harness run, not accepted",
+  "actual_saf_steps_executed": 0,
+  "failure": "Async main performed device I/O before test registration. The driver emitted an empty placeholder success alongside an unhandled registration exception. No SAF acceptance is claimed.",
+  "correction": "Synchronous registration; asynchronous device checks inside fixtures/test callbacks. Host coordinator now requires the complete expected picker marker sequence or explicit restart verification and rejects unhandled Dart failures.",
+  "log": "/tmp/bilga-reader-saf-tablet1.log"
+}
