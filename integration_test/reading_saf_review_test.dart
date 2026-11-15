@@ -158,8 +158,20 @@ void main() {
       }
 
       Future<void> choose(String name, {bool reference = false}) async {
+        expect(find.byType(BookLibraryPage), findsOneWidget);
+        final scrollable = find
+            .descendant(
+              of: find.byType(CustomScrollView),
+              matching: find.byType(Scrollable),
+            )
+            .first;
         if (reference) {
-          await t.ensureVisible(find.byKey(const Key('book-library-organize')));
+          await t.scrollUntilVisible(
+            find.byKey(const Key('book-library-organize')),
+            300,
+            scrollable: scrollable,
+            maxScrolls: 40,
+          );
           await settle();
           await t.tap(find.byKey(const Key('book-library-organize')));
           await settle();
@@ -169,7 +181,12 @@ void main() {
         final button = find.byKey(
           Key(reference ? 'book-library-link' : 'book-library-add'),
         );
-        await t.ensureVisible(button);
+        await t.scrollUntilVisible(
+          button,
+          reference ? 300 : -300,
+          scrollable: scrollable,
+          maxScrolls: 40,
+        );
         await settle();
         debugPrint('BILGA_SAF_READY:$name');
         await t.tap(button);

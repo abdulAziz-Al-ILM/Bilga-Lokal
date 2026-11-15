@@ -34,9 +34,21 @@ def main():
 
     def choose(kind):
         if kind == 'CANCEL':
-            time.sleep(2)
-            adb('shell', 'input', 'keyevent', '4')
-            return
+            deadline = time.monotonic() + 45
+            opened = False
+            while time.monotonic() < deadline:
+                adb('shell', 'uiautomator', 'dump', '--compressed', '/data/local/tmp/bilga-review-picker.xml')
+                tree = ET.fromstring(adb('exec-out', 'cat', '/data/local/tmp/bilga-review-picker.xml'))
+                if any('documentsui' in n.attrib.get('package', '') for n in tree.iter('node')):
+                    opened = True
+                    adb('shell', 'input', 'keyevent', '4')
+                    time.sleep(.3)
+                elif opened:
+                    print('SAF cancelled confirmed DocumentsUI', flush=True)
+                    return
+                else:
+                    time.sleep(.3)
+            raise RuntimeError('DocumentsUI did not open for cancellation')
         filename = f'BilgaReaderFixture-{kind}.{"pdf" if kind == "PDF" else "txt" if kind == "TXT" else "epub"}'
         opened_roots = False
         inside_fixture = False
