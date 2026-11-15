@@ -9,6 +9,7 @@ import '../todo/reminders/todo_reminder_store.dart';
 import '../../core/private_database.dart';
 import '../habits/habit_plan.dart';
 import '../private_space/record_store.dart';
+import '../books/reading/reading_data.dart';
 
 import 'dart:convert';
 import 'dart:io';
@@ -30,6 +31,15 @@ class BackupStore {
   Future<Database> get _notes async => notesDb ?? await NoteDatabase.database;
   Future<Database> get _todo async => todoDb ?? await TodoDatabase.database;
   static const tableColumns = <String, Set<String>>{
+    'book_reading': {
+      'id',
+      'book_id',
+      'kind',
+      'payload',
+      'revision',
+      'created_at',
+      'updated_at',
+    },
     'private_records': {
       'id',
       'kind',
@@ -140,6 +150,22 @@ class BackupStore {
     final notes = await _notes, todo = await _todo;
     // UI keeps this operation exclusive; no editor is open during a backup.
     final data = <String, dynamic>{};
+    var bytes = 0, count = 0;
+    Future<void> boundedRead(DatabaseExecutor txn, String table) async {
+      final sum = tableColumns[table]!
+          .map((c) => "length(CAST(coalesce($c,'') AS BLOB))")
+          .join('+');
+      final sizes = (await txn.rawQuery(
+        'SELECT coalesce(SUM($sum),0) AS bytes,COUNT(*) AS n FROM $table',
+      )).single;
+      bytes += (sizes['bytes'] as int);
+      count += (sizes['n'] as int);
+      if (bytes > 14 * 1024 * 1024 || count > 100000) {
+        throw const FormatException('backup_large');
+      }
+      data[table] = await txn.query(table);
+    }
+
     await notes.transaction((txn) async {
       for (final table in [
         'folders',
@@ -149,8 +175,9 @@ class BackupStore {
         'note_tag_links',
         'habits',
         'private_records',
+        'book_reading',
       ]) {
-        data[table] = await txn.query(table);
+        await boundedRead(txn, table);
       }
     });
     await todo.transaction((txn) async {
@@ -164,21 +191,22 @@ class BackupStore {
         'todo_templates',
         'todo_projects',
       ]) {
-        data[table] = await txn.query(table);
+        await boundedRead(txn, table);
       }
     });
     return {
       'format': 'bilga-data',
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
-      'notesSchema':
-          (data['private_records'] as List).any(
-            (row) =>
-                row['kind'] == 'finance' &&
-                (jsonDecode(row['payload'] as String) as Map).containsKey(
-                  'accountsVersion',
-                ),
-          )
+      'notesSchema': (data['book_reading'] as List).isNotEmpty
+          ? 15
+          : (data['private_records'] as List).any(
+              (row) =>
+                  row['kind'] == 'finance' &&
+                  (jsonDecode(row['payload'] as String) as Map).containsKey(
+                    'accountsVersion',
+                  ),
+            )
           ? 14
           : 13,
       'todoSchema': 11,
@@ -193,18 +221,25 @@ class BackupStore {
   ) {
     if (payload['format'] != 'bilga-data' ||
         payload['version'] != 1 ||
-        ![8, 9, 10, 11, 12, 13, 14].contains(payload['notesSchema']) ||
+        ![8, 9, 10, 11, 12, 13, 14, 15].contains(payload['notesSchema']) ||
         ![6, 7, 8, 9, 10, 11].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
       throw const FormatException('backup_invalid');
     }
     final raw = payload['data'];
     if (raw is! Map) throw const FormatException('backup_invalid');
+    if ((payload['notesSchema'] as int) < 15 &&
+        raw['book_reading'] is List &&
+        (raw['book_reading'] as List).isNotEmpty) {
+      throw const FormatException('reading_schema');
+    }
     final result = <String, List<Map<String, Object?>>>{};
     var count = 0;
     for (final entry in tableColumns.entries) {
       final list =
-          (entry.key == 'todo_reminders' && payload['todoSchema'] == 6) ||
+          (entry.key == 'book_reading' &&
+                  (payload['notesSchema'] as int) < 15) ||
+              (entry.key == 'todo_reminders' && payload['todoSchema'] == 6) ||
               (entry.key == 'todo_projects' &&
                   (payload['todoSchema'] as int) < 11) ||
               (entry.key == 'todo_templates' &&
@@ -230,6 +265,7 @@ class BackupStore {
           throw const FormatException('backup_invalid');
         }
         final row = Map<String, Object?>.from(value);
+        if (entry.key == 'book_reading') ReadingData.decode(row);
         if (entry.key == 'todo_projects') {
           TodoProject.validate(row);
           if (!ids.add(row['folder_id']!) ||
@@ -525,6 +561,49 @@ class BackupStore {
     if (result['note_versions']!.any((r) => !noteIds.contains(r['note_id']))) {
       throw const FormatException('backup_invalid');
     }
+    final books = result['private_records']!
+        .where((r) => r['kind'] == 'book')
+        .map((r) => r['id'])
+        .toSet();
+    if (result['book_reading']!.any((r) => !books.contains(r['book_id']))) {
+      throw const FormatException('reading_owner');
+    }
+    final singles = <String>{};
+    final sources = <String, Map<String, dynamic>>{};
+    for (final row in result['book_reading']!) {
+      if ({'source', 'progress', 'settings'}.contains(row['kind']) &&
+          !singles.add('${row['book_id']}:${row['kind']}')) {
+        throw const FormatException('reading_duplicate');
+      }
+      if (row['kind'] == 'source') {
+        sources[row['book_id'] as String] = ReadingData.decode(row);
+      }
+    }
+    final media = <String, Map<String, dynamic>>{};
+    for (final r in result['private_records']!.where(
+      (r) => r['kind'] == 'attachment',
+    )) {
+      final d = Map<String, dynamic>.from(jsonDecode(r['payload'] as String));
+      if (d['ownerKind'] == 'book' &&
+          {'bookSource', 'bookCover', 'bookIndex'}.contains(d['role'])) {
+        media['${d['owner']}:${d['role']}'] = d;
+      }
+    }
+    for (final entry in sources.entries) {
+      final d = entry.value;
+      for (final role in ['bookSource', 'bookCover', 'bookIndex']) {
+        final hash = role == 'bookSource'
+            ? (d['mode'] == 'managed' ? d['blob'] : null)
+            : d[role == 'bookCover' ? 'cover' : 'index'];
+        if (hash == null) continue;
+        final attachment = media['${entry.key}:$role'];
+        if (attachment == null ||
+            attachment['blob'] != hash ||
+            (role == 'bookSource' && attachment['size'] != d['size'])) {
+          throw const FormatException('reading_media_manifest');
+        }
+      }
+    }
     return result;
   }
 
@@ -721,6 +800,22 @@ class BackupStore {
           await _insert(txn, 'private_records', {
             ...row,
             'id': '$prefix${row['id']}',
+            'payload': jsonEncode(data),
+          });
+        }
+        for (final row in tables['book_reading']!) {
+          final data = Map<String, dynamic>.from(
+            jsonDecode(row['payload'] as String),
+          );
+          if (row['kind'] == 'review') data['card'] = '$prefix${data['card']}';
+          if (row['kind'] == 'link') {
+            data['target'] = '$prefix${data['target']}';
+            data['origin'] = '$prefix${data['origin']}';
+          }
+          await _insert(txn, 'book_reading', {
+            ...row,
+            'id': '$prefix${row['id']}',
+            'book_id': '$prefix${row['book_id']}',
             'payload': jsonEncode(data),
           });
         }

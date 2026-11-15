@@ -648,7 +648,7 @@ void main() {
     final path = db.path;
     await db.close();
     db = await NoteDatabase.openAt(path);
-    expect(await db.getVersion(), 16);
+    expect(await db.getVersion(), 17);
     for (final table in tables) {
       expect(await db.query(table), before[table]);
     }

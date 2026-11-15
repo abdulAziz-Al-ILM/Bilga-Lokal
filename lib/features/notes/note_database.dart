@@ -1,4 +1,5 @@
 import '../search/search_index.dart';
+import '../books/reading/reading_data.dart';
 import '../../core/private_database.dart';
 import 'note_tag_store.dart';
 import 'note_widget_permission_store.dart';
@@ -32,10 +33,10 @@ class NoteDatabase {
       secure: secure,
       verifyOnOpen: true,
       diagnostic: NotesWidgetLoading.trace,
-      // v16 marks versioned finance accounts. PrivateDatabase refuses a lower
+      // v17 adds independently revisioned reading data; v16 added finance accounts. PrivateDatabase refuses a lower
       // configured version; older binaries without that guard remain unsafe to
       // install over this database. Existing Notes rows need no rewrite.
-      version: 16,
+      version: 17,
 
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
@@ -44,6 +45,7 @@ class NoteDatabase {
       },
       onCreate: (db, version) async {
         await createRecords(db);
+        await ReadingData.createSchema(db);
         await createHabits(db);
         await db.execute(
           "ALTER TABLE habits ADD COLUMN details TEXT NOT NULL DEFAULT '{}'",
@@ -96,6 +98,7 @@ class NoteDatabase {
         if (oldVersion < 10) {
           await createRecords(db);
         }
+        if (oldVersion < 17) await ReadingData.createSchema(db);
         if (oldVersion < 9) {
           await createHabits(db);
         }

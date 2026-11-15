@@ -1,0 +1,29 @@
+{
+  "scope": "Books offline reader and complete host regression suite",
+  "command": "bash tool/test_host.sh",
+  "passed": 285,
+  "failed": 0,
+  "elapsed_seconds": 307,
+  "log_sha256": "082347c839179d081b6168235d0eac969fbad2b7f431d0cc1d9785182f21f48c",
+  "log_path": "/tmp/bilga-reader-full-host2.log",
+  "notes_database_schema": 17,
+  "tasks_database_schema": 13,
+  "portable_reading_schema": 15,
+  "catalogs": {
+    "languages": 43,
+    "strings": 737,
+    "new_full_translations": [
+      "en",
+      "uz",
+      "ru"
+    ],
+    "other_new_strings": "English fallback"
+  },
+  "format": "225 files clean",
+  "analyzer": "No issues found, /tmp/bilga-reader-analyze-final2.log",
+  "manifest_guard_tests": 9,
+  "non_voice_guard": "passed",
+  "post_suite_runtime_changes": "Braces-only analyzer fixes",
+  "native_reader_acceptance": "pending",
+  "ordinary_reader_apk": "pending"
+}

@@ -44,7 +44,7 @@ dependencies:
   sqflite_sqlcipher: 3.4.1
   crypto: ^3.0.6
   path_provider: ^2.1.5
-  archive: ^4.0.7
+  archive: 4.5.2
   path: ^1.9.1
   google_sign_in: ^7.2.0
   http: ^1.5.0
@@ -57,6 +57,10 @@ dependencies:
   url_launcher: ^6.3.2
   in_app_purchase: ^3.3.1
   in_app_purchase_android: ^0.5.5
+  pdfrx: 2.12.1
+  xml: 7.1.0
+  html: 0.15.6
+  scrollable_positioned_list: 0.3.8
 
 dev_dependencies:
   sqflite_common_ffi: ^2.3.6

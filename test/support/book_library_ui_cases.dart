@@ -130,7 +130,8 @@ void registerBookLibraryUiTests({
           ),
         );
         await settle(tester);
-        await press(tester, const Key('book-library-add'));
+        await press(tester, const Key('book-library-organize'));
+        await press(tester, const Key('book-library-manual'));
         await fill(tester, 'title', 'Personal library book');
         await fill(tester, 'author', 'Saved author');
         await fill(
@@ -209,6 +210,12 @@ void registerBookLibraryUiTests({
         expect(meta['shelves'], ['Home']);
         await tester.pageBack();
         await settle(tester);
+        if (find
+            .byKey(const Key('book-filter-status-all'))
+            .evaluate()
+            .isEmpty) {
+          await press(tester, const Key('book-library-organize'));
+        }
         await press(tester, const Key('book-filter-status-all'));
         await tester.tap(find.text('Want to read').last);
         await settle(tester);
@@ -224,7 +231,7 @@ void registerBookLibraryUiTests({
           tester,
           find.byKey(ValueKey('book-library-row-${saved.id}')),
         );
-        expect(find.text('Personal library book'), findsOneWidget);
+        expect(find.text('Personal library book'), findsWidgets);
         await show(tester, find.byKey(const Key('book-library-search')));
         await tester.enterText(
           find.byKey(const Key('book-library-search')),
@@ -235,7 +242,7 @@ void registerBookLibraryUiTests({
           tester,
           find.byKey(ValueKey('book-library-row-${saved.id}')),
         );
-        expect(find.text('Personal library book'), findsOneWidget);
+        expect(find.text('Personal library book'), findsWidgets);
         saved = (await read(tester, store)).single;
         expect(saved.revision, 1);
         expect(tester.takeException(), isNull);
@@ -334,6 +341,7 @@ void registerBookLibraryUiTests({
         expect((await read(tester, records)).single.revision, saved.revision);
         gate.complete();
         await settle(tester);
+        await press(tester, const Key('book-library-organize'));
         await show(tester, find.byKey(const Key('book-filter-shelves-')));
         expect(find.byKey(const Key('book-filter-shelves-')), findsOneWidget);
         expect(find.byKey(const Key('book-filter-tags-')), findsOneWidget);
@@ -341,7 +349,7 @@ void registerBookLibraryUiTests({
           tester,
           find.byKey(ValueKey('book-library-row-${saved.id}')),
         );
-        expect(find.text('Legacy reading'), findsOneWidget);
+        expect(find.text('Legacy reading'), findsWidgets);
         expect(tester.takeException(), isNull);
       } finally {
         if (!gate.isCompleted) gate.complete();

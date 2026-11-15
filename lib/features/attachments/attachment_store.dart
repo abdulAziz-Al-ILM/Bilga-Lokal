@@ -160,6 +160,9 @@ class Attachments {
   }
 
   static Future<void> remove(PrivateRecord r, {RecordStore? store}) async {
+    if ({'bookSource', 'bookCover', 'bookIndex'}.contains(r.data['role'])) {
+      throw StateError('book_managed_media');
+    }
     final records = store ?? RecordStore();
     await records.remove(r);
     final id = r.data['blob'];

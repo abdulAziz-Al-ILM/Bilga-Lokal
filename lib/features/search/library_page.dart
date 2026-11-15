@@ -10,6 +10,9 @@ import '../../core/strings.dart';
 import '../attachments/attachment_store.dart';
 import '../finance/ledger.dart';
 import '../books/book_library.dart';
+import '../books/reading/reading_store.dart';
+import '../books/reading/book_reading_page.dart';
+import '../agent/agent_access.dart';
 import '../finance/finance_reports_page.dart';
 import '../finance/account_ledger.dart';
 import '../habits/habit_store.dart';
@@ -249,6 +252,7 @@ class DocumentPage extends StatefulWidget {
 class _DocumentPageState extends State<DocumentPage> {
   Map<String, Object?>? row;
   bool busy = false, failed = false;
+  bool bookReadable = false;
   List<Map<String, Object?>> versions = [];
   List<PrivateRecord> attachments = [];
   List<TodoChecklistItem> checklist = [];
@@ -262,6 +266,12 @@ class _DocumentPageState extends State<DocumentPage> {
   Future<void> load() async {
     try {
       final source = await widget.repository.source(widget.hit);
+      bookReadable =
+          widget.hit.kind == 'book' &&
+          (await ReadingStore(
+                records: RecordStore(database: await widget.repository.notes),
+              ).one(widget.hit.id, 'source')) !=
+              null;
       if (source != null && {'finance', 'book'}.contains(widget.hit.kind)) {
         RecordStore.validate(
           widget.hit.kind,
@@ -289,7 +299,7 @@ class _DocumentPageState extends State<DocumentPage> {
           : <Map<String, Object?>>[];
       final files = await (await widget.repository.notes).query(
         'private_records',
-        where: "kind = ? AND json_extract(payload, '\$.owner') = ? AND json_extract(payload, '\$.ownerKind') = ?",
+        where: "kind = ? AND json_extract(payload, '\$.owner') = ? AND json_extract(payload, '\$.ownerKind') = ? AND coalesce(json_extract(payload,'\$.role'),'') NOT IN ('bookSource','bookCover','bookIndex')",
         whereArgs: ['attachment', widget.hit.id, widget.hit.kind],
       );
       final owned = files
@@ -449,6 +459,32 @@ class _DocumentPageState extends State<DocumentPage> {
     appBar: AppBar(
       title: Text(widget.hit.title),
       actions: [
+        if (bookReadable)
+          IconButton(
+            key: const Key('library-read-book'),
+            tooltip: context.tr('rRead'),
+            icon: const Icon(Icons.menu_book),
+            onPressed: row == null || busy
+                ? null
+                : () async {
+                    final db = await widget.repository.notes;
+                    if (!context.mounted) return;
+                    await Navigator.push<void>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BookReadingPage(
+                          book: PrivateRecord.row(row!),
+                          store: ReadingStore(
+                            records: RecordStore(database: db),
+                          ),
+                          access: AgentAccess.instance,
+                          readOnly: widget.readOnly,
+                        ),
+                      ),
+                    );
+                    if (mounted) load();
+                  },
+          ),
         if (widget.hit.kind == 'finance')
           IconButton(
             key: const Key('finance-reader-reports-open'),

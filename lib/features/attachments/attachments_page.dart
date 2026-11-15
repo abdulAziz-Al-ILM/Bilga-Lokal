@@ -39,7 +39,19 @@ class _AttachmentsState extends State<AttachmentsPage> {
       widget.owner,
       store: widget.store,
     );
-    if (mounted) setState(() => rows = r);
+    if (mounted) {
+      setState(
+        () => rows = r
+            .where(
+              (r) => !{
+                'bookSource',
+                'bookCover',
+                'bookIndex',
+              }.contains(r.data['role']),
+            )
+            .toList(),
+      );
+    }
   }
 
   Future<void> run(Future<void> Function() f) async {
@@ -186,7 +198,13 @@ class _AttachmentsState extends State<AttachmentsPage> {
                   onTap: busy ? null : () => run(() => open(r)),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline),
-                    onPressed: busy
+                    onPressed:
+                        busy ||
+                            {
+                              'bookSource',
+                              'bookCover',
+                              'bookIndex',
+                            }.contains(r.data['role'])
                         ? null
                         : () => run(() async {
                             if (await consent(

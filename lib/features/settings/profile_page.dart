@@ -138,15 +138,45 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> exportFile() async {
+    final snapshot = await store.snapshot(ownerId: settings.backupOwner);
+    final size = MediaBackup.blobs(snapshot).values
+        .fold<int>(0, (a, b) => a + b);
+    if (!mounted) return;
+    final full = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(c.tr('backup')),
+        content: SingleChildScrollView(
+          child: Text(
+            '${c.tr('rBackupChoice')}\n\n${(size / (1024 * 1024)).toStringAsFixed(1)} MB ${c.tr('rBackupSize')}',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: Text(c.tr('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: Text(c.tr('rBackupMetadata')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: Text(c.tr('rBackupFull')),
+          ),
+        ],
+      ),
+    );
+    if (full == null || !mounted) return;
     final secret = await password(creating: true);
     if (secret == null) return;
+    final bytes = full
+        ? MediaBackup.encode(snapshot, secret)
+        : Stream.value(await BackupCodec.encrypt(snapshot, secret));
     await Attachments.export(
-      'Bilga-${DateTime.now().millisecondsSinceEpoch}.bilga2',
+      'Bilga-${DateTime.now().millisecondsSinceEpoch}.${full ? 'bilga2' : 'bilga'}',
       'application/octet-stream',
-      MediaBackup.encode(
-        await store.snapshot(ownerId: settings.backupOwner),
-        secret,
-      ),
+      bytes,
     );
     if (mounted) setState(() => status = 'exported');
   }

@@ -6,6 +6,8 @@ import '../search/search_index.dart';
 import 'book_library.dart';
 
 class BookSummary {
+  final String? format, cover, opened;
+  final double? progress;
   final String id, title, author, status, updated, description;
   final int revision, chapters, currentPage;
   final int? pages, rating;
@@ -23,6 +25,10 @@ class BookSummary {
     this.pages,
     this.rating,
     this.favorite,
+    this.format,
+    this.cover,
+    this.opened,
+    this.progress,
   );
   factory BookSummary.row(Map<String, Object?> row) {
     final version = row['library_version'];
@@ -47,6 +53,10 @@ class BookSummary {
       row['pages'] as int?,
       row['rating'] as int?,
       row['favorite'] == 1,
+      row['source_format'] as String?,
+      row['cover'] as String?,
+      row['opened'] as String?,
+      (row['progress'] as num?)?.toDouble(),
     );
   }
 }
@@ -73,7 +83,7 @@ class BookLibraryStore {
         limit < 1 ||
         limit > 100 ||
         (status != null && !BookLibrary.statuses.contains(status)) ||
-        !{'updated', 'title', 'author'}.contains(sort)) {
+        !{'updated', 'title', 'author', 'opened', 'added'}.contains(sort)) {
       throw ArgumentError('book_page');
     }
     final where = <String>["kind='book'"], args = <Object?>[];
@@ -107,6 +117,8 @@ class BookLibraryStore {
       }
     }
     final order = switch (sort) {
+      'opened' => "(SELECT json_extract(r.payload,'\$.opened') FROM book_reading r WHERE r.book_id=private_records.id AND r.kind='progress' LIMIT 1) DESC,updated_at DESC,id",
+      'added' => 'created_at DESC,id',
       'title' => "json_extract(payload,'\$.title') COLLATE NOCASE ASC,updated_at DESC,id",
       'author' => "coalesce(json_extract(payload,'\$.library.author'),'') COLLATE NOCASE ASC,updated_at DESC,id",
       _ => 'updated_at DESC,id',
@@ -120,10 +132,14 @@ class BookLibraryStore {
       substr(coalesce(json_extract(payload,'\$.library.description'),''),1,241) AS description,
       coalesce(json_extract(payload,'\$.library.status'),'unspecified') AS status,
       coalesce(json_extract(payload,'\$.library.favorite'),0) AS favorite,
-      coalesce(json_extract(payload,'\$.library.currentPage'),0) AS current_page,
+      coalesce((SELECT json_extract(r.payload,'\$.location.page') FROM book_reading r WHERE r.book_id=private_records.id AND r.kind='progress' LIMIT 1),json_extract(payload,'\$.library.currentPage'),0) AS current_page,
       json_extract(payload,'\$.library.pages') AS pages,
       json_extract(payload,'\$.library.rating') AS rating,
-      json_array_length(payload,'\$.chapters') AS chapters
+      json_array_length(payload,'\$.chapters') AS chapters,
+      (SELECT json_extract(r.payload,'\$.format') FROM book_reading r WHERE r.book_id=private_records.id AND r.kind='source' LIMIT 1) AS source_format,
+      (SELECT json_extract(r.payload,'\$.cover') FROM book_reading r WHERE r.book_id=private_records.id AND r.kind='source' LIMIT 1) AS cover,
+      (SELECT json_extract(r.payload,'\$.opened') FROM book_reading r WHERE r.book_id=private_records.id AND r.kind='progress' LIMIT 1) AS opened,
+      (SELECT json_extract(r.payload,'\$.fraction') FROM book_reading r WHERE r.book_id=private_records.id AND r.kind='progress' LIMIT 1) AS progress
       FROM private_records WHERE ${where.join(' AND ')} ORDER BY $order LIMIT ? OFFSET ?''',
       [...args, limit, offset],
     );

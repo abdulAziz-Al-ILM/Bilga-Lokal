@@ -61,6 +61,10 @@ jobs:
               bilga_missing+=("$bilga_package")
             fi
           done
+          # pdfrx builds a small native PDFium gate during host tests.
+          if ! command -v clang >/dev/null 2>&1; then
+            bilga_missing+=(clang)
+          fi
           if [ "${#bilga_missing[@]}" -gt 0 ]; then
             sudo apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any update -qq
             sudo apt-get -o Acquire::Retries=3 install --yes --no-install-recommends "${bilga_missing[@]}"

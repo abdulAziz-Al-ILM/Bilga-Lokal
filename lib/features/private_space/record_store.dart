@@ -122,6 +122,19 @@ class RecordStore {
         whereArgs: [kind],
         orderBy: 'updated_at DESC',
       )).map(PrivateRecord.row).toList();
+  Future<PrivateRecord> get(String id) async {
+    final rows = await (await _db).query(
+      'private_records',
+      where: 'id=?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) throw StateError('record_missing');
+    final record = PrivateRecord.row(rows.single);
+    validate(record.kind, record.data);
+    return record;
+  }
+
   Future<List<PrivateRecord>> attachments(String kind, String owner) async =>
       (await (await _db).query(
         'private_records',
@@ -170,13 +183,24 @@ class RecordStore {
   }
 
   Future<void> remove(PrivateRecord r) async {
-    if (await (await _db).delete(
+    await (await _db).transaction((txn) async {
+      if (await txn.delete(
+            'private_records',
+            where: 'id=? AND revision=?',
+            whereArgs: [r.id, r.revision],
+          ) !=
+          1) {
+        throw StateError('record_changed');
+      }
+      if (r.kind == 'book') {
+        // Remove owned metadata with the book. Content-addressed encrypted files
+        // can be shared by other records, so their physical deletion is deferred.
+        await txn.delete(
           'private_records',
-          where: 'id = ? AND revision = ?',
-          whereArgs: [r.id, r.revision],
-        ) !=
-        1) {
-      throw StateError('record_changed');
-    }
+          where: "kind='attachment' AND json_extract(payload,'\$.ownerKind')='book' AND json_extract(payload,'\$.owner')=?",
+          whereArgs: [r.id],
+        );
+      }
+    });
   }
 }

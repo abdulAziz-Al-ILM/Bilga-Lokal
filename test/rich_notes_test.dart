@@ -158,7 +158,7 @@ void main() {
       await db.setVersion(14);
       await db.close();
       db = await NoteDatabase.openAt('${dir.path}/notes.db');
-      expect(await db.getVersion(), 16);
+      expect(await db.getVersion(), 17);
       final migrated = (await NoteService(
         database: db,
       ).getAllActiveNotes()).single;

@@ -9,6 +9,7 @@ import '../../core/chunk_vault.dart';
 import '../attachments/attachment_store.dart';
 import 'backup_codec.dart';
 import 'backup_store.dart';
+import '../books/reading/book_vault.dart';
 
 class MediaBackup {
   static Future<SecretKey> derive(String password, List<int> salt) async =>
@@ -45,8 +46,9 @@ class MediaBackup {
 
   static Stream<List<int>> encode(
     Map<String, dynamic> p,
-    String password,
-  ) async* {
+    String password, {
+    BookVault vault = const AppBookVault(),
+  }) async* {
     if (password.runes.length < 12) {
       throw const FormatException('password_short');
     }
@@ -61,7 +63,7 @@ class MediaBackup {
       for (final e in blobs(p).entries) {
         yield u32(e.value);
         var count = 0;
-        await for (final b in Attachments.read(e.key)) {
+        await for (final b in vault.read(e.key)) {
           count += b.length;
           yield b;
         }
@@ -76,8 +78,9 @@ class MediaBackup {
 
   static Future<Map<String, dynamic>> decode(
     Stream<List<int>> source,
-    String password,
-  ) async {
+    String password, {
+    BookVault vault = const AppBookVault(),
+  }) async {
     final outer = ByteReader(source);
     try {
       final magic = await outer.read(8);
@@ -107,11 +110,7 @@ class MediaBackup {
           if (size != e.value || size > Attachments.maxFile) {
             throw const FormatException('media_size');
           }
-          await Attachments.write(
-            reader.take(size),
-            expected: e.key,
-            size: size,
-          );
+          await vault.write(reader.take(size), expected: e.key, size: size);
         }
         if (!await reader.ended) throw const FormatException('trailing');
         return p;
