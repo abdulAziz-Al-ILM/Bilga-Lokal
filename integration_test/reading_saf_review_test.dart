@@ -160,14 +160,17 @@ void main() {
       Future<void> choose(String name, {bool reference = false}) async {
         if (reference) {
           await t.ensureVisible(find.byKey(const Key('book-library-organize')));
+          await settle();
           await t.tap(find.byKey(const Key('book-library-organize')));
           await settle();
           await t.ensureVisible(find.byKey(const Key('book-library-link')));
+          await settle();
         }
         final button = find.byKey(
           Key(reference ? 'book-library-link' : 'book-library-add'),
         );
         await t.ensureVisible(button);
+        await settle();
         debugPrint('BILGA_SAF_READY:$name');
         await t.tap(button);
         // Native DocumentsUI is operated by the paired host acceptance driver.

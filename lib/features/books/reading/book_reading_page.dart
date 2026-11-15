@@ -140,7 +140,16 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         id: 'book.reader.$topic',
         steps: [
           step,
-          const GuideStep('saved', 'menu', 'rGuideSaved', backBoundary: true),
+          GuideStep(
+            'saved',
+            'menu',
+            topic == 'appearance'
+                ? 'rGuideAppearanceDone'
+                : topic == 'navigate'
+                ? 'rGuideNavigationDone'
+                : 'rGuideSaved',
+            backBoundary: true,
+          ),
         ],
       );
       guide.start();
@@ -665,9 +674,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
 
   Future<void> jump(Map<String, dynamic> target) async {
     if (isPdf) {
-      await pdf.goToPage(
-        pageNumber: (target['page'] as int).clamp(1, pdf.pageCount),
-      );
+      await navigatePdf(target['page'] as int, duration: Duration.zero);
     } else {
       final i = sections.indexWhere((s) => s['key'] == target['section']);
       if (i >= 0) await loadSection(i, restore: target['block'] as int);
@@ -686,9 +693,11 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         numberFields: {'page'},
         onSave: (v) async {
           final n = int.parse(v['page']!);
-          if (n < 1 || n > pdf.pageCount) throw const FormatException('page');
+          if (n < 1 || n > document!.pages.length) {
+            throw const FormatException('page');
+          }
           final before = page;
-          await pdf.goToPage(pageNumber: n, duration: Duration.zero);
+          await navigatePdf(n, duration: Duration.zero);
           if (n != before) navigationDone();
         },
       );
@@ -774,6 +783,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
   }
 
   Future<void> appearance() async {
+    final before = Map<String, dynamic>.from(settings);
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -784,22 +794,24 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                for (final pair in [
-                  ('font', 12.0, 40.0, 'rFontSize'),
-                  ('line', 1.0, 2.5, 'rLineSpacing'),
-                  ('margin', 8.0, 64.0, 'rMargins'),
-                ]) ...[
-                  Text(c.tr(pair.$4)),
-                  Slider(
-                    value: (settings[pair.$1] as num).toDouble(),
-                    min: pair.$2,
-                    max: pair.$3,
-                    onChanged: (n) {
-                      set(() => settings[pair.$1] = n);
-                      refresh();
-                    },
-                  ),
-                ],
+                if (isPdf) Text(c.tr('rPdfSettingsHint')),
+                if (!isPdf)
+                  for (final pair in [
+                    ('font', 12.0, 40.0, 'rFontSize'),
+                    ('line', 1.0, 2.5, 'rLineSpacing'),
+                    ('margin', 8.0, 64.0, 'rMargins'),
+                  ]) ...[
+                    Text(c.tr(pair.$4)),
+                    Slider(
+                      value: (settings[pair.$1] as num).toDouble(),
+                      min: pair.$2,
+                      max: pair.$3,
+                      onChanged: (n) {
+                        set(() => settings[pair.$1] = n);
+                        refresh();
+                      },
+                    ),
+                  ],
                 Wrap(
                   spacing: 8,
                   children: [
@@ -814,30 +826,42 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
                       ),
                   ],
                 ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final family in ['sans', 'serif', 'mono'])
-                      ChoiceChip(
-                        label: Text(c.tr('rFont_$family')),
-                        selected: settings['family'] == family,
-                        onSelected: (_) {
-                          set(() => settings['family'] = family);
-                          refresh();
-                        },
-                      ),
-                  ],
-                ),
+                if (!isPdf)
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final family in ['sans', 'serif', 'mono'])
+                        ChoiceChip(
+                          label: Text(c.tr('rFont_$family')),
+                          selected: settings['family'] == family,
+                          onSelected: (_) {
+                            set(() => settings['family'] = family);
+                            refresh();
+                          },
+                        ),
+                    ],
+                  ),
                 if (isPdf)
                   SwitchListTile(
                     title: Text(c.tr('rPageByPage')),
                     value: paged,
                     onChanged: (v) {
+                      final target = page;
                       set(() {
                         paged = v;
                         settings['paged'] = v;
                       });
                       refresh();
+                      if (!v) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted && pdf.isReady) {
+                            pdf.goToPage(
+                              pageNumber: target,
+                              duration: Duration.zero,
+                            );
+                          }
+                        });
+                      }
                     },
                   ),
                 Text(c.tr('rSessionExplanation')),
@@ -851,6 +875,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         ),
       ),
     );
+    if (mapEquals(before, settings)) return;
     if (writable) {
       queue(() async {
         settingsRow = await widget.store.put(
@@ -862,6 +887,8 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         );
         guide.event('appearanceSaved');
       });
+    } else {
+      guide.event('appearanceSaved');
     }
   }
 
@@ -873,8 +900,26 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> navigatePdf(int number) async {
-    await pdf.goToPage(pageNumber: number);
+  Future<void> navigatePdf(
+    int number, {
+    Duration duration = const Duration(milliseconds: 200),
+  }) async {
+    touch();
+    final target = number.clamp(1, document!.pages.length);
+    if (paged) {
+      if (pdf.isReady) {
+        await pdf.goToPage(pageNumber: target, duration: Duration.zero);
+      }
+      if (!mounted) return;
+      setState(() {
+        page = target;
+        location = {'kind': 'pdf', 'page': target};
+        fraction = target / document!.pages.length;
+      });
+      queue(savePosition);
+    } else {
+      await pdf.goToPage(pageNumber: target, duration: duration);
+    }
     navigationDone();
   }
 
@@ -910,7 +955,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         ),
       ),
     );
-    if (chosen != null && pdf.isReady) await pdf.goToPage(pageNumber: chosen);
+    if (chosen != null) await navigatePdf(chosen);
   }
 
   Widget textBlock(int i) {
@@ -1171,7 +1216,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
                 IconButton(
                   key: const Key('reader-search'),
                   tooltip: c.tr('rSearchBook'),
-                  onPressed: loading || error != null
+                  onPressed: loading || error != null || (isPdf && paged)
                       ? null
                       : () => run(search),
                   icon: const Icon(Icons.search),
@@ -1182,9 +1227,9 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
                   onPressed: loading || error != null
                       ? null
                       : () => run(appearance),
-                  icon: const Icon(
-                    Icons.text_fields,
-                    key: Key('reader-appearance'),
+                  icon: Icon(
+                    isPdf ? Icons.tune : Icons.text_fields,
+                    key: const Key('reader-appearance'),
                   ),
                 ),
                 IconButton(

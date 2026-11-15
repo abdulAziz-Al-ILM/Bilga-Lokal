@@ -626,7 +626,7 @@
   "rPage": "Page",
   "rPageByPage": "Page-by-page PDF",
   "rPageNote": "Add a location note",
-  "rPagedHint": "Pinch to zoom and pan this page. Switch off page-by-page mode to select and highlight PDF text.",
+  "rPagedHint": "Pinch to zoom and pan this page. Switch off page-by-page mode to search, select and highlight PDF text.",
   "rPauseTimer": "Pause reading timer",
   "rQuestion": "Question",
   "rRead": "Read",
@@ -735,5 +735,8 @@
   "rBackupFull": "Full backup including managed files",
   "rBackupSize": "of managed files, plus encrypted reading data and a small encryption overhead.",
   "rPartialFormat": "This format opens as simplified text only. Images, layout, interactive content and publisher styles are not preserved. Continue?",
-  "rHabitReason": "Reading motivation (up to 1800 characters)"
+  "rHabitReason": "Reading motivation (up to 1800 characters)",
+  "rPdfSettingsHint": "PDF keeps its original layout. Pinch to zoom. Themes change reader controls; text size and spacing settings apply to EPUB and TXT.",
+  "rGuideAppearanceDone": "Reading settings are applied. In read-only mode, changes last only for this session.",
+  "rGuideNavigationDone": "You moved to a new reading location. Continue reading, or open Bookmarks and cards from the menu."
 }

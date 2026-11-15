@@ -40,7 +40,9 @@ def main():
         filename = f'BilgaReaderFixture-{kind}.{"pdf" if kind == "PDF" else "txt" if kind == "TXT" else "epub"}'
         opened_roots = False
         inside_fixture = False
-        deadline = time.monotonic() + 18
+        internal_storage = False
+        in_downloads = False
+        deadline = time.monotonic() + 45
         while time.monotonic() < deadline:
             adb('shell', 'uiautomator', 'dump', '--compressed', '/data/local/tmp/bilga-review-picker.xml')
             tree = ET.fromstring(adb('exec-out', 'cat', '/data/local/tmp/bilga-review-picker.xml'))
@@ -55,17 +57,25 @@ def main():
                     tap(n)
                     print(f'SAF selected original fixture: {kind}', flush=True)
                     return
+            storage = next((n for n in nodes if n.attrib.get('text') in ('Tab 16','Tab16_NEU','Internal storage','Internal shared storage') and n.attrib.get('resource-id','').endswith('/title')),None)
+            if storage is not None and opened_roots:
+                tap(storage)
+                opened_roots=False
+                internal_storage=True
+                in_downloads=False
+                continue
             folder = next((n for n in nodes if n.attrib.get('text') == args.fixture_folder and n.attrib.get('resource-id','').endswith('/title')), None)
             if folder is not None:
                 tap(folder)
                 inside_fixture = True
                 continue
-            downloads = next((n for n in nodes if n.attrib.get('text') in ('Downloads', 'Download', 'Загрузки') and n.attrib.get('resource-id','').endswith('/title')), None)
-            if downloads is not None and opened_roots:
+            downloads = next((n for n in nodes if n.attrib.get('text') in ('Downloads', 'Download', 'Загрузки', 'Yuklanmalar') and n.attrib.get('resource-id','').endswith('/title')), None)
+            if downloads is not None and (opened_roots or (internal_storage and not in_downloads)):
                 tap(downloads)
                 opened_roots = False
+                in_downloads=True
                 continue
-            menu = next((n for n in nodes if n.attrib.get('content-desc') in ('Show roots', 'Open navigation drawer', 'Показать корневые папки') or n.attrib.get('resource-id') == 'android:id/home'), None)
+            menu = next((n for n in nodes if n.attrib.get('content-desc') in ('Show roots', 'Open navigation drawer', 'Показать корневые папки', 'Ko‘rsatish', "Ko'rsatish") or n.attrib.get('resource-id') == 'android:id/home'), None)
             if menu is not None and not opened_roots:
                 tap(menu)
                 opened_roots = True

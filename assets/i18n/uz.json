@@ -626,7 +626,7 @@
   "rPage": "Sahifa",
   "rPageByPage": "PDF sahifalab ko‘rish",
   "rPageNote": "O‘qish joyiga izoh yozish",
-  "rPagedHint": "Sahifani ikki barmoq bilan kattalashtiring va suring. PDF matnini belgilash uchun sahifalab ko‘rishni o‘chiring.",
+  "rPagedHint": "Sahifani ikki barmoq bilan kattalashtiring va suring. PDF matnini qidirish yoki belgilash uchun sahifalab ko‘rishni o‘chiring.",
   "rPauseTimer": "O‘qish vaqtini to‘xtatish",
   "rQuestion": "Savol",
   "rRead": "O‘qish",
@@ -735,5 +735,8 @@
   "rBackupFull": "Ichki fayllar bilan to‘liq zaxira",
   "rBackupSize": "ichki fayl, qo‘shimcha o‘qish ma’lumotlari va shifrlash hajmi.",
   "rPartialFormat": "Bu format faqat soddalashtirilgan matn tarzida ochiladi. Rasmlar, maket, interaktiv tarkib va nashriyot uslublari saqlanmaydi. Davom etilsinmi?",
-  "rHabitReason": "O‘qish sababi (1800 tagacha belgi)"
+  "rHabitReason": "O‘qish sababi (1800 tagacha belgi)",
+  "rPdfSettingsHint": "PDF asl maketini saqlaydi. Ikki barmoq bilan kattalashtiring. Mavzular boshqaruv rangini o‘zgartiradi; shrift va satr sozlamalari EPUB va TXT uchun.",
+  "rGuideAppearanceDone": "O‘qish sozlamalari qo‘llandi. Faqat o‘qish rejimida o‘zgarishlar shu seans uchun amal qiladi.",
+  "rGuideNavigationDone": "Yangi o‘qish joyiga o‘tdingiz. O‘qishni davom ettiring yoki menyudan Belgilar va kartalarni oching."
 }

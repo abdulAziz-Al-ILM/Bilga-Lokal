@@ -3,8 +3,10 @@
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 mkdir -p .bilga-tools
-exec 9>.bilga-tools/build.lock
-flock -n 9 || { echo 'Another Bilga build/test is active; wait for it to finish.' >&2; exit 1; }
+# Keep the lock in flock's parent, never in ADB/Gradle descendants.
+if [[ "${BILGA_REVIEW_LOCKED:-}" != 1 ]]; then
+  exec flock --close -n .bilga-tools/build.lock env BILGA_REVIEW_LOCKED=1 bash "$PWD/tool/test_tablet_review.sh" "$@"
+fi
 if [[ $# -lt 2 || $# -gt 3 ]]; then
   echo 'Usage: bash tool/test_tablet_review.sh <device-serial> <review-test.apk> [integration_test/target_test.dart]' >&2
   exit 1

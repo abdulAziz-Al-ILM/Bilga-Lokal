@@ -81,6 +81,24 @@ void registerReadingPdfUiCases({
 
       try {
         await open();
+        await tap(t, find.byKey(const Key('reader-appearance')));
+        expect(find.byType(Slider), findsNothing);
+        await tap(t, find.byType(SwitchListTile));
+        await tap(t, find.text(Strings.get('en', 'gFinish')));
+        expect(find.byKey(const ValueKey('pdf-single-1')), findsOneWidget);
+        expect(
+          t
+              .widget<IconButton>(find.byKey(const Key('reader-search')))
+              .onPressed,
+          isNull,
+        );
+        await tap(t, find.byKey(const Key('reader-next')));
+        expect(find.byKey(const ValueKey('pdf-single-2')), findsOneWidget);
+        expect(find.text('2 / 500'), findsOneWidget);
+        await tap(t, find.byKey(const Key('reader-appearance')));
+        await tap(t, find.byType(SwitchListTile));
+        await tap(t, find.text(Strings.get('en', 'gFinish')));
+        expect(find.text('2 / 500'), findsOneWidget);
         await tap(t, find.byKey(const Key('reader-location')));
         await t.enterText(find.byType(TextField).first, '154');
         await tap(

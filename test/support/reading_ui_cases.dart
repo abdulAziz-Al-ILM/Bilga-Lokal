@@ -221,12 +221,34 @@ void registerReadingUiCases({
         await settle(t);
         expect(find.text('First chapter'), findsWidgets);
         await tap(t, find.byKey(const Key('reader-appearance')));
+        await t.drag(find.byType(Slider).first, const Offset(70, 0));
+        await settle(t);
         await tap(t, find.text('Sepia'));
         await tap(t, find.text(Strings.get('en', 'gFinish')));
         final settings = (await t.runAsync(
           () => store.one(book.id, 'settings'),
         ))!;
         expect(settings.data['theme'], 'sepia');
+        expect(settings.data['font'], greaterThan(20));
+        await tap(t, find.byIcon(Icons.more_vert));
+        await tap(t, find.text(Strings.get('en', 'rHelp')));
+        await tap(t, find.text(Strings.get('en', 'rAppearance')));
+        final appearanceGuide = t
+            .widget<GuideHost>(find.byType(GuideHost))
+            .controller;
+        await tap(t, find.byKey(const Key('reader-appearance')));
+        await tap(t, find.text(Strings.get('en', 'gFinish')));
+        expect(appearanceGuide.index, 0);
+        expect(
+          (await t.runAsync(() => store.one(book.id, 'settings')))!.revision,
+          settings.revision,
+        );
+        await tap(t, find.byKey(const Key('reader-appearance')));
+        await t.drag(find.byType(Slider).first, const Offset(30, 0));
+        await settle(t);
+        await tap(t, find.text(Strings.get('en', 'gFinish')));
+        expect(appearanceGuide.index, 1);
+        await tap(t, find.byKey(const Key('guide-next')));
         await tap(t, find.byIcon(Icons.chevron_right).last);
         expect(find.text('فصل دوم'), findsWidgets);
         await t.pumpWidget(const SizedBox.shrink());

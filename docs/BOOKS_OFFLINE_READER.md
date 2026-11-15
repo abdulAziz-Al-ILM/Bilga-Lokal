@@ -12,7 +12,7 @@ Android import uses `ACTION_OPEN_DOCUMENT`, without broad-storage permissions. A
 
 | Format | Implemented behavior | Limits |
 | --- | --- | --- |
-| PDF | Native PDFium pages, lazy bounded rendering, scroll and page mode, pinch/pan, page jump, thumbnails, embedded-text search/selection, bookmarks, page notes, permitted text highlights | Unencrypted documents only, at most 1 GiB and 1,000,000 pages. Scanned/textless pages render; no OCR. Page mode uses an image viewport; return to scrolling for text selection. |
+| PDF | Native PDFium pages, lazy bounded rendering, scroll and page mode, pinch/pan, page jump, thumbnails, embedded-text search/selection, bookmarks, page notes, permitted text highlights | Unencrypted documents only, at most 1 GiB and 1,000,000 pages. Scanned/textless pages render; no OCR. Page mode uses an image viewport; return to scrolling for text search and selection. |
 | EPUB | Spine chapters, EPUB 3 navigation / NCX when available, local images, selectable reflowed text, typography, themes, search, highlights and paragraph locators | No DRM, scripts, remote resources, publisher CSS, embedded fonts or audio/video. Complex publisher layouts are simplified. Archives compressed/expanded at most 256 MiB, 5,000 entries, 16 MiB per entry; index at most 2 MiB. |
 | TXT | Strict UTF-8, UTF-8 BOM or UTF-16 LE/BE BOM, selectable text, search, typography, paragraph locations | At most 16 MiB. Unknown encodings are rejected instead of guessing. |
 | HTML / FB2 | Explicitly disclosed simplified text import | Text only; original layout/interactive content/images are not preserved. |

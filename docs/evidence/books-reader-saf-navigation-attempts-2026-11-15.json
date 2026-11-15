@@ -1,0 +1,35 @@
+{
+  "artifact": "build/review/bilga-reader-saf-tests-v2.apk",
+  "artifact_sha256": "46abe470a04f2fec10057083e57adeb52af8927e431a19a06be33310c8c2901f",
+  "source": "fb0cc0e",
+  "attempts": [
+    {
+      "log": "/tmp/bilga-reader-saf-tablet2.log",
+      "result": "not accepted",
+      "reason": "Coordinator initially expected English navigation; actual system picker is Uzbek."
+    },
+    {
+      "log": "/tmp/bilga-reader-saf-tablet3.log",
+      "result": "not accepted",
+      "reason": "Downloads provider listed the generated folder but showed USB-copied, unindexed files as empty; use actual internal-storage provider."
+    },
+    {
+      "log": "/tmp/bilga-reader-saf-tablet4.log",
+      "result": "not accepted",
+      "verified_before_failure": [
+        "actual picker cancellation",
+        "actual PDF selected/imported/read",
+        "actual EPUB selected/imported/read"
+      ],
+      "failure": "TXT reference UI helper tapped advanced organization before the scroll jump had painted in landscape. Added a real frame wait before tapping. Persistence assertions were not skipped."
+    }
+  ],
+  "coordinator_corrections": [
+    "Observed Uzbek navigation labels",
+    "exact generated folder/file selection only",
+    "internal storage -> Download provider path",
+    "bounded 45-second native picker wait",
+    "complete marker sequence and unhandled-error guards"
+  ],
+  "production_touched": false
+}
