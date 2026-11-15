@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bilga/core/strings.dart';
+import 'package:bilga/features/books/book_library.dart';
 import 'package:bilga/features/finance/account_ledger.dart';
 import 'package:bilga/features/finance/ledger.dart';
 import 'package:bilga/features/finance/finance_reports_page.dart';
@@ -286,6 +287,94 @@ void main() {
         expect(find.byType(FloatingActionButton), findsNothing);
         await tester.pageBack();
         await tester.pumpAndSettle();
+        await tester.runAsync(
+          () async => expect(await notes.query('private_records'), before),
+        );
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.runAsync(() async {
+          await notes.close();
+          await todos.close();
+          await directory.delete(recursive: true);
+        });
+      }
+    },
+  );
+  testWidgets(
+    'Read-only book source retains complete metadata, unknown dates and original chapters without a write',
+    (tester) async {
+      late Directory directory;
+      late Database notes, todos;
+      late SearchRepository repo;
+      late SearchHit hit;
+      late List<Map<String, Object?>> before;
+      await tester.runAsync(() async {
+        directory = await Directory.systemTemp.createTemp('bilga-book-reader-');
+        notes = await NoteDatabase.openAt('${directory.path}/notes.db');
+        todos = await TodoDatabase.openAt('${directory.path}/tasks.db');
+        await RecordStore(database: notes).save(
+          'book',
+          BookLibrary.update(
+            {
+              'title': 'Book source',
+              'chapters': [
+                {
+                  'title': 'Saved chapter',
+                  'body': 'Complete chapter source',
+                  'versions': <dynamic>[],
+                },
+              ],
+              'characters': 'Personal character notes',
+            },
+            {
+              'author': 'Privatereadingauthor',
+              'description': 'Complete personal annotation',
+              'status': 'reading',
+              'pages': 250,
+              'currentPage': 42,
+              'rating': 4,
+              'isbn': '9780306406157',
+              'shelves': ['Home shelf'],
+              'tags': ['Study'],
+            },
+          ),
+        );
+        before = await notes.query('private_records');
+        repo = SearchRepository(notesDb: notes, todoDb: todos);
+        hit = (await repo.search('Privatereadingauthor', kind: 'book')).single;
+      });
+      try {
+        await tester.runAsync(() async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: DocumentPage(hit: hit, repository: repo),
+            ),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        });
+        await tester.pumpAndSettle();
+        final text = tester
+            .widget<SelectableText>(find.byType(SelectableText))
+            .data!;
+        for (final value in [
+          'Privatereadingauthor',
+          'Complete personal annotation',
+          'Reading',
+          '42 / 250',
+          '4 / 5',
+          '9780306406157',
+          'Home shelf',
+          'Study',
+          'Complete chapter source',
+          'Personal character notes',
+        ]) {
+          expect(text, contains(value));
+        }
+        expect(text, isNot(contains('Start date:')));
+        expect(text, isNot(contains('Finish date:')));
+        expect(find.byIcon(Icons.edit_outlined), findsNothing);
+        expect(find.byType(TextField), findsNothing);
         await tester.runAsync(
           () async => expect(await notes.query('private_records'), before),
         );

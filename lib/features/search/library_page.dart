@@ -9,6 +9,7 @@ import '../../core/dialogs.dart';
 import '../../core/strings.dart';
 import '../attachments/attachment_store.dart';
 import '../finance/ledger.dart';
+import '../books/book_library.dart';
 import '../finance/finance_reports_page.dart';
 import '../finance/account_ledger.dart';
 import '../habits/habit_store.dart';
@@ -261,9 +262,9 @@ class _DocumentPageState extends State<DocumentPage> {
   Future<void> load() async {
     try {
       final source = await widget.repository.source(widget.hit);
-      if (source != null && widget.hit.kind == 'finance') {
+      if (source != null && {'finance', 'book'}.contains(widget.hit.kind)) {
         RecordStore.validate(
-          'finance',
+          widget.hit.kind,
           jsonDecode(source['payload'] as String) as Map<String, dynamic>,
         );
       }
@@ -353,6 +354,9 @@ class _DocumentPageState extends State<DocumentPage> {
           '${date(day)}: ${h.plan.amount(DateTime.parse(day), h.days)} ${h.plan.unit}\n${h.plan.entries[day]?['note'] ?? ''}',
       ].join('\n\n');
     }
+    if (widget.hit.kind == 'book') {
+      return BookLibrary.readable(payload, label: context.tr, date: date);
+    }
     if (widget.hit.kind == 'finance') {
       final accounts = AccountLedger.accounts(payload);
       final balances = AccountLedger.balances(
@@ -426,7 +430,10 @@ class _DocumentPageState extends State<DocumentPage> {
     final Widget? page = switch (widget.hit.kind) {
       'note' => NoteEditorPage(note: Note.fromMap(row!)),
       'todo' => TodoEditorPage(todo: row, database: widget.repository.todoDb),
-      'experience' || 'book' => RecordPage(PrivateRecord.row(row!)),
+      'experience' || 'book' => RecordPage(
+        PrivateRecord.row(row!),
+        store: RecordStore(database: widget.repository.notesDb),
+      ),
       _ => null,
     };
     if (page == null) return;

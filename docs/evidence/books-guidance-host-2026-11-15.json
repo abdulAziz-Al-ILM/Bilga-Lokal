@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-15",
+  "source": "Books library and first deterministic Habit tutorial checkpoint; see containing commit",
+  "flutterTestsPassed": 268,
+  "durationSeconds": 127,
+  "flutterLog": "/tmp/bilga-guidance-full-tests-2.log",
+  "analyzer": "No issues found",
+  "catalogLanguages": 43,
+  "catalogKeys": 568,
+  "formatFiles": 201,
+  "formatChangesRequired": 0,
+  "manifestGuardsPassed": 9,
+  "voiceSourceGuard": "PASS",
+  "newCoverage": [
+    "Books model: legacy no rewrite, metadata bounds/ISBN/date/fullwidth numerals/deep copies/future version rejection",
+    "Books database: thin pagination/search/filters/legacy chapters and bookmarks/stale and failed rollback/portable backup/idempotence/attachment owner isolation",
+    "Books UI: real metadata create/validation/search/favorite/filter/edit/retry and delayed-load query race",
+    "Books compact 2x RTL/dark expired-access draft retry and read-only full content",
+    "Guidance required events, ordered preferences, explicit resume/malformed state and no replay across saved boundary",
+    "22 template plan independence and no fabricated completions",
+    "Real spotlight accepts target pointer actions and blocks unrelated pointer controls; rotation and missing-target fallback",
+    "Habit template preview/cancel/customize/explicit save with no writes during selection",
+    "Actual Habit name/schedule/target/unit/save/progress tour with Back/Next/Skip/Exit and Android Back discard",
+    "Failed and expired Habit writes retain draft, allow explicit successful retry once",
+    "360px 2x text RTL/dark route-wide Habit form and guide panel usability"
+  ],
+  "earlierAttempts": "Initial compile/step-count/virtualized-field assertions failed and were corrected; final full suite passes. /tmp/bilga-habit-guidance-tests-[1-5].log retained locally.",
+  "deviceAcceptance": "Scoped physical results in books-guidance-tablet-2026-11-15.json; combined earlier failure is preserved",
+  "schemaChange": false,
+  "newDependencies": false,
+  "overallProductComplete": false,
+  "scopeLimits": [
+    "Only Habit creation is wired to the shared tutorial engine",
+    "Other modules and full four-module completion remain in progress",
+    "No manual TalkBack or release-performance acceptance",
+    "New en/uz/ru copy is draft; other catalogs fallback English"
+  ],
+  "supplementalBookUiCasesPassed": 4,
+  "supplementalBookUiDurationSeconds": 46,
+  "supplementalBookUiLog": "/tmp/bilga-books-ui-refocus-tests.log"
+}

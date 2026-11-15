@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-15",
+  "suite": "integration_test/guided_review_test.dart",
+  "package": "com.ilmmizan.bilga.review",
+  "device": "Blackview Tab16 / Android 12 API31 / arm64",
+  "apkSha256": "798e1c4e00d454aa605797330fac8ada75176b6b47b087ab3036c149f13e03d5",
+  "durationSeconds": 238,
+  "scenarioCases": 14,
+  "scenariosPassed": 13,
+  "scenariosFailed": 1,
+  "runnerCasesIncludingHooks": 16,
+  "result": "FAIL",
+  "failure": {
+    "case": "Book library creates validated metadata, filters reading/favorites and searches author without losing details",
+    "assertion": "Expected RecordPage after final Save; no RecordPage found",
+    "location": "test/support/book_library_ui_cases.dart:147",
+    "rootCause": "The next instrumented run confirmed that the corrected ISBN was replaced by the earlier invalid value while Android IME was attaching. The fixture helper now waits for the real input client and asserts text before and after blur; product validation correctly refused the invalid value."
+  },
+  "passedScope": [
+    "Actual startup/all ten routes/14 themes/Arabic RTL",
+    "Six encrypted Book metadata/storage/search/paging/rollback/backup/attachment cases",
+    "Book failed-save/legacy preservation and delayed-initial-load UI cases",
+    "Three Habit template/guide/failure-expiry-retry/skip-discard UI journeys",
+    "Four actual synthetic-fixture screenshots"
+  ],
+  "log": "/tmp/bilga-books-guidance-tablet-tests-1.log",
+  "nativeRotationVerified": false,
+  "metadataCorrection": "App journey formerly emitted rotation metadata without executing rotation in this focused target. It is not accepted as evidence. Current source moves that marker into the actual full-suite rotation test.",
+  "productionPackageModified": false,
+  "clearOrUninstallUsed": false,
+  "overallProductComplete": false
+}

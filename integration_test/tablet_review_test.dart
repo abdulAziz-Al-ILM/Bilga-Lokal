@@ -30,6 +30,8 @@ import 'checklist_cases.dart';
 import 'task_template_cases.dart';
 import 'todo_project_cases.dart';
 import 'finance_account_cases.dart';
+import 'book_library_cases.dart';
+import 'habit_guidance_cases.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -185,6 +187,10 @@ void main() {
           ),
           isTrue,
         );
+        binding.reportData = {
+          ...?binding.reportData,
+          'realEditorRotation': 'portrait-landscape-portrait',
+        };
       } finally {
         await SystemChrome.setPreferredOrientations([]);
         await tester.pumpWidget(const SizedBox.shrink());
@@ -201,4 +207,6 @@ void main() {
   registerTaskTemplateCases(binding);
   registerTodoProjectCases(binding);
   registerFinanceAccountCases(binding);
+  registerBookLibraryCases(binding);
+  registerHabitGuidanceCases(binding);
 }

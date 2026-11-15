@@ -118,20 +118,22 @@ class Attachments {
       (await bridge.invokeListMethod('pick') ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
-  static Future<List<PrivateRecord>> all(String kind, String owner) async =>
-      (await RecordStore().all('attachment'))
-          .where((r) => r.data['ownerKind'] == kind && r.data['owner'] == owner)
-          .toList();
+  static Future<List<PrivateRecord>> all(
+    String kind,
+    String owner, {
+    RecordStore? store,
+  }) => (store ?? RecordStore()).attachments(kind, owner);
   static Future<void> add(
     String kind,
     String owner,
-    Map<String, dynamic> item,
-  ) async {
+    Map<String, dynamic> item, {
+    RecordStore? store,
+  }) async {
     if ((item['size'] ?? 0) > maxFile) {
       throw const FormatException('file_large');
     }
     final f = await write(uriStream(item['uri']));
-    await RecordStore().save('attachment', {
+    await (store ?? RecordStore()).save('attachment', {
       'title': '${item['name'] ?? 'File'}',
       'ownerKind': kind,
       'owner': owner,
@@ -141,9 +143,14 @@ class Attachments {
     });
   }
 
-  static Future<void> text(String kind, String owner, String text) async {
+  static Future<void> text(
+    String kind,
+    String owner,
+    String text, {
+    RecordStore? store,
+  }) async {
     if (text.trim().isEmpty) return;
-    await RecordStore().save('attachment', {
+    await (store ?? RecordStore()).save('attachment', {
       'title': text.substring(0, text.length.clamp(0, 200)),
       'ownerKind': kind,
       'owner': owner,
@@ -152,12 +159,11 @@ class Attachments {
     });
   }
 
-  static Future<void> remove(PrivateRecord r) async {
-    await RecordStore().remove(r);
+  static Future<void> remove(PrivateRecord r, {RecordStore? store}) async {
+    final records = store ?? RecordStore();
+    await records.remove(r);
     final id = r.data['blob'];
-    if (id is String &&
-        !(await RecordStore().all('attachment'))
-            .any((a) => a.data['blob'] == id)) {
+    if (id is String && !await records.hasAttachmentBlob(id)) {
       final f = await file(id);
       if (await f.exists()) await f.delete();
     }

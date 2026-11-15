@@ -37,21 +37,31 @@ Future<Map<String, String>?> editFields(
   Set<String> dateFields = const {},
   Set<String> numberFields = const {},
   Set<String> signedNumberFields = const {},
+  Map<String, GlobalKey> fieldKeys = const {},
+  GlobalKey? saveKey,
+  void Function(String field, String value)? onChanged,
+  Widget Function(Widget child)? pageWrapper,
 }) => Navigator.push(
   c,
   MaterialPageRoute(
-    builder: (_) => _FormPage(
-      title,
-      labels,
-      initial,
-      multiline,
-      onSave,
-      requiredFields,
-      weekdayFields,
-      dateFields,
-      numberFields,
-      signedNumberFields,
-    ),
+    builder: (_) {
+      final page = _FormPage(
+        title,
+        labels,
+        initial,
+        multiline,
+        onSave,
+        requiredFields,
+        weekdayFields,
+        dateFields,
+        numberFields,
+        signedNumberFields,
+        fieldKeys,
+        saveKey,
+        onChanged,
+      );
+      return pageWrapper?.call(page) ?? page;
+    },
   ),
 );
 
@@ -62,6 +72,9 @@ class _FormPage extends StatefulWidget {
   final Future<void> Function(Map<String, String>)? onSave;
   final Set<String> requiredFields, weekdayFields, dateFields, numberFields;
   final Set<String> signedNumberFields;
+  final Map<String, GlobalKey> fieldKeys;
+  final GlobalKey? saveKey;
+  final void Function(String field, String value)? onChanged;
   const _FormPage(
     this.title,
     this.labels,
@@ -73,6 +86,9 @@ class _FormPage extends StatefulWidget {
     this.dateFields,
     this.numberFields,
     this.signedNumberFields,
+    this.fieldKeys,
+    this.saveKey,
+    this.onChanged,
   );
   @override
   State<_FormPage> createState() => _FormState();
@@ -115,6 +131,7 @@ class _FormState extends State<_FormPage> {
         title: Text(widget.title),
         actions: [
           TextButton(
+            key: widget.saveKey,
             onPressed: saving
                 ? null
                 : () async {
@@ -156,104 +173,118 @@ class _FormState extends State<_FormPage> {
           ),
         ],
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        children: [
-          if (saving) const LinearProgressIndicator(),
-          if (error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (saving) const LinearProgressIndicator(),
+            if (error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ),
-            ),
-          for (final e in controllers.entries)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: widget.weekdayFields.contains(e.key)
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(widget.labels[e.key]!),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          children: List.generate(7, (i) {
-                            final days = e.value.text
-                                .split(',')
-                                .map(int.tryParse)
-                                .whereType<int>()
-                                .toSet();
-                            return FilterChip(
-                              label: Text(
-                                MaterialLocalizations.of(context)
-                                    .narrowWeekdays[(i + 1) % 7],
-                              ),
-                              selected: days.contains(i + 1),
-                              onSelected: saving
-                                  ? null
-                                  : (selected) {
-                                      if (selected) {
-                                        days.add(i + 1);
-                                      } else if (days.length > 1) {
-                                        days.remove(i + 1);
-                                      }
-                                      setState(
-                                        () => e.value.text =
-                                            (days.toList()..sort()).join(','),
-                                      );
-                                    },
-                            );
-                          }),
-                        ),
-                      ],
-                    )
-                  : TextField(
-                      controller: e.value,
-                      keyboardType: widget.numberFields.contains(e.key)
-                          ? TextInputType.numberWithOptions(
-                              decimal: true,
-                              signed: widget.signedNumberFields.contains(e.key),
-                            )
-                          : null,
-                      readOnly: widget.dateFields.contains(e.key),
-                      onTap: !widget.dateFields.contains(e.key)
-                          ? null
-                          : () async {
-                              final date = await showDatePicker(
-                                context: context,
-                                initialDate:
-                                    DateTime.tryParse(e.value.text) ??
-                                    DateTime.now(),
-                                firstDate: DateTime(1),
-                                lastDate: DateTime(9999, 12, 31),
+            for (final e in controllers.entries)
+              Padding(
+                key: widget.fieldKeys[e.key],
+                padding: const EdgeInsets.only(bottom: 20),
+                child: widget.weekdayFields.contains(e.key)
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.labels[e.key]!),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: List.generate(7, (i) {
+                              final days = e.value.text
+                                  .split(',')
+                                  .map(int.tryParse)
+                                  .whereType<int>()
+                                  .toSet();
+                              return FilterChip(
+                                label: Text(
+                                  MaterialLocalizations.of(context)
+                                      .narrowWeekdays[(i + 1) % 7],
+                                ),
+                                selected: days.contains(i + 1),
+                                onSelected: saving
+                                    ? null
+                                    : (selected) {
+                                        if (selected) {
+                                          days.add(i + 1);
+                                        } else if (days.length > 1) {
+                                          days.remove(i + 1);
+                                        }
+                                        setState(
+                                          () => e.value.text =
+                                              (days.toList()..sort()).join(','),
+                                        );
+                                        widget.onChanged?.call(
+                                          e.key,
+                                          e.value.text,
+                                        );
+                                      },
                               );
-                              if (date != null && mounted) {
-                                setState(
-                                  () => e.value.text = date
-                                      .toIso8601String()
-                                      .substring(0, 10),
+                            }),
+                          ),
+                        ],
+                      )
+                    : TextField(
+                        key: ValueKey('editor-field-${e.key}'),
+                        controller: e.value,
+                        keyboardType: widget.numberFields.contains(e.key)
+                            ? TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: widget.signedNumberFields.contains(
+                                  e.key,
+                                ),
+                              )
+                            : null,
+                        readOnly: widget.dateFields.contains(e.key),
+                        onTap: !widget.dateFields.contains(e.key)
+                            ? null
+                            : () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate:
+                                      DateTime.tryParse(e.value.text) ??
+                                      DateTime.now(),
+                                  firstDate: DateTime(1),
+                                  lastDate: DateTime(9999, 12, 31),
                                 );
-                              }
-                            },
-                      enabled: !saving,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      enableIMEPersonalizedLearning: false,
-                      onChanged: (_) => setState(() {}),
-                      minLines: widget.multiline.contains(e.key) ? 6 : 1,
-                      maxLines: widget.multiline.contains(e.key) ? null : 1,
-                      maxLength: widget.multiline.contains(e.key)
-                          ? 100000
-                          : 200,
-                      decoration: InputDecoration(
-                        labelText: widget.labels[e.key],
-                        border: const OutlineInputBorder(),
+                                if (date != null && mounted) {
+                                  setState(
+                                    () => e.value.text = date
+                                        .toIso8601String()
+                                        .substring(0, 10),
+                                  );
+                                }
+                              },
+                        enabled: !saving,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        enableIMEPersonalizedLearning: false,
+                        onChanged: (value) {
+                          setState(() {});
+                          widget.onChanged?.call(e.key, value);
+                        },
+                        minLines: widget.multiline.contains(e.key) ? 6 : 1,
+                        maxLines: widget.multiline.contains(e.key) ? null : 1,
+                        maxLength: widget.multiline.contains(e.key)
+                            ? 100000
+                            : 200,
+                        decoration: InputDecoration(
+                          labelText: widget.labels[e.key],
+                          border: const OutlineInputBorder(),
+                        ),
                       ),
-                    ),
-            ),
-        ],
+              ),
+          ],
+        ),
       ),
     ),
   );

@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../notes/note_database.dart';
 import '../finance/ledger.dart';
+import '../books/book_library.dart';
 
 String localId() => List.generate(
   24,
@@ -57,6 +58,7 @@ class RecordStore {
       }
     }
     if (kind == 'book') {
+      BookLibrary.validate(data);
       if (data['bookmark'] != null &&
           (data['bookmark'] is! int || data['bookmark'] < 0)) {
         throw const FormatException('bookmark');
@@ -120,6 +122,19 @@ class RecordStore {
         whereArgs: [kind],
         orderBy: 'updated_at DESC',
       )).map(PrivateRecord.row).toList();
+  Future<List<PrivateRecord>> attachments(String kind, String owner) async =>
+      (await (await _db).query(
+        'private_records',
+        where: "kind = ? AND json_extract(payload, '\$.ownerKind') = ? AND json_extract(payload, '\$.owner') = ?",
+        whereArgs: ['attachment', kind, owner],
+      )).map(PrivateRecord.row).toList();
+
+  Future<bool> hasAttachmentBlob(String blob) async =>
+      (await (await _db).rawQuery(
+        "SELECT 1 FROM private_records WHERE kind = 'attachment' AND json_extract(payload, '\$.blob') = ? LIMIT 1",
+        [blob],
+      )).isNotEmpty;
+
   Future<PrivateRecord> save(
     String kind,
     Map<String, dynamic> data, {

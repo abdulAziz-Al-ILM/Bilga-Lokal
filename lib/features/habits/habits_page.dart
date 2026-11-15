@@ -2,17 +2,49 @@ import 'package:flutter/material.dart';
 
 import '../../core/editor_form.dart';
 import '../../core/strings.dart';
+import '../agent/agent_access.dart';
+import '../agent/purchase_panel.dart';
 import '../attachments/attachments_page.dart';
+import '../guidance/guide_controller.dart';
+import '../guidance/guide_host.dart';
+import '../private_space/record_store.dart';
 import 'habit_store.dart';
+import 'habit_templates.dart';
+import 'habit_template_page.dart';
 
 class HabitsPage extends StatefulWidget {
-  const HabitsPage({super.key});
+  final HabitStore? store;
+  final AgentAccess? access;
+  const HabitsPage({super.key, this.store, this.access});
   @override
   State<HabitsPage> createState() => _HabitsState();
 }
 
 class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
-  final store = HabitStore();
+  late final store = widget.store ?? HabitStore();
+  AgentAccess get access => widget.access ?? AgentAccess.instance;
+  final targets = <String, GlobalKey>{
+    for (final id in [
+      'title',
+      'weekdays',
+      'target',
+      'unit',
+      'save',
+      'progress',
+    ])
+      id: GlobalKey(debugLabel: 'habit-guide-$id'),
+  };
+  late final guide = GuideController(
+    id: 'habit.create',
+    steps: const [
+      GuideStep('title', 'title', 'hgTitle', event: 'titleEntered'),
+      GuideStep('schedule', 'weekdays', 'hgSchedule'),
+      GuideStep('target', 'target', 'hgTarget'),
+      GuideStep('unit', 'unit', 'hgUnit'),
+      GuideStep('save', 'save', 'hgSave', event: 'saved'),
+      GuideStep('progress', 'progress', 'hgProgress', backBoundary: true),
+    ],
+  );
   late Future<List<Habit>> loading;
   bool archive = false, busy = false;
   @override
@@ -25,7 +57,59 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    guide.dispose();
     super.dispose();
+  }
+
+  Future<bool> allowed() async {
+    if (access.has(AgentAccess.core)) return true;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => PurchasePanel(product: AgentAccess.core, access: access),
+    );
+    return access.has(AgentAccess.core);
+  }
+
+  void requireAccess() {
+    if (!access.has(AgentAccess.core)) throw StateError('access_expired');
+  }
+
+  Future<void> templates() async {
+    final selected = await Navigator.push<HabitTemplate>(
+      context,
+      MaterialPageRoute(builder: (_) => const HabitTemplatePage()),
+    );
+    if (selected != null && mounted) await edit(null, selected);
+  }
+
+  Future<void> help() async {
+    final pending = await guide.hasPending();
+    if (!mounted) return;
+    final start = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(c.tr('gHelp')),
+        content: SingleChildScrollView(
+          child: Text(
+            '${c.tr('hgAbout')}\n\n${c.tr('hgHow')}\n\n${c.tr('hgSafe')}'
+            '${pending ? '\n\n${c.tr('hgRestart')}' : ''}',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: Text(c.tr('gExit')),
+          ),
+          FilledButton(
+            key: const Key('habit-guide-start'),
+            onPressed: () => Navigator.pop(c, true),
+            child: Text(c.tr(pending ? 'gResume' : 'gShowMe')),
+          ),
+        ],
+      ),
+    );
+    if (start == true && mounted) await run(() => edit(null, null, true));
   }
 
   @override
@@ -54,8 +138,15 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> edit([Habit? h]) async {
-    final p = h?.plan ?? HabitPlan();
+  Future<void> edit([
+    Habit? h,
+    HabitTemplate? template,
+    bool guided = false,
+  ]) async {
+    if (!await allowed() || !mounted) return;
+    final p = h?.plan ?? template?.plan(context.tr) ?? HabitPlan();
+    if (guided) await guide.resume();
+    if (!mounted) return;
     await editFields(
       context,
       context.tr('xHabits'),
@@ -69,7 +160,9 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
         'reason': context.tr('hReason'),
       },
       initial: {
-        'title': h?.title ?? '',
+        'title':
+            h?.title ??
+            (template == null ? '' : context.tr('ht_${template.id}')),
         'weekdays': (p.weekdays.toList()..sort()).join(','),
         'target': '${p.target}',
         'unit': p.unit,
@@ -80,7 +173,26 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
       requiredFields: {'title', 'weekdays', 'target'},
       weekdayFields: {'weekdays'},
       numberFields: {'target'},
+      fieldKeys: guided
+          ? {
+              for (final id in ['title', 'weekdays', 'target', 'unit'])
+                id: targets[id]!,
+            }
+          : const {},
+      saveKey: guided ? targets['save'] : null,
+      onChanged: guided
+          ? (field, value) {
+              if (field == 'title') {
+                guide.satisfy('titleEntered', valid: value.trim().isNotEmpty);
+              }
+            }
+          : null,
+      pageWrapper: guided
+          ? (child) =>
+                GuideHost(controller: guide, targets: targets, child: child)
+          : null,
       onSave: (v) async {
+        requireAccess();
         final days = v['weekdays']!
             .split(RegExp(r'[,،\s]+'))
             .where((s) => s.isNotEmpty)
@@ -100,8 +212,11 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
         } else {
           await store.configure(h.id, v['title']!, plan);
         }
+        if (guided) guide.event('saved');
       },
     );
+    // Leaving an unsaved editor ends the tour; the existing draft guard applies.
+    if (guided && guide.active && guide.step.id != 'progress') guide.exit();
   }
 
   Future<void> check(Habit h, DateTime date) async {
@@ -120,8 +235,15 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
       multiline: {'note'},
       requiredFields: {'amount'},
       numberFields: {'amount'},
-      onSave: (v) =>
-          store.checkIn(h.id, date, int.parse(v['amount']!), note: v['note']),
+      onSave: (v) async {
+        requireAccess();
+        await store.checkIn(
+          h.id,
+          date,
+          int.parse(v['amount']!),
+          note: v['note'],
+        );
+      },
     );
   }
 
@@ -137,240 +259,288 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(context.tr('xHabits')),
-      actions: [
-        IconButton(
-          tooltip: context.tr('archive'),
-          icon: Icon(archive ? Icons.unarchive : Icons.archive_outlined),
-          onPressed: busy
-              ? null
-              : () => setState(() {
-                  archive = !archive;
-                  reload();
-                }),
-        ),
-      ],
-    ),
-    floatingActionButton: FloatingActionButton(
-      onPressed: busy ? null : () => run(edit),
-      child: const Icon(Icons.add),
-    ),
-    body: FutureBuilder<List<Habit>>(
-      future: loading,
-      builder: (c, s) {
-        if (s.hasError) {
-          return Center(
-            child: TextButton(
-              onPressed: () => setState(reload),
-              child: Text(c.tr('retry')),
-            ),
-          );
-        }
-        if (!s.hasData) return const Center(child: CircularProgressIndicator());
-        final list = s.data!, now = DateTime.now();
-        final active = list
-            .where((h) => !h.archived && h.plan.scheduled(now))
-            .toList();
-        final done = active.where((h) => h.plan.done(now, h.days)).length;
-        return Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 840),
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-              itemCount: list.length + 1,
-              itemBuilder: (c, index) {
-                if (index == 0) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${c.tr('hToday')} · $done / ${active.length}',
-                          style: Theme.of(c).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 12),
-                        LinearProgressIndicator(
-                          value: active.isEmpty ? 0 : done / active.length,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(c.tr('hEncourage')),
-                        if (list.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(c.tr('hFirst')),
+  Widget build(BuildContext context) => GuideHost(
+    controller: guide,
+    targets: targets,
+    child: Scaffold(
+      appBar: AppBar(
+        title: Text(context.tr('xHabits')),
+        actions: [
+          IconButton(
+            key: const Key('habit-help'),
+            tooltip: context.tr('gHelp'),
+            onPressed: busy ? null : help,
+            icon: const Icon(Icons.help_outline),
+          ),
+          IconButton(
+            tooltip: context.tr('htLibrary'),
+            onPressed: busy ? null : () => run(templates),
+            icon: const Icon(Icons.grid_view_outlined),
+          ),
+          IconButton(
+            tooltip: context.tr('archive'),
+            icon: Icon(archive ? Icons.unarchive : Icons.archive_outlined),
+            onPressed: busy
+                ? null
+                : () => setState(() {
+                    archive = !archive;
+                    reload();
+                  }),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        key: const Key('habit-add'),
+        tooltip: context.tr('hCreate'),
+        onPressed: busy ? null : () => run(() => edit()),
+        child: const Icon(Icons.add),
+      ),
+      body: FutureBuilder<List<Habit>>(
+        future: loading,
+        builder: (c, s) {
+          if (s.hasError) {
+            return Center(
+              child: TextButton(
+                onPressed: () => setState(reload),
+                child: Text(c.tr('retry')),
+              ),
+            );
+          }
+          if (!s.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final list = s.data!, now = DateTime.now();
+          final active = list
+              .where((h) => !h.archived && h.plan.scheduled(now))
+              .toList();
+          final done = active.where((h) => h.plan.done(now, h.days)).length;
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 840),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                itemCount: list.length + 1,
+                itemBuilder: (c, index) {
+                  if (index == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Column(
+                        key: targets['progress'],
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${c.tr('hToday')} · $done / ${active.length}',
+                            style: Theme.of(c).textTheme.headlineSmall,
                           ),
-                      ],
-                    ),
-                  );
-                }
-                final h = list[index - 1], p = h.plan;
-                var planned = 0, completed = 0;
-                for (var i = 0; i < 28; i++) {
-                  final d = DateTime(now.year, now.month, now.day - i);
-                  if (dayKey(d).compareTo(dayKey(h.created)) >= 0 &&
-                      p.scheduled(d) &&
-                      !p.skipped(d)) {
-                    planned++;
-                    if (p.done(d, h.days)) completed++;
-                  }
-                }
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                h.title,
-                                style: Theme.of(c).textTheme.titleLarge,
-                              ),
-                            ),
-                            PopupMenuButton<String>(
-                              enabled: !busy,
-                              onSelected: (v) => run(() async {
-                                if (v == 'edit') {
-                                  await edit(h);
-                                } else {
-                                  await store.archive(h.id, !h.archived);
-                                }
-                              }),
-                              itemBuilder: (c) => [
-                                PopupMenuItem(
-                                  value: 'edit',
-                                  child: Text(c.tr('edit')),
-                                ),
-                                PopupMenuItem(
-                                  value: 'archive',
-                                  child: Text(
-                                    c.tr(h.archived ? 'restore' : 'archive'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Text(
-                          '${p.amount(now, h.days)} / ${p.target} ${p.unit} · ${p.streak(h.days, now)} ${c.tr('hStreak')}',
-                        ),
-                        if (p.cue.isNotEmpty) Text('${c.tr('hCue')}: ${p.cue}'),
-                        if (p.minimum.isNotEmpty)
-                          Text('${c.tr('hMinimum')}: ${p.minimum}'),
-                        if (p.reason.isNotEmpty)
-                          Text('${c.tr('hReason')}: ${p.reason}'),
-                        const SizedBox(height: 12),
-                        Text('${c.tr('h28Days')}: $completed / $planned'),
-                        const SizedBox(height: 8),
-                        LinearProgressIndicator(
-                          value: planned == 0 ? 0 : completed / planned,
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 5,
-                          runSpacing: 4,
-                          children: List.generate(28, (i) {
-                            final d = DateTime(
-                              now.year,
-                              now.month,
-                              now.day - 27 + i,
-                            );
-                            return ActionChip(
-                              label: Text('${d.day}/${d.month}'),
-                              avatar: Icon(
-                                p.done(d, h.days)
-                                    ? Icons.check_circle
-                                    : p.skipped(d)
-                                    ? Icons.pause_circle_outline
-                                    : p.amount(d, h.days) > 0
-                                    ? Icons.timelapse
-                                    : Icons.circle_outlined,
-                                size: 16,
-                              ),
-                              onPressed: busy || h.archived
-                                  ? null
-                                  : () => run(() => check(h, d)),
-                            );
-                          }),
-                        ),
-                        if (!h.archived)
+                          const SizedBox(height: 12),
+                          LinearProgressIndicator(
+                            value: active.isEmpty ? 0 : done / active.length,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(c.tr('hEncourage')),
+                          const SizedBox(height: 12),
+                          Text(c.tr('hgAbout')),
+                          const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
+                            runSpacing: 8,
                             children: [
                               FilledButton.icon(
-                                onPressed: busy
-                                    ? null
-                                    : () => run(
-                                        () => store.mark(
-                                          h.id,
-                                          now,
-                                          !p.done(now, h.days),
-                                        ),
-                                      ),
-                                icon: Icon(
-                                  p.done(now, h.days)
-                                      ? Icons.undo
-                                      : Icons.check,
-                                ),
-                                label: Text(
-                                  c.tr(p.done(now, h.days) ? 'undo' : 'hDone'),
-                                ),
+                                key: const Key('habit-templates'),
+                                onPressed: busy ? null : () => run(templates),
+                                icon: const Icon(Icons.grid_view_outlined),
+                                label: Text(c.tr('htLibrary')),
                               ),
-                              OutlinedButton(
-                                onPressed: busy
-                                    ? null
-                                    : () => run(() => check(h, now)),
-                                child: Text(c.tr('hCheckIn')),
-                              ),
-                              TextButton(
-                                onPressed: busy
-                                    ? null
-                                    : () => run(
-                                        () => store.checkIn(
-                                          h.id,
-                                          now,
-                                          p.amount(now, h.days),
-                                          skipped: !p.skipped(now),
-                                        ),
-                                      ),
-                                child: Text(c.tr('hPause')),
-                              ),
-                              TextButton(
-                                onPressed: busy
-                                    ? null
-                                    : () => run(() => history(h)),
-                                child: Text(c.tr('history')),
+                              OutlinedButton.icon(
+                                key: const Key('habit-get-started'),
+                                onPressed: busy ? null : help,
+                                icon: const Icon(Icons.touch_app_outlined),
+                                label: Text(c.tr('gGetStarted')),
                               ),
                             ],
                           ),
-                        TextButton.icon(
-                          onPressed: () => Navigator.push(
-                            c,
-                            MaterialPageRoute(
-                              builder: (_) => AttachmentsPage(
-                                kind: 'habit',
-                                owner: h.id,
-                                title: h.title,
+                          if (list.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text(c.tr('hFirst')),
+                            ),
+                        ],
+                      ),
+                    );
+                  }
+                  final h = list[index - 1], p = h.plan;
+                  var planned = 0, completed = 0;
+                  for (var i = 0; i < 28; i++) {
+                    final d = DateTime(now.year, now.month, now.day - i);
+                    if (dayKey(d).compareTo(dayKey(h.created)) >= 0 &&
+                        p.scheduled(d) &&
+                        !p.skipped(d)) {
+                      planned++;
+                      if (p.done(d, h.days)) completed++;
+                    }
+                  }
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  h.title,
+                                  style: Theme.of(c).textTheme.titleLarge,
+                                ),
+                              ),
+                              PopupMenuButton<String>(
+                                enabled: !busy,
+                                onSelected: (v) => run(() async {
+                                  requireAccess();
+                                  if (v == 'edit') {
+                                    await edit(h);
+                                  } else {
+                                    await store.archive(h.id, !h.archived);
+                                  }
+                                }),
+                                itemBuilder: (c) => [
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    child: Text(c.tr('edit')),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'archive',
+                                    child: Text(
+                                      c.tr(h.archived ? 'restore' : 'archive'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${p.amount(now, h.days)} / ${p.target} ${p.unit} · ${p.streak(h.days, now)} ${c.tr('hStreak')}',
+                          ),
+                          if (p.cue.isNotEmpty)
+                            Text('${c.tr('hCue')}: ${p.cue}'),
+                          if (p.minimum.isNotEmpty)
+                            Text('${c.tr('hMinimum')}: ${p.minimum}'),
+                          if (p.reason.isNotEmpty)
+                            Text('${c.tr('hReason')}: ${p.reason}'),
+                          const SizedBox(height: 12),
+                          Text('${c.tr('h28Days')}: $completed / $planned'),
+                          const SizedBox(height: 8),
+                          LinearProgressIndicator(
+                            value: planned == 0 ? 0 : completed / planned,
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 5,
+                            runSpacing: 4,
+                            children: List.generate(28, (i) {
+                              final d = DateTime(
+                                now.year,
+                                now.month,
+                                now.day - 27 + i,
+                              );
+                              return ActionChip(
+                                label: Text('${d.day}/${d.month}'),
+                                avatar: Icon(
+                                  p.done(d, h.days)
+                                      ? Icons.check_circle
+                                      : p.skipped(d)
+                                      ? Icons.pause_circle_outline
+                                      : p.amount(d, h.days) > 0
+                                      ? Icons.timelapse
+                                      : Icons.circle_outlined,
+                                  size: 16,
+                                ),
+                                onPressed: busy || h.archived
+                                    ? null
+                                    : () => run(() => check(h, d)),
+                              );
+                            }),
+                          ),
+                          if (!h.archived)
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                FilledButton.icon(
+                                  onPressed: busy
+                                      ? null
+                                      : () => run(() async {
+                                          requireAccess();
+                                          await store.mark(
+                                            h.id,
+                                            now,
+                                            !p.done(now, h.days),
+                                          );
+                                        }),
+                                  icon: Icon(
+                                    p.done(now, h.days)
+                                        ? Icons.undo
+                                        : Icons.check,
+                                  ),
+                                  label: Text(
+                                    c.tr(
+                                      p.done(now, h.days) ? 'undo' : 'hDone',
+                                    ),
+                                  ),
+                                ),
+                                OutlinedButton(
+                                  onPressed: busy
+                                      ? null
+                                      : () => run(() => check(h, now)),
+                                  child: Text(c.tr('hCheckIn')),
+                                ),
+                                TextButton(
+                                  onPressed: busy
+                                      ? null
+                                      : () => run(() async {
+                                          requireAccess();
+                                          await store.checkIn(
+                                            h.id,
+                                            now,
+                                            p.amount(now, h.days),
+                                            skipped: !p.skipped(now),
+                                          );
+                                        }),
+                                  child: Text(c.tr('hPause')),
+                                ),
+                                TextButton(
+                                  onPressed: busy
+                                      ? null
+                                      : () => run(() => history(h)),
+                                  child: Text(c.tr('history')),
+                                ),
+                              ],
+                            ),
+                          TextButton.icon(
+                            onPressed: () => Navigator.push(
+                              c,
+                              MaterialPageRoute(
+                                builder: (_) => AttachmentsPage(
+                                  kind: 'habit',
+                                  owner: h.id,
+                                  title: h.title,
+                                  store: RecordStore(database: store.provided),
+                                ),
                               ),
                             ),
+                            icon: const Icon(Icons.attach_file),
+                            label: Text(c.tr('xAttach')),
                           ),
-                          icon: const Icon(Icons.attach_file),
-                          label: Text(c.tr('xAttach')),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     ),
   );
 }

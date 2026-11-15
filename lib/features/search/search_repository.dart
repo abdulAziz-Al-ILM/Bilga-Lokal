@@ -79,6 +79,10 @@ class SearchRepository {
             'reason', substr(json_extract(body, '\$.reason'), 1, 200),
             'cue', substr(json_extract(body, '\$.cue'), 1, 200),
             'unit', substr(json_extract(body, '\$.unit'), 1, 100))
+          WHEN kind = 'book' THEN json_object('body', substr(trim(
+            coalesce(json_extract(body, '\$.library.author'), '') || char(10) ||
+            coalesce(nullif(json_extract(body, '\$.library.description'), ''),
+              json_extract(body, '\$.chapters[0].body'), '')), 1, 241))
           ELSE json_object('body', substr(coalesce(
             json_extract(body, '\$.body'),
             json_extract(body, '\$.chapters[0].body'),

@@ -4,7 +4,7 @@
 
 The source recovery and initial integrated development checkpoint are not a complete commercial release. Consult FEATURE_MATRIX.md, TEST_REPORT.md and KNOWN_LIMITATIONS.md for precise gaps.
 
-Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_todo.db`. Current derived-search upgrade targets: Notes 15 / Tasks 13. Portable backup content versions remain Notes 13 / Tasks 11 with backward-compatible import; search indexes and device-local widget consent are excluded and reconstructed.
+Package: `com.ilmmizan.bilga` (preserved). Database files: `bilga.db`, `bilga_todo.db`. Current derived-search upgrade targets: Notes 16 / Tasks 13. Portable backup content versions are Notes 13 (14 for Finance account-bearing snapshots) / Tasks 11 with backward-compatible import; search indexes and device-local widget consent are excluded and reconstructed.
 
 Business: 40-day application-managed trial, then one non-consumable lifetime product `bilga_lifetime_unlock`. No subscription or automatic billing. Price must come from Play ProductDetails; $9.99 is a planning reference only. Existing data is not removed at expiry; protected read/export/backup routes remain.
 
@@ -33,3 +33,9 @@ Historical November 9 host verification: **158 Flutter tests PASS**, analyzer no
 This is a disposable-signer debug build, not a signed production release or an upgrade-signing acceptance result. That November 9 CI artifact did not establish release-signing or device acceptance. The newer tablet results are recorded separately above.
 
 No release signing credentials were supplied to this work. Do not generate replacement keys or silently substitute debug artifacts.
+
+## Current continuation — 2026-11-15
+
+The combined Books-library/Habit-guidance source passes **268 full host tests**, clean analyzer/format, 43 × 568 catalogs, nine manifest guards and the non-voice guard. Current schema remains **Notes 16 / Tasks 13**; portable Notes content is **13 normally, 14 for Finance accounts**, Tasks **11**. This corrects the older schema summary above. Finance report CI 43064321644 succeeded at e520971, separately from this uncommitted/new checkpoint; current hosted verification is pending until push.
+
+Book metadata/search/filter/editor/reader/backup and the first deterministic Habit guide/22-template gallery are incremental product work. All four professional-module scopes, remaining five module tours, full accessibility/localization/device/security/performance acceptance and real release setup remain required. No release readiness, main merge, voice approval, Google Play publication or paid activation is asserted or authorized by these test results.

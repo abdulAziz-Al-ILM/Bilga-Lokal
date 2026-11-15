@@ -328,6 +328,7 @@ class _FinanceState extends State<FinancePage> {
                     kind: 'finance',
                     owner: r.id,
                     title: r.data['title'],
+                    store: store,
                   ),
                 ),
               ),

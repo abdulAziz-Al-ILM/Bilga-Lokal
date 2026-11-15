@@ -1,0 +1,5 @@
+# Third-party screenshots are for local UX research; never ship or redistribute.
+/habits/*
+/finance/*
+/experiences/*
+/books/*

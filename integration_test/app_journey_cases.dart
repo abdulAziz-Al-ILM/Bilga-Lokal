@@ -147,11 +147,11 @@ void registerAppJourney(IntegrationTestWidgetsFlutterBinding binding) {
         );
         expect(tester.takeException(), isNull);
         binding.reportData = {
+          ...?binding.reportData,
           'deviceSuite': 'isolated Bilga Review',
           'visitedModules': visited,
           'themeVariants': 14,
           'rtl': 'Arabic',
-          'realEditorRotation': 'portrait-landscape-portrait',
         };
       } finally {
         settings.language = originalLanguage;

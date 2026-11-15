@@ -5,12 +5,17 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 mkdir -p .bilga-tools
 exec 9>.bilga-tools/build.lock
 flock -n 9 || { echo 'Another Bilga build/test is active; wait for it to finish.' >&2; exit 1; }
-if [[ $# != 2 ]]; then
-  echo 'Usage: bash tool/test_tablet_review.sh <device-serial> <review-test.apk>' >&2
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  echo 'Usage: bash tool/test_tablet_review.sh <device-serial> <review-test.apk> [integration_test/target_test.dart]' >&2
   exit 1
 fi
 bilga_device="$1"
 bilga_apk="$2"
+bilga_target="${3:-integration_test/tablet_review_test.dart}"
+if [[ ! "$bilga_target" =~ ^integration_test/[a-z0-9_]+_test\.dart$ || ! -f "$bilga_target" ]]; then
+  echo 'Expected an existing integration_test/*_test.dart target; refusing device access.' >&2
+  exit 1
+fi
 export ANDROID_HOME="${ANDROID_HOME:-$PWD/.bilga-tools/android}"
 export JAVA_HOME="${JAVA_HOME:-$(printf '%s\n' "$PWD"/.bilga-tools/java/jdk-*)}"
 export PATH="$JAVA_HOME/bin:$PATH"
@@ -35,6 +40,6 @@ python3 tool/check_tablet_review_install.py "$bilga_device" "$bilga_apk"
 # test identity for the driver; --use-application-binary prevents rebuilding.
 .bilga-tools/flutter/bin/flutter drive --no-pub -d "$bilga_device" \
   --keep-app-running \
-  --target integration_test/tablet_review_test.dart \
+  --target "$bilga_target" \
   --driver test_driver/tablet_review_driver.dart \
   --use-application-binary "$bilga_apk"
