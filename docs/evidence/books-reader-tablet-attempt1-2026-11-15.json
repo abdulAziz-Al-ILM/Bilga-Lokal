@@ -1,0 +1,26 @@
+{
+  "source": "eeeb9670fa71fc12533fb267053b9c9741398a61",
+  "artifact": "build/review/bilga-reader-acceptance-tests.apk",
+  "sha256": "8a398b527d6b8695efdfa2df04f6a62e4a78245a04180d003c46e9f39555469a",
+  "target": "integration_test/reading_review_test.dart",
+  "device": "Tab16NEU0045423",
+  "package": "com.ilmmizan.bilga.review",
+  "actual_scenarios_passed": 14,
+  "actual_scenarios_failed": 1,
+  "runner_cases_passed_including_hooks": 16,
+  "runner_cases_failed": 1,
+  "elapsed_seconds": 127,
+  "log": "/tmp/bilga-reader-tablet-acceptance1.log",
+  "failure": "Text UI selection step could not find Highlights after long-pressing the first cached SelectableText. Update the test to choose a visible paragraph and handle toolbar overflow; re-run rather than claiming native completion.",
+  "passed_scope": [
+    "11 encrypted temporary data/parser/backup/link/migration cases",
+    "EPUB typography/chapter navigation/read-only UI",
+    "picker cancellation and all duplicate decisions through injected fixture picker",
+    "500-page PDF native viewer/page154/bookmark/search/reopen and real landscape activity orientation"
+  ],
+  "not_yet_accepted": [
+    "text selection/card/review UI after this failed step",
+    "actual SAF picker",
+    "ordinary owner review APK"
+  ]
+}

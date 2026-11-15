@@ -68,7 +68,13 @@ class _LibraryState extends State<BookLibraryPage> {
     steps: const [
       GuideStep('add', 'add', 'rGuideImport', event: 'pickerOpened'),
       GuideStep('choose', 'add', 'rGuideChoose', event: 'imported'),
-      GuideStep('read', 'read', 'rGuideRead', event: 'readerOpened'),
+      GuideStep(
+        'read',
+        'read',
+        'rGuideRead',
+        event: 'readerOpened',
+        backBoundary: true,
+      ),
     ],
   );
   @override
@@ -388,7 +394,13 @@ class _LibraryState extends State<BookLibraryPage> {
           : const [
               GuideStep('add', 'add', 'rGuideImport', event: 'pickerOpened'),
               GuideStep('choose', 'add', 'rGuideChoose', event: 'imported'),
-              GuideStep('read', 'read', 'rGuideRead', event: 'readerOpened'),
+              GuideStep(
+                'read',
+                'read',
+                'rGuideRead',
+                event: 'readerOpened',
+                backBoundary: true,
+              ),
             ];
       if (result == 'continue') {
         guidedBook =

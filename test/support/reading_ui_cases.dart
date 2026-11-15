@@ -11,6 +11,7 @@ import 'package:bilga/features/books/reading/reading_store.dart';
 import 'package:bilga/features/notes/note_database.dart';
 import 'package:bilga/features/private_space/record_store.dart';
 import 'package:flutter/material.dart';
+import 'package:bilga/features/guidance/guide_host.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'reading_fixtures.dart';
@@ -31,6 +32,7 @@ void registerReadingUiCases({
           dialogs.evaluate().isNotEmpty &&
           ModalRoute.of(t.element(dialogs.first))?.animation?.status ==
               AnimationStatus.completed;
+      if (secure && i < 10) continue;
       if (find.byType(CircularProgressIndicator).evaluate().isEmpty &&
           (modalReady || !t.binding.hasScheduledFrame)) {
         if (++quiet >= 3) return;
@@ -148,9 +150,17 @@ void registerReadingUiCases({
         await settle(t);
         await tap(t, find.byKey(ValueKey('book-current-read-${book.id}')));
         expect(find.byType(BookReadingPage), findsOneWidget);
-        await t.longPress(find.byType(SelectableText).first);
+        await t.longPress(find.byType(SelectableText).hitTestable().first);
         await settle(t);
-        await tap(t, find.text(Strings.get('en', 'rKind_highlight')));
+        final highlight = find.text(Strings.get('en', 'rKind_highlight'));
+        if (highlight.evaluate().isEmpty) {
+          final overflow = find.descendant(
+            of: find.byType(AdaptiveTextSelectionToolbar),
+            matching: find.byIcon(Icons.more_vert),
+          );
+          if (overflow.evaluate().isNotEmpty) await tap(t, overflow.first);
+        }
+        await tap(t, highlight);
         await tap(t, find.text('Yellow'));
         await save(t);
         expect(
@@ -173,6 +183,10 @@ void registerReadingUiCases({
         await tap(t, find.byKey(const Key('reading-review-due')));
         expect(find.text('What helps memory?'), findsOneWidget);
         expect(await t.runAsync(() => store.rows(book.id, 'review')), isEmpty);
+        await tap(t, find.byIcon(Icons.help_outline));
+        await tap(t, find.byKey(const Key('flashcard-flip')));
+        await tap(t, find.byKey(const Key('guide-back')));
+        expect(find.byKey(const Key('flashcard-flip')), findsOneWidget);
         await tap(t, find.byKey(const Key('flashcard-flip')));
         expect(find.text('Explain and review.'), findsOneWidget);
         await tap(t, find.byKey(const Key('flashcard-rate-2')));
@@ -300,6 +314,99 @@ void registerReadingUiCases({
         await tap(t, find.text(Strings.get('en', 'rAnotherCopy')));
         expect(find.byType(BookReadingPage), findsOneWidget);
         expect(await t.runAsync(() => store.records.all('book')), hasLength(2));
+        expect(t.takeException(), isNull);
+      } finally {
+        await dispose(t, dir, store, access);
+      }
+    },
+  );
+  testWidgets(
+    'Bookmark help advances only after actual Save and survives editor cancellation',
+    (t) async {
+      final (dir, store, access) = await fixture(t);
+      try {
+        final c = (await t.runAsync(
+          () => BookImporter(store).prepare(
+            Stream.value(utf8.encode('Original guided reading passage.')),
+            'Guided.txt',
+          ),
+        ))!;
+        final book = (await t.runAsync(
+          () => BookImporter(store).commit(c, allowed: () => true),
+        ))!;
+        await t.pumpWidget(
+          MaterialApp(
+            home: BookReadingPage(book: book, store: store, access: access),
+          ),
+        );
+        await settle(t);
+        await tap(t, find.byIcon(Icons.more_vert));
+        await tap(t, find.text(Strings.get('en', 'rHelp')));
+        await tap(t, find.text(Strings.get('en', 'rKind_bookmark')));
+        var controller = t.widget<GuideHost>(find.byType(GuideHost)).controller;
+        expect(controller.index, 0);
+        expect(controller.canNext, isFalse);
+        await tap(t, find.byKey(const Key('reader-bookmark')));
+        await t.pageBack();
+        await settle(t);
+        expect(controller.index, 0);
+        expect(
+          await t.runAsync(() => store.rows(book.id, 'bookmark')),
+          isEmpty,
+        );
+        await tap(t, find.byKey(const Key('reader-bookmark')));
+        await save(t);
+        expect(controller.index, 1);
+        expect(controller.canBack, isFalse);
+        expect(
+          await t.runAsync(() => store.rows(book.id, 'bookmark')),
+          hasLength(1),
+        );
+        await tap(t, find.byKey(const Key('guide-next')));
+        expect(controller.active, isFalse);
+        await t.runAsync(c.close);
+        expect(t.takeException(), isNull);
+      } finally {
+        await dispose(t, dir, store, access);
+      }
+    },
+  );
+  testWidgets(
+    'Reading navigation guide highlights working chapter controls and saves the new location',
+    (t) async {
+      final (dir, store, access) = await fixture(t);
+      try {
+        final c = (await t.runAsync(
+          () =>
+              BookImporter(store)
+                  .prepare(Stream.value(fixtureEpub()), 'Guided.epub'),
+        ))!;
+        final book = (await t.runAsync(
+          () => BookImporter(store).commit(c, allowed: () => true),
+        ))!;
+        await t.pumpWidget(
+          MaterialApp(
+            home: BookReadingPage(book: book, store: store, access: access),
+          ),
+        );
+        await settle(t);
+        await tap(t, find.byIcon(Icons.more_vert));
+        await tap(t, find.text(Strings.get('en', 'rHelp')));
+        await tap(t, find.text('EPUB / TXT'));
+        final controller = t
+            .widget<GuideHost>(find.byType(GuideHost))
+            .controller;
+        expect(controller.canNext, isFalse);
+        await tap(t, find.byIcon(Icons.chevron_right).last);
+        expect(controller.index, 1);
+        expect(controller.canBack, isFalse);
+        expect(
+          (await t.runAsync(() => store.one(book.id, 'progress')))!
+              .data['location']['section'],
+          'OEBPS/text/two.xhtml',
+        );
+        await tap(t, find.byKey(const Key('guide-next')));
+        await t.runAsync(c.close);
         expect(t.takeException(), isNull);
       } finally {
         await dispose(t, dir, store, access);

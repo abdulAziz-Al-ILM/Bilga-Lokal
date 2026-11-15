@@ -68,7 +68,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         'rGuideBookmark',
         event: 'bookmarkSaved',
       ),
-      GuideStep('saved', 'menu', 'rGuideSaved'),
+      GuideStep('saved', 'menu', 'rGuideSaved', backBoundary: true),
     ],
   );
   Future<void> help() async {
@@ -100,7 +100,14 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
     );
     if (topic == null || !mounted) return;
     final step = switch (topic) {
-      'navigate' => const GuideStep('navigate', 'navigation', 'rGuideNavigate'),
+      'navigate' => GuideStep(
+        'navigate',
+        (isPdf ? (document?.pages.length ?? 0) > 1 : sections.length > 1)
+            ? 'navigation'
+            : 'content',
+        'rGuideNavigate',
+        event: 'navigated',
+      ),
       'appearance' => const GuideStep(
         'appearance',
         'appearance',
@@ -131,7 +138,10 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
       controls = true;
       guide = GuideController(
         id: 'book.reader.$topic',
-        steps: [step, const GuideStep('saved', 'menu', 'rGuideSaved')],
+        steps: [
+          step,
+          const GuideStep('saved', 'menu', 'rGuideSaved', backBoundary: true),
+        ],
       );
       guide.start();
     });
@@ -148,7 +158,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
   Map<String, dynamic> index = {},
       location = {'kind': 'text', 'section': 'text', 'block': 0, 'offset': 0};
   Map<String, dynamic>? initialPdfLocation;
-  bool pdfRestored = false;
+  bool pdfRestored = false, navigationGesture = false;
   Map<String, dynamic> settings = {
     'v': 1,
     'font': 20.0,
@@ -355,6 +365,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
   }
 
   Future<void> loadSection(int i, {int restore = 0}) async {
+    final previous = sectionIndex;
     final rows = await TextDocument.section(
       file!.path,
       source!.data['format'],
@@ -374,6 +385,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
       };
     });
     sectionGeneration++;
+    if (i != previous) navigationDone();
   }
 
   int visibleBlock() {
@@ -479,6 +491,10 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
     if (mapEquals(previousLocation, location) &&
         (fraction - previousFraction).abs() < 0.000001) {
       return;
+    }
+    if (navigationGesture) {
+      navigationGesture = false;
+      navigationDone();
     }
     debounce?.cancel();
     debounce = Timer(
@@ -671,7 +687,9 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         onSave: (v) async {
           final n = int.parse(v['page']!);
           if (n < 1 || n > pdf.pageCount) throw const FormatException('page');
+          final before = page;
           await pdf.goToPage(pageNumber: n, duration: Duration.zero);
+          if (n != before) navigationDone();
         },
       );
     } else {
@@ -845,6 +863,19 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         guide.event('appearanceSaved');
       });
     }
+  }
+
+  void navigationDone() {
+    if (!guide.active || guide.step.event != 'navigated') return;
+    queue(() async {
+      await savePosition();
+      guide.event('navigated');
+    });
+  }
+
+  Future<void> navigatePdf(int number) async {
+    await pdf.goToPage(pageNumber: number);
+    navigationDone();
   }
 
   Future<void> thumbnails() async {
@@ -1314,7 +1345,11 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
               Expanded(
                 child: Listener(
                   key: contentAnchor,
-                  onPointerDown: (_) => touch(),
+                  onPointerDown: (_) {
+                    navigationGesture =
+                        guide.active && guide.step.id == 'navigate';
+                    touch();
+                  },
                   onPointerSignal: (_) => touch(),
                   child: isPdf
                       ? pdfReader()
@@ -1384,11 +1419,9 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  LinearProgressIndicator(
-                    key: navigationAnchor,
-                    value: fraction.clamp(0, 1),
-                  ),
+                  LinearProgressIndicator(value: fraction.clamp(0, 1)),
                   Wrap(
+                    key: navigationAnchor,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     spacing: 8,
                     children: [
@@ -1396,7 +1429,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
                         IconButton(
                           key: const Key('reader-previous'),
                           onPressed: page > 1
-                              ? () => pdf.goToPage(pageNumber: page - 1)
+                              ? () => navigatePdf(page - 1)
                               : null,
                           icon: const Icon(Icons.chevron_left),
                         )
@@ -1421,7 +1454,7 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
                         IconButton(
                           key: const Key('reader-next'),
                           onPressed: page < document!.pages.length
-                              ? () => pdf.goToPage(pageNumber: page + 1)
+                              ? () => navigatePdf(page + 1)
                               : null,
                           icon: const Icon(Icons.chevron_right),
                         )

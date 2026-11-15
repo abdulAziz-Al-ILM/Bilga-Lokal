@@ -503,8 +503,21 @@ class _FlashState extends State<FlashcardPage> {
       GuideStep('rate', 'rating', 'rGuideRate', event: 'rated'),
     ],
   );
+  void guideChanged() {
+    if (mounted && guide.active && guide.step.id == 'flip' && flipped) {
+      setState(() => flipped = false);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    guide.addListener(guideChanged);
+  }
+
   @override
   void dispose() {
+    guide.removeListener(guideChanged);
     guide.dispose();
     super.dispose();
   }
@@ -540,7 +553,12 @@ class _FlashState extends State<FlashcardPage> {
         actions: [
           IconButton(
             tooltip: c.tr('rHelp'),
-            onPressed: () => guide.start(),
+            onPressed: index >= widget.cards.length
+                ? null
+                : () {
+                    setState(() => flipped = false);
+                    guide.start();
+                  },
             icon: const Icon(Icons.help_outline),
           ),
         ],
