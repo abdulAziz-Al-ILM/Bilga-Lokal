@@ -1,0 +1,33 @@
+{
+  "source": "c0d18e2",
+  "artifact": "build/review/bilga-reader-acceptance-tests-v2.apk",
+  "sha256": "113e59dece931ba41321835e0ae458d27a8c93ac6cadf0050ff3bee7a67b68a4",
+  "target": "integration_test/reading_review_test.dart",
+  "device": "Tab16NEU0045423",
+  "package": "com.ilmmizan.bilga.review",
+  "actual_scenarios_passed": 20,
+  "actual_scenarios_failed": 0,
+  "runner_cases_passed_including_hooks": 22,
+  "elapsed_seconds": 369,
+  "log": "/tmp/bilga-reader-tablet-acceptance2.log",
+  "log_sha256": "e055afd3c8a9e110d4ee3632e6f340d2b013354bb64250652cd5bc78688622b4",
+  "scope": [
+    "11 encrypted data/parser/recovery/link/migration scenarios",
+    "TXT actual UI import/continue/visible text highlight/bookmark/card/Leitner review",
+    "EPUB typography/chapter navigation/read-only immutability",
+    "picker cancellation and all duplicate decisions through an injected fixture picker",
+    "bookmark cancellation and confirmed-save help boundary",
+    "real chapter-control guidance and committed location",
+    "native PDF viewer 500 pages/page154/bookmark/text search/real landscape/reopen",
+    "three actual metadata/status/favorites/shelf/filter/author-search/legacy-preservation UI cases"
+  ],
+  "earlier_failure": "Fixed visible paragraph selection, adaptive toolbar overflow and native viewport settling; entire expanded target rerun, no skipped persistence checks.",
+  "not_yet_accepted": [
+    "real Android SAF picker",
+    "true process restart",
+    "ordinary owner APK"
+  ],
+  "manual_keyboard_acceptance": false,
+  "fixture_input": "Flutter test text injection with actual UI controls",
+  "production_package_touched": false
+}

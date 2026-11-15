@@ -2,7 +2,7 @@
 """Generate original legal SAF acceptance documents; no owner files are read."""
 import argparse
 from pathlib import Path
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED
 
 
 def pdf(pages=5):
@@ -33,11 +33,11 @@ def main():
     parser.add_argument('directory', type=Path)
     args = parser.parse_args()
     args.directory.mkdir(parents=True, exist_ok=False)
-    (args.directory / 'BilgaReaderFixture-PDF.pdf').write_bytes(pdf())
+    (args.directory / 'BilgaReaderFixture-PDF.pdf').write_bytes(pdf(500))
     (args.directory / 'BilgaReaderFixture-TXT.txt').write_text('Original Bilga SAF text.\n\nA legal demonstration for offline reading.\n\nRemember this idea.\n', encoding='utf8')
     (args.directory / 'BilgaReaderFixture-Invalid.epub').write_bytes(b'PK\x03\x04invalid original fixture')
     with ZipFile(args.directory / 'BilgaReaderFixture-EPUB.epub', 'w', ZIP_DEFLATED) as z:
-        z.writestr('mimetype', 'application/epub+zip')
+        z.writestr('mimetype', 'application/epub+zip', compress_type=ZIP_STORED)
         z.writestr('META-INF/container.xml', '<container><rootfiles><rootfile full-path="book.opf"/></rootfiles></container>')
         z.writestr('book.opf', '<package xmlns:dc="http://purl.org/dc/elements/1.1/"><metadata><dc:title>Original SAF EPUB</dc:title></metadata><manifest><item id="one" href="one.xhtml" media-type="application/xhtml+xml"/><item id="two" href="two.xhtml" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="one"/><itemref idref="two"/></spine></package>')
         z.writestr('one.xhtml', '<html><body><h1>Original first chapter</h1><p>Remember this original legal passage.</p></body></html>')

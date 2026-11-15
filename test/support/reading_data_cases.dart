@@ -269,6 +269,11 @@ void registerReadingDataCases({
     final history = (await store.one(b.id, 'review'))!;
     expect(history.data['front'], 'Why?');
     expect(history.data['back'], 'Because.');
+    await expectLater(store.remove(history), throwsStateError);
+    await expectLater(
+      store.put(b.id, 'review', history.data, previous: history),
+      throwsStateError,
+    );
     expect(await store.rows(b.id, 'review'), hasLength(1));
     await c.close();
   });
@@ -288,6 +293,43 @@ void registerReadingDataCases({
       'end': '2026-11-15T00:00:00Z',
       'seconds': 60,
     });
+    await store.put(b.id, 'settings', {
+      'v': 1,
+      'font': 22.0,
+      'line': 1.8,
+      'margin': 32.0,
+      'theme': 'sepia',
+      'family': 'serif',
+    });
+    final locator = {
+      'kind': 'text',
+      'section': 'OEBPS/text/two.xhtml',
+      'block': 1,
+      'offset': 0,
+    };
+    for (final kind in ['bookmark', 'highlight', 'annotation']) {
+      await store.put(b.id, kind, {
+        'v': 1,
+        'location': locator,
+        'text': kind == 'highlight' ? 'مرحبا' : '',
+        'note': 'Original $kind',
+        if (kind == 'highlight') 'color': 'blue',
+        if (kind == 'highlight') 'end': 5,
+      });
+    }
+    final question = await store.put(b.id, 'card', {
+      'v': 1,
+      'type': 'question',
+      'front': 'How do I remember an idea?',
+      'back': 'Explain and review.',
+      'explanation': 'Original explanation',
+      'tags': ['Learning'],
+      'location': locator,
+      'box': 0,
+      'reviews': 0,
+      'due': '2020-01-01T00:00:00Z',
+    });
+    await store.review(question, 2, at: DateTime(2026, 11, 15));
     final backup = BackupStore(notesDb: notes, todoDb: tasks);
     final snapshot = await backup.snapshot();
     expect(snapshot['notesSchema'], 15);
@@ -322,6 +364,22 @@ void registerReadingDataCases({
     expect(
       (await store.one(restored.id, 'progress'))!.data['location']['section'],
       'OEBPS/text/two.xhtml',
+    );
+    for (final kind in ['bookmark', 'highlight', 'annotation']) {
+      final restoredMark = (await store.one(restored.id, kind))!;
+      expect(restoredMark.data['note'], 'Original $kind');
+      expect(restoredMark.data['location'], locator);
+    }
+    expect((await store.one(restored.id, 'settings'))!.data['theme'], 'sepia');
+    final restoredQuestion = (await store.one(restored.id, 'card'))!;
+    final restoredHistory = (await store.one(restored.id, 'review'))!;
+    expect(restoredQuestion.data['front'], 'How do I remember an idea?');
+    expect(restoredQuestion.data['reviews'], 1);
+    expect(restoredHistory.data['card'], restoredQuestion.id);
+    expect(restoredHistory.data['back'], 'Explain and review.');
+    expect(
+      await store.rows(restored.id, 'card', query: 'remember'),
+      hasLength(1),
     );
     expect((await store.activity()).single['day'], '2026-11-15');
     final downgrade = jsonDecode(jsonEncode(snapshot)) as Map<String, dynamic>;
