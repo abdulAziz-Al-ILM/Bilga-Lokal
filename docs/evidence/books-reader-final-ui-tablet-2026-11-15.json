@@ -1,0 +1,35 @@
+{
+  "source": "8ff1d3a",
+  "runtime_source": "ff59d5bf12a9f080e2270fdb5f2e3f06b4a62c77",
+  "artifact": "build/review/bilga-reader-final-ui-tests.apk",
+  "sha256": "e6264aab80260b91b2c7bb6cdbdb4dfc0391698793b2dacb55dc3533543d2dd2",
+  "target": "integration_test/reading_ui_review_test.dart",
+  "device": "Tab16NEU0045423",
+  "package": "com.ilmmizan.bilga.review",
+  "result": "PASS",
+  "actual_scenarios_passed": 6,
+  "runner_cases_passed_including_hooks": 8,
+  "elapsed_seconds": 140,
+  "log": "/tmp/bilga-reader-final-ui-tablet1.log",
+  "log_sha256": "0bb19c9f71b089a36be1c47290c5a65ea1f7db83248d79fd0e2963e3a3531416",
+  "scope": [
+    "TXT UI import/continue/bookmark/visible selection/highlight/question card/flip/rating",
+    "EPUB actual typography change/chapter navigation/read-only immutability",
+    "injected-picker cancel and three duplicate decisions",
+    "bookmark help cancel/save boundary",
+    "real chapter-control navigation help",
+    "native500-page PDF scroll/page mode/page2 retention/meaningful settings/search/page154/bookmark/landscape/reopen"
+  ],
+  "appearance_followup": [
+    "PDF does not expose ineffective font/reflow sliders",
+    "PDF page-mode search disabled with explicit switch-to-scroll explanation",
+    "page-mode navigation persists and switching to scroll retains page",
+    "EPUB font slider changes persisted settings",
+    "unchanged appearance does not revise saved data or advance guidance"
+  ],
+  "native_notes": [
+    "Flutter AccessibilityBridge logged an uninitialized transform during slider semantics update. No test/framework assertion failed. Full manual TalkBack acceptance remains outstanding."
+  ],
+  "manual_keyboard_acceptance": false,
+  "production_touched": false
+}

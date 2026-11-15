@@ -1,3 +1,15 @@
+## Offline Books reader acceptance — 2026-11-15
+
+Books now imports and reads PDF/EPUB/TXT inside Bilga, with encrypted managed files or explicit persistent references, covers, continue/progress, bookmarks/highlights/notes, typography, native PDF controls, knowledge cards/Leitner review, active-reading statistics, shelves, deterministic help, templates, durable cross-module links and full local encrypted recovery. Optional bibliographic details remain advanced. Notes DB **17**, Tasks **13**, portable reading content **15**. Format bounds and limitations: [BOOKS_OFFLINE_READER.md](BOOKS_OFFLINE_READER.md).
+
+Final runtime **ff59d5b** CI **43708926430 succeeds with287 tests**, analyzer, DST/backend, Android build/verification. Physical Tab16 passes the expanded20-scenario suite, final6-case current UI suite, actual SAF12-case suite and real-process-restart12-case suite (overlapping scopes, not a summed suite). The latter prove PDF154/bookmark and persisted external TXT survive Review process death. [Acceptance/artifact checkpoint](BOOKS_READER_ACTIVE_CHECKPOINT.md) links exact evidence and failed-attempt history.
+
+Ordinary **`build/review/bilga-reader-review-app.apk`** is signer-checked, installed in place and launched; real home → Kitoblar opens the new library. SHA256 **`400d37d158e2615698afe6400e908ccb5f51ec35671dc258d8969092d3740bae`**. Test runners are absent. Production package metadata is identical before/after; production data was not read or modified. Generated tablet documents were hash-verified and removed. Owner ZIP is preserved.
+
+**The wider six-module product remains IN PROGRESS.** No manual TalkBack/native-keyboard, release performance, second-device recovery or full translation acceptance is claimed. No main merge, publication, paid activation or voice work. Earlier checkpoints below describe older artifacts/schemas and are historical.
+
+---
+
 ## Book library and deterministic Habit guidance — 2026-11-15
 
 **The full six-module product remains IN PROGRESS.** The owner's new professional-completion directive and ZIP references were inspected. The ZIP contained four text files and seven externally linked images; all seven images were downloaded and visually reviewed. Research attribution and useful patterns are preserved in `references/README.md`; third-party images remain local/ignored and are not shipped in Bilga.

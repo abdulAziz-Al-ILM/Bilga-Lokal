@@ -54,7 +54,20 @@ Tests use original generated PDF/EPUB/TXT documents and separate encrypted fixtu
 - `integration_test/reading_saf_review_test.dart`: actual Android picker cancellation, PDF/EPUB import, persistent TXT reference, duplicate cancellation and corrupt rejection. The paired `tool/run_reading_saf_review.py` selects only generated documents in a uniquely named Downloads fixture folder.
 - `tool/prepare_reading_review_fixtures.py`: creates only original synthetic files; never reads owner content.
 
-The final broad host run passed **285 tests in 307 seconds** (`/tmp/bilga-reader-full-host2.log`). This includes the actual text/card journey, native PDF renderer/search/page-154 reopen, duplicate decisions, Unicode EPUB navigation, encrypted media recovery, cross-module idempotency and additive migration checks. The earlier broad run exposed old schema-16 expectations and two UI-test synchronization assumptions, now corrected. Only analyzer brace fixes followed this pass. Follow-up source c0d18e2 passes **20/20 physical-tablet scenarios (22 including hooks) in 369s**, including actual text selection/card/review, chapter/bookmark help, metadata/shelves/search and real PDF landscape/reopen. Current source guidance changes also pass six focused host UI cases. Actual SAF, true process restart and the ordinary review APK remain pending; they must be recorded before claiming completion. A compiled control or imported catalog entry alone is not acceptance evidence.
+The current runtime source **ff59d5b** passes GitHub validation **43708926430**: **287 host tests in 274 seconds**, clean analyzer/format, backend protocol and DST checks, **43 × 740** catalogs, non-voice/manifest guards, Android multi-ABI build and artifact verification. Optional cloud artifact upload was skipped; no hosted download is claimed. [CI evidence](evidence/books-reader-final-ci-2026-11-15.json).
+
+Physical Blackview Tab16/API31, isolated Review only:
+
+| Acceptance | Result | Evidence |
+| --- | --- | --- |
+| Expanded reader/data/library suite at c0d18e2 | 20 actual scenarios / 22 including hooks PASS, 369s | [Expanded tablet suite](evidence/books-reader-tablet-pass-2026-11-15.json) |
+| Final runtime controls, real text selection/card/review, EPUB typography, guides, PDF page mode/search/500 pages/rotation/reopen | 6 actual / 8 including hooks PASS, 140s | [Final UI](evidence/books-reader-final-ui-tablet-2026-11-15.json) |
+| Real Android SAF cancel, managed PDF/EPUB, persistent external TXT, duplicate cancel, corrupt rejection, page154/bookmark preparation, rich encrypted recovery | 12 actual / 14 including hooks PASS, 285s; no operator intervention | [Actual SAF](evidence/books-reader-saf-pass-2026-11-15.json) |
+| Explicit Review process death, new PID, managed PDF page154/bookmark and persisted external TXT access | 12 actual / 14 including hooks PASS, 77s | [Process restart](evidence/books-reader-process-restart-2026-11-15.json) |
+
+The latter native runs use test source **8ff1d3a**; application runtime is unchanged from ff59d5b. Counts overlap and must not be added into a claimed single all-feature suite. Fixtures use Flutter input injection with actual controls; manual native-keyboard/TalkBack acceptance, release-mode performance and second-device restore are not certified. Android logged a Flutter slider semantics transform warning during an otherwise passing UI run; full manual accessibility remains a separate acceptance item. Earlier failed harness attempts are preserved in the dated evidence and superseded only by the complete passes above.
+
+The ordinary default-main Review APK and production preservation record are recorded in [the active checkpoint](BOOKS_READER_ACTIVE_CHECKPOINT.md). The broader six-module product remains in progress; these results complete the scoped reader engineering acceptance, not global commercial-release acceptance.
 
 ## Primary references
 
