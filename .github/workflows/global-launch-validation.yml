@@ -4,6 +4,12 @@ on:
   push:
     branches: [development/global-launch]
   workflow_dispatch:
+    inputs:
+      upload_debug_artifact:
+        description: 'Upload the verified debug APK (requires available artifact storage)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -87,11 +93,23 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest print build/app/outputs/flutter-apk/app-debug.apk > "$RUNNER_TEMP/bilga-manifest.xml"
           python3 tool/verify_play_manifest.py "$RUNNER_TEMP/bilga-manifest.xml"
           sha256sum build/app/outputs/flutter-apk/app-debug.apk
+          python3 - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          apk = Path('build/app/outputs/flutter-apk/app-debug.apk')
+          digest = hashlib.sha256(apk.read_bytes()).hexdigest()
+          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:
+              summary.write(f'Android debug APK built and verified. SHA-256: `{digest}`.\n\n')
+              summary.write('Cloud APK upload is optional: use the manual workflow input '
+                            '`upload_debug_artifact` when artifact storage is available. '
+                            'Automatic pushes still run every validation step.\n')
+          PY
       - name: Save debug artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_debug_artifact
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: bilga-development-debug-${{ github.sha }}
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           compression-level: 0
-          retention-days: 7
+          retention-days: 1
