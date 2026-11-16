@@ -46,7 +46,8 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
     ...widget.initial,
     'experienceVersion': 1,
     for (final e in controls.entries)
-      if (e.key != 'tags') e.key: e.value.text.trim(),
+      if (e.key != 'tags')
+        e.key: e.key == 'title' ? e.value.text.trim() : e.value.text,
     'tags': controls['tags']!.text
         .split(',')
         .map((t) => t.trim())

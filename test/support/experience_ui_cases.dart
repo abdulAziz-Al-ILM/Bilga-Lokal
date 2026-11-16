@@ -218,6 +218,7 @@ void registerExperienceUiCases({
           find.widgetWithText(ChoiceChip, Strings.get('en', 'eExperiment')),
         );
         await settle(t);
+        await enter(t, 'experience-body', '  Original observation.\n');
         await enter(t, 'experience-next', 'Try a second session');
         await enter(t, 'experience-hypothesis', 'One change will help.');
         await enter(t, 'experience-method', 'Compare two actual sessions.');
@@ -237,7 +238,10 @@ void registerExperienceUiCases({
         );
         await settle(t);
         expect((await t.runAsync(() => r.$5.get(entry.id)))!.revision, 3);
-        expect((await t.runAsync(() => r.$5.get(entry.id)))!.data['body'], '');
+        expect(
+          (await t.runAsync(() => r.$5.get(entry.id)))!.data['body'],
+          '  Original observation.\n',
+        );
         await tap(t, 'experience-task');
         expect(find.text('Try a second session'), findsWidgets);
         await t.tap(find.widgetWithText(TextButton, Strings.get('en', 'save')));
