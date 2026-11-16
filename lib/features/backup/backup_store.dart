@@ -1,3 +1,4 @@
+import '../modules/module_data.dart';
 import '../notes/rich_note_codec.dart';
 import '../todo/todo_changes.dart';
 import '../todo/todo_series_store.dart';
@@ -31,6 +32,16 @@ class BackupStore {
   Future<Database> get _notes async => notesDb ?? await NoteDatabase.database;
   Future<Database> get _todo async => todoDb ?? await TodoDatabase.database;
   static const tableColumns = <String, Set<String>>{
+    'module_data': {
+      'id',
+      'module',
+      'kind',
+      'owner',
+      'payload',
+      'revision',
+      'created_at',
+      'updated_at',
+    },
     'book_reading': {
       'id',
       'book_id',
@@ -176,6 +187,7 @@ class BackupStore {
         'habits',
         'private_records',
         'book_reading',
+        'module_data',
       ]) {
         await boundedRead(txn, table);
       }
@@ -198,7 +210,9 @@ class BackupStore {
       'format': 'bilga-data',
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
-      'notesSchema': (data['book_reading'] as List).isNotEmpty
+      'notesSchema': (data['module_data'] as List).isNotEmpty
+          ? 16
+          : (data['book_reading'] as List).isNotEmpty
           ? 15
           : (data['private_records'] as List).any(
               (row) =>
@@ -221,13 +235,18 @@ class BackupStore {
   ) {
     if (payload['format'] != 'bilga-data' ||
         payload['version'] != 1 ||
-        ![8, 9, 10, 11, 12, 13, 14, 15].contains(payload['notesSchema']) ||
+        ![8, 9, 10, 11, 12, 13, 14, 15, 16].contains(payload['notesSchema']) ||
         ![6, 7, 8, 9, 10, 11].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
       throw const FormatException('backup_invalid');
     }
     final raw = payload['data'];
     if (raw is! Map) throw const FormatException('backup_invalid');
+    if ((payload['notesSchema'] as int) < 16 &&
+        raw['module_data'] is List &&
+        (raw['module_data'] as List).isNotEmpty) {
+      throw const FormatException('module_schema');
+    }
     if ((payload['notesSchema'] as int) < 15 &&
         raw['book_reading'] is List &&
         (raw['book_reading'] as List).isNotEmpty) {
@@ -237,7 +256,9 @@ class BackupStore {
     var count = 0;
     for (final entry in tableColumns.entries) {
       final list =
-          (entry.key == 'book_reading' &&
+          (entry.key == 'module_data' &&
+                  (payload['notesSchema'] as int) < 16) ||
+              (entry.key == 'book_reading' &&
                   (payload['notesSchema'] as int) < 15) ||
               (entry.key == 'todo_reminders' && payload['todoSchema'] == 6) ||
               (entry.key == 'todo_projects' &&
@@ -265,6 +286,7 @@ class BackupStore {
           throw const FormatException('backup_invalid');
         }
         final row = Map<String, Object?>.from(value);
+        if (entry.key == 'module_data') ModuleData.decode(row);
         if (entry.key == 'book_reading') ReadingData.decode(row);
         if (entry.key == 'todo_projects') {
           TodoProject.validate(row);
@@ -561,6 +583,34 @@ class BackupStore {
     if (result['note_versions']!.any((r) => !noteIds.contains(r['note_id']))) {
       throw const FormatException('backup_invalid');
     }
+    final experiences = result['private_records']!
+        .where((r) => r['kind'] == 'experience')
+        .map((r) => r['id'])
+        .toSet();
+    final uniqueModule = <String>{};
+    final moduleTargets = <String>{};
+    for (final row in result['module_data']!) {
+      final d = ModuleData.decode(row);
+      if (row['module'] == 'experience' &&
+          row['kind'] != 'category' &&
+          !experiences.contains(row['owner'])) {
+        throw const FormatException('module_owner');
+      }
+      if (row['kind'] == 'link' &&
+          !moduleTargets.add(
+            '${row['module']}:${row['owner']}:${d['targetKind']}:${d['target']}',
+          )) {
+        throw const FormatException('module_link_duplicate');
+      }
+      final key = row['kind'] == 'history'
+          ? '${row['owner']}:history:${d['entryRevision']}'
+          : row['kind'] == 'link'
+          ? '${row['owner']}:link:${d['targetKind']}:${d['action']}'
+          : '${row['id']}';
+      if (!uniqueModule.add(key)) {
+        throw const FormatException('module_duplicate');
+      }
+    }
     final books = result['private_records']!
         .where((r) => r['kind'] == 'book')
         .map((r) => r['id'])
@@ -794,12 +844,42 @@ class BackupStore {
           final data = Map<String, dynamic>.from(
             jsonDecode(row['payload'] as String),
           );
+          if (row['kind'] == 'experience' &&
+              tables['module_data']!.any(
+                (c) => c['kind'] == 'category' && c['id'] == data['category'],
+              )) {
+            data['category'] = '$prefix${data['category']}';
+          }
           if (row['kind'] == 'attachment') {
             data['owner'] = '$prefix${data['owner']}';
           }
           await _insert(txn, 'private_records', {
             ...row,
             'id': '$prefix${row['id']}',
+            'payload': jsonEncode(data),
+          });
+        }
+        for (final row in tables['module_data']!) {
+          final data = ModuleData.decode(row);
+          if (row['kind'] == 'history') {
+            final snap = Map<String, dynamic>.from(data['snapshot']);
+            if (tables['module_data']!.any(
+              (c) => c['kind'] == 'category' && c['id'] == snap['category'],
+            )) {
+              snap['category'] = '$prefix${snap['category']}';
+            }
+            data['snapshot'] = snap;
+          }
+          if (row['kind'] == 'link') {
+            data['target'] = '$prefix${data['target']}';
+          }
+          if (row['kind'] == 'category' && data['parent'] != null) {
+            data['parent'] = '$prefix${data['parent']}';
+          }
+          await _insert(txn, 'module_data', {
+            ...row,
+            'id': '$prefix${row['id']}',
+            'owner': row['owner'] == '' ? '' : '$prefix${row['owner']}',
             'payload': jsonEncode(data),
           });
         }
@@ -818,6 +898,25 @@ class BackupStore {
             'book_id': '$prefix${row['book_id']}',
             'payload': jsonEncode(data),
           });
+        }
+        for (final row in tables['private_records']!.where(
+          (r) => r['kind'] == 'experience',
+        )) {
+          final id = '$prefix${row['id']}';
+          final actual = (await txn.query(
+            'private_records',
+            where: 'id=?',
+            whereArgs: [id],
+            limit: 1,
+          )).single;
+          await ModuleData.history(
+            txn,
+            id,
+            actual['revision'] as int,
+            Map<String, dynamic>.from(jsonDecode(actual['payload'] as String)),
+            actual['updated_at'] as String,
+            existing: true,
+          );
         }
         for (final row in tables['habits']!) {
           await _insert(txn, 'habits', {...row, 'id': '$prefix${row['id']}'});

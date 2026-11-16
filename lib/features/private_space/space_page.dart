@@ -1,3 +1,7 @@
+import '../experiences/experiences_page.dart';
+import '../experiences/experience_page.dart';
+import '../experiences/experience_store.dart';
+
 import 'dart:convert';
 
 import 'package:archive/archive.dart';
@@ -44,7 +48,7 @@ class _SpaceState extends State<SpacePage> {
   @override
   void initState() {
     super.initState();
-    if (widget.kind != 'book') load();
+    if (!{'book', 'experience'}.contains(widget.kind)) load();
   }
 
   Future<void> load() async {
@@ -99,7 +103,11 @@ class _SpaceState extends State<SpacePage> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.kind == 'book'
+  Widget build(BuildContext context) => widget.kind == 'experience'
+      ? ExperiencesPage(records: store, access: access)
+      : _legacy(context);
+
+  Widget _legacy(BuildContext context) => widget.kind == 'book'
       ? BookLibraryPage(records: store, access: access)
       : Scaffold(
           appBar: AppBar(
@@ -332,7 +340,15 @@ class _RecordState extends State<RecordPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => r.kind == 'experience'
+      ? ExperiencePage(
+          record: r,
+          store: ExperienceStore(records: store),
+          access: access,
+        )
+      : _legacy(context);
+
+  Widget _legacy(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: Text(r.data['title']),
       actions: [

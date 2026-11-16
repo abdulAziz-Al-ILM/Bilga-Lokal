@@ -155,10 +155,11 @@ void main() {
       await NoteService(database: db).addNote(original);
       await db.execute('ALTER TABLE notes DROP COLUMN rich_body');
       await db.execute('ALTER TABLE note_versions DROP COLUMN rich_body');
+      await db.execute('DROP TABLE module_data');
       await db.setVersion(14);
       await db.close();
       db = await NoteDatabase.openAt('${dir.path}/notes.db');
-      expect(await db.getVersion(), 17);
+      expect(await db.getVersion(), 18);
       final migrated = (await NoteService(
         database: db,
       ).getAllActiveNotes()).single;

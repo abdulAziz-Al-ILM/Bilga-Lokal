@@ -153,6 +153,7 @@ void main() {
         await db.execute('DROP INDEX $index');
       }
       if (db == notes) {
+        await db.execute('DROP TABLE module_data');
         await db.execute('ALTER TABLE notes DROP COLUMN rich_body');
         await db.execute('ALTER TABLE note_versions DROP COLUMN rich_body');
       }
@@ -171,7 +172,7 @@ void main() {
     notes = await NoteDatabase.openAt('${dir.path}/notes.db');
     todos = await TodoDatabase.openAt('${dir.path}/todos.db');
     search = SearchRepository(notesDb: notes, todoDb: todos);
-    expect(await notes.getVersion(), 17);
+    expect(await notes.getVersion(), 18);
     expect(await todos.getVersion(), 13);
     expect((await search.search('Orchid')).map((h) => h.id).toSet(), {
       'legacy-note',

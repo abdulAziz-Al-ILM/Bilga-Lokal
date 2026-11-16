@@ -44,7 +44,19 @@ class SearchHit {
   }
 
   static String recordText(Map<String, dynamic> data) => [
-    for (final key in ['body', 'feelings', 'lesson', 'next', 'characters'])
+    for (final key in [
+      'body',
+      'feelings',
+      'lesson',
+      'next',
+      'hypothesis',
+      'method',
+      'observations',
+      'evidence',
+      'result',
+      'conclusions',
+      'characters',
+    ])
       if (data[key] is String && (data[key] as String).isNotEmpty) data[key],
     for (final c in data['chapters'] as List? ?? [])
       '${c['title']}\n${c['body']}',

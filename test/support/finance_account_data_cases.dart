@@ -68,6 +68,7 @@ void registerFinanceAccountDataTests({
     });
     final records = await db.query('private_records'),
         notes = await db.query('notes');
+    await db.execute('DROP TABLE module_data');
     await db.setVersion(15);
     await db.close();
     db = await NoteDatabase.openAt(
@@ -75,7 +76,7 @@ void registerFinanceAccountDataTests({
       secure: secure,
     );
     store = RecordStore(database: db);
-    expect(await db.getVersion(), 17);
+    expect(await db.getVersion(), 18);
     expect(await db.query('private_records'), records);
     expect(await db.query('notes'), notes);
     final restored = (await store.all('finance')).single;
@@ -242,7 +243,7 @@ void registerFinanceAccountDataTests({
       secure: secure,
     );
     store = RecordStore(database: db);
-    expect(await db.getVersion(), 17);
+    expect(await db.getVersion(), 18);
     expect(await db.query('private_records'), before);
     expect(Ledger.balance((await store.all('finance')).single.data), 150000);
   });

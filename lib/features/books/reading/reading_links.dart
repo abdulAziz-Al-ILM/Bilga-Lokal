@@ -1,3 +1,5 @@
+import '../../modules/module_data.dart';
+
 import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
@@ -122,6 +124,7 @@ class ReadingLinks {
           'created_at': stamp,
           'updated_at': stamp,
         });
+        await ModuleData.history(txn, target, 1, record, stamp);
       }
       final row = {
         'id': localId(),

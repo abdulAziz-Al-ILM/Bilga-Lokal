@@ -644,11 +644,12 @@ void main() {
     await db.execute('DROP INDEX search_attachment_owner');
     await db.execute('ALTER TABLE notes DROP COLUMN rich_body');
     await db.execute('ALTER TABLE note_versions DROP COLUMN rich_body');
+    await db.execute('DROP TABLE module_data');
     await db.setVersion(12);
     final path = db.path;
     await db.close();
     db = await NoteDatabase.openAt(path);
-    expect(await db.getVersion(), 17);
+    expect(await db.getVersion(), 18);
     for (final table in tables) {
       expect(await db.query(table), before[table]);
     }
