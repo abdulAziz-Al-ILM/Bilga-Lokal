@@ -1,3 +1,4 @@
+import '../../habits/habit_changes.dart';
 import '../../modules/module_data.dart';
 
 import 'dart:convert';
@@ -173,6 +174,7 @@ class ReadingLinks {
       );
     }
     if (kind == 'note') NotesChanges.committed();
+    if (kind == 'habit') HabitChanges.committed();
     return result;
   }
 }

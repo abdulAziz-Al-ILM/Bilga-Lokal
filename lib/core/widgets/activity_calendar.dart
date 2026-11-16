@@ -78,6 +78,7 @@ class ActivityCalendar extends StatelessWidget {
                           selected: selected == key,
                           button: true,
                           child: InkWell(
+                            key: Key('activity-day-$key'),
                             onTap: () => onDay(date),
                             borderRadius: BorderRadius.circular(12),
                             child: Container(

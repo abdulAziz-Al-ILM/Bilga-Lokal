@@ -19,6 +19,7 @@ open class MainActivity : AudioServiceFragmentActivity() {
     private var launchAgent = false
     private var todoBridge: TodoBridge? = null
     private var notesWidget: NotesWidgetBridge? = null
+    private var moduleReminders: ModuleReminderBridge? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         launchAgent = intent?.action == "com.ilmmizan.bilga.OPEN_AGENT"
@@ -30,6 +31,7 @@ open class MainActivity : AudioServiceFragmentActivity() {
         files?.receive(intent)
         notesWidget?.receive(intent)
         todoBridge?.receive(intent)
+        moduleReminders?.receive(intent)
         if (intent.action == "com.ilmmizan.bilga.OPEN_AGENT") {
             launchAgent = true
             assistant?.invokeMethod("openAgent", null)
@@ -40,6 +42,7 @@ open class MainActivity : AudioServiceFragmentActivity() {
         WidgetTheme.bind(this,flutterEngine.dartExecutor.binaryMessenger)
         todoBridge = TodoBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         notesWidget = NotesWidgetBridge(this, flutterEngine.dartExecutor.binaryMessenger)
+        moduleReminders = ModuleReminderBridge(this,flutterEngine.dartExecutor.binaryMessenger)
         VaultBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         TrialBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         files = FilesBridge(this, flutterEngine.dartExecutor.binaryMessenger)
@@ -83,6 +86,7 @@ open class MainActivity : AudioServiceFragmentActivity() {
         // handlers are installed; cold Dart still performs its normal first sync.
         notesWidget?.ready()
         todoBridge?.ready()
+        moduleReminders?.ready()
     }
 
     override fun onStart() { super.onStart(); TodoReminders.foreground=true; stopService(Intent(this,TodoOverlayService::class.java)) }
@@ -91,5 +95,5 @@ open class MainActivity : AudioServiceFragmentActivity() {
         if (files?.activityResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
     }
-    override fun onDestroy() { todoBridge?.close(); todoBridge=null; notesWidget?.close(); notesWidget = null; files?.close(); files = null; assistant = null; super.onDestroy() }
+    override fun onDestroy() { moduleReminders?.close();moduleReminders=null; todoBridge?.close(); todoBridge=null; notesWidget?.close(); notesWidget = null; files?.close(); files = null; assistant = null; super.onDestroy() }
 }

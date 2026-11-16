@@ -1,3 +1,13 @@
+## Active non-voice completion — 2026-11-16
+
+**Whole product remains IN PROGRESS.** Latest pushed/owner-installed source2cb48a6 adds professional Experiences (timeline/calendar/12templates/structured experiments/history/custom categories/tags/favorites/links/actual summaries/real guide). Its physical9actual/11withhooks suite passes172s; ordinary APK `build/review/bilga-experiences-review-app.apk` SHA25636c02559f9f4d53a06704986cb43c7a86dc70cb7a52581e0afc4e5b326033a0c is installed in-place. Hosted CI43863555340 succeeds with301 Flutter+17backend+9manifest tests, clean analyzer and verified Android build. Production package metadata is unchanged; its data was not read or changed.
+
+Current subsequent working tree extends Habits with advanced dated schedules/pauses/history/goals/search/categories/statistics/calendar, real-control guides and encrypted generic native reminders. **311 host tests pass412s**, plus1later real time-picker/opt-in/save/disable UI case passes12s; analyzer8 is clean and43×886 catalogs/non-voice/9manifest guards pass. Notes capability19/portable advanced-Habit17; previous Experiences18/content16 are historical. Native Habit/alarm acceptance and ordinary19 APK are pending; **ADB currently has no connected device** and reconnection is requested. No current native result is invented. Detailed exact state: [NON_VOICE_COMPLETION_ACTIVE_CHECKPOINT.md](NON_VOICE_COMPLETION_ACTIVE_CHECKPOINT.md), [HABITS_ADVANCED_AND_REMINDERS.md](HABITS_ADVANCED_AND_REMINDERS.md).
+
+Finance planning expansion, universal searchable Help Hub/remaining module guides and final integration/accessibility/localization/release/purchase acceptance remain outstanding. No voice/microphone, main merge, publication or paid activation. Older entries below describe earlier checkpoints and artifacts.
+
+---
+
 # Known limitations
 
 Overall product is IN PROGRESS. The master spec acceptance criteria are not yet met.

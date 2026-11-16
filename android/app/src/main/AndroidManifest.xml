@@ -61,6 +61,16 @@
             <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/NormalTheme"/>
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/></intent-filter>
         </activity>
+        <receiver android:name=".ModuleReminderReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.USER_UNLOCKED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.TIME_SET"/>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
         <receiver android:name=".TodoActionReceiver" android:exported="false"/>
         <activity android:name=".TodoSnoozeActivity" android:exported="false" android:taskAffinity="" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize"/>
         <receiver android:name=".TodoReceiver" android:exported="false">

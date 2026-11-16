@@ -468,7 +468,7 @@ void registerReadingDataCases({
     }
     await c.close();
   });
-  test('Notes v16 migrates to v18 additively and preserves legacy book/history byte for byte', () async {
+  test('Notes v16 migrates to v19 additively and preserves legacy book/history byte for byte', () async {
     final original = await store.records.save('book', {
       'title': 'Legacy',
       'characters': 'Kept',
@@ -491,7 +491,7 @@ void registerReadingDataCases({
     expect(await notes.query('private_records'), before);
     expect((await store.records.get(original.id)).data['characters'], 'Kept');
     expect(await notes.query('book_reading'), isEmpty);
-    expect(await notes.getVersion(), 18);
+    expect(await notes.getVersion(), 19);
   });
   test('Strict normalized data rejects future versions and malformed highlight geometry', () {
     final p = {

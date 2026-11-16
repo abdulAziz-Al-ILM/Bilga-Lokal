@@ -60,7 +60,7 @@ class PlannerRepository {
         .where(
           (h) =>
               !day(h.created.toLocal()).isAfter(today) &&
-              h.plan.scheduled(today),
+              h.plan.due(today, h.days, created: h.created),
         )
         .toList();
     return DailyPlan(overdue, due, upcoming, completed, habits);

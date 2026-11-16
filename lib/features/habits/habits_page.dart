@@ -1,3 +1,10 @@
+import '../reminders/module_reminder_status.dart';
+import 'habit_statistics_page.dart';
+
+import 'dart:convert';
+
+import 'habit_advanced_page.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../core/editor_form.dart';
@@ -46,7 +53,9 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
     ],
   );
   late Future<List<Habit>> loading;
-  bool archive = false, busy = false;
+  bool archive = false, busy = false, favoritesOnly = false;
+  String query = '', category = '';
+  final search = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -57,6 +66,7 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    search.dispose();
     guide.dispose();
     super.dispose();
   }
@@ -198,7 +208,7 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
             .where((s) => s.isNotEmpty)
             .map(int.parse)
             .toSet();
-        final plan = HabitPlan(
+        final plan = p.copyWith(
           weekdays: days,
           target: int.parse(v['target']!),
           unit: v['unit']!,
@@ -244,6 +254,103 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
           note: v['note'],
         );
       },
+    );
+  }
+
+  Future<void> advanced(Habit h) async {
+    if (!await allowed() || !mounted) return;
+    final current = await store.get(h.id);
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HabitAdvancedPage(
+          initial: current.plan,
+          onSave: (plan) async {
+            requireAccess();
+            await store.configure(current.id, current.title, plan);
+          },
+        ),
+      ),
+    );
+  }
+
+  ({int done, int required}) period(Habit h, DateTime day) {
+    final p = h.plan,
+        schedule = p.dayPlan(day),
+        created = schedule.start == null
+            ? h.created
+            : DateTime.parse(schedule.start!);
+    return (
+      done: schedule.completed(
+        day,
+        created: created,
+        through: day,
+        done: (d) => !p.skipped(d) && p.done(d, h.days),
+      ),
+      required: schedule.required(day, created: created),
+    );
+  }
+
+  bool due(Habit h, DateTime day) =>
+      h.plan.due(day, h.days, created: h.created);
+
+  Widget organization(List<Habit> all) {
+    final categories = {
+      for (final h in all)
+        if (h.plan.category.isNotEmpty) h.plan.category,
+      if (category.isNotEmpty) category,
+    }.toList()..sort();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          key: const Key('habit-search'),
+          controller: search,
+          decoration: InputDecoration(
+            labelText: context.tr('search'),
+            prefixIcon: const Icon(Icons.search),
+          ),
+          onChanged: (v) => setState(() => query = v.trim().toLowerCase()),
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            FilterChip(
+              label: Text(context.tr('favorites')),
+              selected: favoritesOnly,
+              onSelected: (v) => setState(() => favoritesOnly = v),
+            ),
+            if (query.isNotEmpty || category.isNotEmpty || favoritesOnly)
+              TextButton(
+                onPressed: () => setState(() {
+                  search.clear();
+                  query = category = '';
+                  favoritesOnly = false;
+                }),
+                child: Text(context.tr('eReset')),
+              ),
+          ],
+        ),
+        if (categories.isNotEmpty)
+          DropdownButtonFormField<String>(
+            key: ValueKey('habit-category-$category'),
+            initialValue: category,
+            isExpanded: true,
+            decoration: InputDecoration(labelText: context.tr('haCategory')),
+            items: [
+              DropdownMenuItem(value: '', child: Text(context.tr('all'))),
+              for (final c in categories)
+                DropdownMenuItem(
+                  value: c,
+                  child: Text(c, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+            ],
+            onChanged: (v) => setState(() => category = v!),
+          ),
+        const SizedBox(height: 12),
+      ],
     );
   }
 
@@ -309,10 +416,24 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
           if (!s.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final list = s.data!, now = DateTime.now();
-          final active = list
-              .where((h) => !h.archived && h.plan.scheduled(now))
+          final all = s.data!, now = DateTime.now();
+          final list = all
+              .where(
+                (h) =>
+                    (archive ? h.archived : !h.archived) &&
+                    (!favoritesOnly || h.plan.favorite) &&
+                    (category.isEmpty || h.plan.category == category) &&
+                    (query.isEmpty ||
+                        [
+                          h.title,
+                          h.plan.category,
+                          h.plan.reason,
+                          h.plan.cue,
+                          ...h.plan.tags,
+                        ].any((v) => v.toLowerCase().contains(query))),
+              )
               .toList();
+          final active = all.where((h) => !h.archived && due(h, now)).toList();
           final done = active.where((h) => h.plan.done(now, h.days)).length;
           return Align(
             alignment: Alignment.topCenter,
@@ -341,6 +462,11 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                           Text(c.tr('hEncourage')),
                           const SizedBox(height: 12),
                           Text(c.tr('hgAbout')),
+                          organization(all),
+                          if (all.any(
+                            (h) => h.plan.reminderMinute != null && !h.archived,
+                          ))
+                            const ModuleReminderStatus(),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
@@ -363,7 +489,9 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                           if (list.isEmpty)
                             Padding(
                               padding: const EdgeInsets.all(24),
-                              child: Text(c.tr('hFirst')),
+                              child: Text(
+                                c.tr(all.isEmpty ? 'hFirst' : 'haNoMatches'),
+                              ),
                             ),
                         ],
                       ),
@@ -395,16 +523,56 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                                 ),
                               ),
                               PopupMenuButton<String>(
+                                key: Key('habit-menu-${h.id}'),
                                 enabled: !busy,
                                 onSelected: (v) => run(() async {
                                   requireAccess();
-                                  if (v == 'edit') {
+                                  if (v == 'statistics') {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => HabitStatisticsPage(
+                                          store: store,
+                                          habitId: h.id,
+                                          access: access,
+                                        ),
+                                      ),
+                                    );
+                                  } else if (v == 'advanced') {
+                                    await advanced(h);
+                                  } else if (v == 'favorite') {
+                                    final current = await store.get(h.id);
+                                    final data = Map<String, dynamic>.from(
+                                      jsonDecode(current.plan.encode()),
+                                    );
+                                    data.addAll({
+                                      'v': 2,
+                                      'favorite': !current.plan.favorite,
+                                    });
+                                    await store.configure(
+                                      h.id,
+                                      current.title,
+                                      HabitPlan.decode(jsonEncode(data)),
+                                    );
+                                  } else if (v == 'edit') {
                                     await edit(h);
                                   } else {
                                     await store.archive(h.id, !h.archived);
                                   }
                                 }),
                                 itemBuilder: (c) => [
+                                  PopupMenuItem(
+                                    value: 'statistics',
+                                    child: Text(c.tr('haStatistics')),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'advanced',
+                                    child: Text(c.tr('haAdvanced')),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'favorite',
+                                    child: Text(c.tr('favorites')),
+                                  ),
                                   PopupMenuItem(
                                     value: 'edit',
                                     child: Text(c.tr('edit')),
@@ -420,8 +588,40 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                             ],
                           ),
                           Text(
-                            '${p.amount(now, h.days)} / ${p.target} ${p.unit} · ${p.streak(h.days, now)} ${c.tr('hStreak')}',
+                            '${p.amount(now, h.days)} / ${p.targetAt(now)} ${p.unit} · ${p.streak(h.days, now, created: p.dayPlan(now).start == null ? h.created : DateTime.parse(p.dayPlan(now).start!))} ${c.tr(['weekly', 'monthly'].contains(p.dayPlan(now).type) ? 'haStreak_${p.dayPlan(now).type}' : 'hStreak')}',
                           ),
+                          if (p.category.isNotEmpty) Text(p.category),
+                          if (p.tags.isNotEmpty)
+                            Wrap(
+                              spacing: 4,
+                              children: [
+                                for (final tag in p.tags)
+                                  Chip(label: Text(tag)),
+                              ],
+                            ),
+                          if (p.goalTarget != null) ...[
+                            Text(
+                              '${c.tr('haGoalProgress')}: ${p.completedDays(h.days, now)} / ${p.goalTarget}',
+                            ),
+                            LinearProgressIndicator(
+                              value:
+                                  (p.completedDays(h.days, now) / p.goalTarget!)
+                                      .clamp(0, 1),
+                            ),
+                            if (p.goalDate != null)
+                              Text('${c.tr('haGoalDate')}: ${p.goalDate}'),
+                            if (p.goalDate != null &&
+                                p.goalDate!.compareTo(dayKey(now)) < 0 &&
+                                p.completedDays(h.days, now) < p.goalTarget!)
+                              Text(c.tr('haGoalOverdue')),
+                          ],
+                          if ([
+                            'weekly',
+                            'monthly',
+                          ].contains(p.dayPlan(now).type))
+                            Text(
+                              '${c.tr('haPeriod')}: ${period(h, now).done} / ${period(h, now).required}',
+                            ),
                           if (p.cue.isNotEmpty)
                             Text('${c.tr('hCue')}: ${p.cue}'),
                           if (p.minimum.isNotEmpty)
@@ -429,11 +629,19 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                           if (p.reason.isNotEmpty)
                             Text('${c.tr('hReason')}: ${p.reason}'),
                           const SizedBox(height: 12),
-                          Text('${c.tr('h28Days')}: $completed / $planned'),
-                          const SizedBox(height: 8),
-                          LinearProgressIndicator(
-                            value: planned == 0 ? 0 : completed / planned,
+                          Text(
+                            ['weekly', 'monthly'].contains(p.dayPlan(now).type)
+                                ? '${c.tr('h28Days')}: $completed'
+                                : '${c.tr('h28Days')}: $completed / $planned',
                           ),
+                          const SizedBox(height: 8),
+                          if (![
+                            'weekly',
+                            'monthly',
+                          ].contains(p.dayPlan(now).type))
+                            LinearProgressIndicator(
+                              value: planned == 0 ? 0 : completed / planned,
+                            ),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 5,

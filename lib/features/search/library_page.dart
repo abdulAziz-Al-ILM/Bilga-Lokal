@@ -272,7 +272,8 @@ class _DocumentPageState extends State<DocumentPage> {
                 records: RecordStore(database: await widget.repository.notes),
               ).one(widget.hit.id, 'source')) !=
               null;
-      if (source != null && {'finance', 'book'}.contains(widget.hit.kind)) {
+      if (source != null &&
+          {'finance', 'book', 'experience'}.contains(widget.hit.kind)) {
         RecordStore.validate(
           widget.hit.kind,
           jsonDecode(source['payload'] as String) as Map<String, dynamic>,
@@ -357,6 +358,25 @@ class _DocumentPageState extends State<DocumentPage> {
       return [
         '${context.tr('hTarget')}: ${h.plan.target} ${h.plan.unit}',
         h.plan.reason,
+        '${context.tr('haAdvanced')}: ${context.tr('haType_${h.plan.currentSchedule.type}')}',
+        if (h.plan.currentSchedule.start != null)
+          '${context.tr('haStart')}: ${h.plan.currentSchedule.start}',
+        if (h.plan.currentSchedule.end != null)
+          '${context.tr('haEnd')}: ${h.plan.currentSchedule.end}',
+        if (['weekly', 'monthly'].contains(h.plan.currentSchedule.type))
+          '${context.tr('haQuota')}: ${h.plan.currentSchedule.quota}',
+        if (h.plan.currentSchedule.type == 'interval')
+          '${context.tr('haInterval')}: ${h.plan.currentSchedule.interval}',
+        for (final pause in h.plan.currentSchedule.pauses)
+          '${context.tr('haPauses')}: ${pause.from} – ${pause.until}',
+        if (h.plan.category.isNotEmpty)
+          '${context.tr('haCategory')}: ${h.plan.category}',
+        if (h.plan.tags.isNotEmpty)
+          '${context.tr('eTags')}: ${h.plan.tags.join(', ')}',
+        if (h.plan.goalTarget != null)
+          '${context.tr('haGoalProgress')}: ${h.plan.completedDays(h.days, DateTime.now())} / ${h.plan.goalTarget}',
+        if (h.plan.goalDate != null)
+          '${context.tr('haGoalDate')}: ${h.plan.goalDate}',
         for (final day in {
           ...entries,
           ...h.days,

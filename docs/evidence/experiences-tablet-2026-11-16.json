@@ -1,16 +1,16 @@
 {
-  "source": "6d04577c4d5a35ead1211d9b12aca3e6fff3e475",
-  "artifact": "build/review/bilga-experiences-tests.apk",
-  "sha256": "06b06312e917a21e8c4c7bc85ac9b33b8eaf45d33b205466950749a7b972cac2",
+  "source": "2cb48a627df02d47774a67e2e68e380111369909",
+  "artifact": "build/review/bilga-experiences-tests-v2.apk",
+  "sha256": "9371a3de69f285fbb681efc28bfae3aa522832e6c5ea798f39430ac69837b466",
   "target": "integration_test/experiences_review_test.dart",
   "device": "Tab16NEU0045423",
   "package": "com.ilmmizan.bilga.review",
   "result": "PASS",
   "actual_scenarios": 9,
   "runner_cases_with_hooks": 11,
-  "elapsed_seconds": 168,
-  "log": "/tmp/bilga-experiences-tablet1.log",
-  "log_sha256": "6aa2ea71630e1c149bfe27458881d28ebd0559bbf0dc045a349286ad976b25c9",
+  "elapsed_seconds": 172,
+  "log": "/tmp/bilga-experiences-tablet2.log",
+  "log_sha256": "be32e384ab0cbcb7a2cf0eb9efc24c87c04715a5497597d4def8d61297cfab15",
   "scope": [
     "six actual encrypted data/history/links/backup/additive migration cases",
     "real guide and failed-save retry",
@@ -19,5 +19,7 @@
   ],
   "manual_keyboard_acceptance": false,
   "production_package_touched": false,
-  "ordinary_app_artifact": "still pending; this is a test APK"
+  "ordinary_app_artifact": "still pending; this is a test APK",
+  "extra_assertion": "Leading/trailing whitespace survives actual experiment editor save and history restoration; title still trimmed",
+  "previous_native_pass": "6d04577,9actual/11withhooks,168s; preserved in Git history"
 }

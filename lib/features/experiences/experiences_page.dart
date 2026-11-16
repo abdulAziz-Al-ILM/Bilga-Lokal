@@ -37,7 +37,14 @@ class _ExperiencesState extends State<ExperiencesPage> {
     id: 'experience.create',
     steps: const [
       GuideStep('create', 'create', 'egCreate', event: 'createOpened'),
-      GuideStep('title', 'title', 'egTitle', event: 'titleEntered'),
+      // The first editor step is a route boundary; Android Back handles draft cancellation.
+      GuideStep(
+        'title',
+        'title',
+        'egTitle',
+        event: 'titleEntered',
+        backBoundary: true,
+      ),
       GuideStep('body', 'body', 'egBody', event: 'reflected'),
       GuideStep('save', 'save', 'egSave', event: 'saved'),
       GuideStep('results', 'results', 'egResults', backBoundary: true),

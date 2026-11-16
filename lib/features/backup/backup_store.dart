@@ -1,3 +1,4 @@
+import '../habits/habit_changes.dart';
 import '../modules/module_data.dart';
 import '../notes/rich_note_codec.dart';
 import '../todo/todo_changes.dart';
@@ -210,7 +211,12 @@ class BackupStore {
       'format': 'bilga-data',
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
-      'notesSchema': (data['module_data'] as List).isNotEmpty
+      'notesSchema':
+          (data['habits'] as List).any(
+            (r) => HabitPlan.decode(r['details'] as String).advanced,
+          )
+          ? 17
+          : (data['module_data'] as List).isNotEmpty
           ? 16
           : (data['book_reading'] as List).isNotEmpty
           ? 15
@@ -235,13 +241,34 @@ class BackupStore {
   ) {
     if (payload['format'] != 'bilga-data' ||
         payload['version'] != 1 ||
-        ![8, 9, 10, 11, 12, 13, 14, 15, 16].contains(payload['notesSchema']) ||
+        ![
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+        ].contains(payload['notesSchema']) ||
         ![6, 7, 8, 9, 10, 11].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
       throw const FormatException('backup_invalid');
     }
     final raw = payload['data'];
     if (raw is! Map) throw const FormatException('backup_invalid');
+    if ((payload['notesSchema'] as int) < 17 &&
+        raw['habits'] is List &&
+        (raw['habits'] as List).any(
+          (r) =>
+              r is Map &&
+              r['details'] is String &&
+              HabitPlan.decode(r['details']).advanced,
+        )) {
+      throw const FormatException('habit_schema');
+    }
     if ((payload['notesSchema'] as int) < 16 &&
         raw['module_data'] is List &&
         (raw['module_data'] as List).isNotEmpty) {
@@ -427,7 +454,10 @@ class BackupStore {
         }
         if (entry.key == 'habits') {
           row['details'] ??= '{}';
-          HabitPlan.decode(row['details'] as String);
+          final habitPlan = HabitPlan.decode(row['details'] as String);
+          if (habitPlan.advanced && (payload['notesSchema'] as int) < 17) {
+            throw const FormatException('habit_schema');
+          }
           if (row['days'] is! String) {
             throw const FormatException('backup_invalid');
           }
@@ -935,6 +965,7 @@ class BackupStore {
       if (restored) {
         NotesChanges.committed();
         TodoChanges.committed();
+        HabitChanges.committed();
       }
       return restored;
     } finally {

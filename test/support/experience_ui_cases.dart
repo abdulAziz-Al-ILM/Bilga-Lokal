@@ -174,6 +174,7 @@ void registerExperienceUiCases({
         await tap(t, 'experience-create');
         expect(find.byType(ExperienceEditor), findsOneWidget);
         expect(guide(t).index, 1);
+        expect(guide(t).canBack, isFalse);
         await enter(t, 'experience-title', 'Real reflection');
         await tap(t, 'guide-next');
         expect(guide(t).index, 2);

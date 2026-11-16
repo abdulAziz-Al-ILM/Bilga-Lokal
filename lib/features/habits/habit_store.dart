@@ -1,3 +1,5 @@
+import 'habit_changes.dart';
+
 import 'dart:convert';
 import 'dart:math';
 
@@ -33,7 +35,7 @@ class Habit {
     Set<String>.from(jsonDecode(row['days'] as String) as List),
     row['is_archived'] == 1,
     plan: HabitPlan.decode(row['details'] as String? ?? '{}'),
-    created: DateTime.parse(row['created_at'] as String),
+    created: DateTime.parse(row['created_at'] as String).toLocal(),
   );
 }
 
@@ -47,6 +49,17 @@ class HabitStore {
         where: includeArchived ? null : 'is_archived = 0',
         orderBy: 'created_at ASC',
       )).map(Habit.fromMap).toList();
+  Future<Habit> get(String id) async {
+    final rows = await (await db).query(
+      'habits',
+      where: 'id=?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) throw StateError('habit_missing');
+    return Habit.fromMap(rows.single);
+  }
+
   Future<void> create(String title, {String? id, HabitPlan? plan}) async {
     if (title.trim().isEmpty || title.length > 200) {
       throw ArgumentError('habit_title');
@@ -62,6 +75,7 @@ class HabitStore {
       'created_at': now,
       'updated_at': now,
     });
+    HabitChanges.committed();
   }
 
   Future<void> rename(String id, String title) async {
@@ -74,6 +88,7 @@ class HabitStore {
       where: 'id = ?',
       whereArgs: [id],
     );
+    HabitChanges.committed();
   }
 
   Future<void> archive(String id, bool value) async {
@@ -86,6 +101,7 @@ class HabitStore {
       where: 'id = ?',
       whereArgs: [id],
     );
+    HabitChanges.committed();
   }
 
   Future<void> configure(String id, String title, HabitPlan plan) async {
@@ -98,25 +114,29 @@ class HabitStore {
       if (rows.isEmpty) throw StateError('habit_missing');
       final old = Habit.fromMap(rows.single).plan;
       final data = jsonDecode(plan.encode()) as Map<String, dynamic>;
+      data['v'] = 2;
+      if (old.schedules.values.any((v) => v is List)) {
+        data['legacyTarget'] = old.legacyTarget ?? old.target;
+      }
       data['entries'] = old.entries;
       data['schedules'] = {
-        dayKey(DateTime.parse(rows.single['created_at'] as String)): old
-            .weekdays
-            .toList(),
+        dayKey(DateTime.parse(rows.single['created_at'] as String).toLocal()):
+            old.currentSchedule.encode(),
         ...old.schedules,
-        dayKey(DateTime.now()): plan.weekdays.toList(),
+        dayKey(DateTime.now()): plan.currentSchedule.encode(),
       };
       await txn.update(
         'habits',
         {
           'title': title.trim(),
-          'details': jsonEncode(data),
+          'details': HabitPlan.decode(jsonEncode(data)).encode(),
           'updated_at': DateTime.now().toIso8601String(),
         },
         where: 'id = ?',
         whereArgs: [id],
       );
     });
+    HabitChanges.committed();
   }
 
   Future<void> mark(String id, DateTime date, bool done) async {
@@ -126,7 +146,11 @@ class HabitStore {
       whereArgs: [id],
     );
     if (rows.isEmpty) throw StateError('habit_missing');
-    await checkIn(id, date, done ? Habit.fromMap(rows.single).plan.target : 0);
+    await checkIn(
+      id,
+      date,
+      done ? Habit.fromMap(rows.single).plan.targetAt(date) : 0,
+    );
   }
 
   Future<void> checkIn(
@@ -147,7 +171,7 @@ class HabitStore {
       if (rows.isEmpty) throw StateError('habit_missing');
       final habit = Habit.fromMap(rows.single), key = dayKey(date);
       if (habit.archived) throw StateError('habit_archived');
-      final target = habit.plan.entries[key]?['target'] ?? habit.plan.target;
+      final target = habit.plan.targetAt(date);
       habit.plan.entries[key] = {
         'amount': amount,
         'target': target,
@@ -172,5 +196,6 @@ class HabitStore {
         whereArgs: [id],
       );
     });
+    HabitChanges.committed();
   }
 }

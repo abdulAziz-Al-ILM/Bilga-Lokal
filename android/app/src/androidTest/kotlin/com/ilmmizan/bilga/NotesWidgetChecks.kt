@@ -11,6 +11,8 @@ import org.json.JSONArray
 
 /** Device tests use reserved synthetic cache IDs, never notes/model/user files. */
 class NotesWidgetChecks : Instrumentation() {
+    private var moduleOperation:String?=null
+    private var moduleFixtureId:String?=null
     private var fixtureTodo = false
     private var verifyTodo = false
     private var verifyEmpty = false
@@ -18,6 +20,8 @@ class NotesWidgetChecks : Instrumentation() {
     override fun onCreate(arguments: Bundle?) {
         check(targetContext.packageName=="com.ilmmizan.bilga.review" &&
             targetContext.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE!=0)
+        moduleOperation=arguments?.getString("moduleOperation")
+        moduleFixtureId=arguments?.getString("moduleId")
         fixtureTodo = arguments?.getString("fixtureTodo") == "true"
         verifyTodo = arguments?.getString("todoChecks") == "true"
         verifyEmpty = arguments?.getString("verifyEmptySnapshots") == "true"
@@ -25,6 +29,10 @@ class NotesWidgetChecks : Instrumentation() {
         super.onCreate(arguments); start()
     }
     override fun onStart() {
+        moduleOperation?.let { op ->
+            val (ok,report)=ModuleReminderChecks.run(targetContext,op,moduleFixtureId?:"invalid")
+            finish(if(ok) Activity.RESULT_OK else Activity.RESULT_CANCELED,Bundle().apply { putString("stream",report) });return
+        }
         if(fixtureTodo) {
             val report=StringBuilder()
             var inspected=true

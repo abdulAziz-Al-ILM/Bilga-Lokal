@@ -89,6 +89,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/bilga-recurrence-java"
           javac -d "$RUNNER_TEMP/bilga-recurrence-java" android/app/src/main/java/com/ilmmizan/bilga/TaskRecurrence.java tool/java/TaskRecurrenceCheck.java
           java -cp "$RUNNER_TEMP/bilga-recurrence-java" TaskRecurrenceCheck
+      - run: python3 tool/test_module_reminder_math.py
       - run: flutter test --no-pub --concurrency=2 --reporter expanded
       - run: flutter build apk --debug --no-pub
       - name: Verify debug artifact

@@ -1,3 +1,4 @@
+import '../features/reminders/module_reminder_host.dart';
 import '../features/todo/reminders/todo_host.dart';
 
 import 'package:flutter/material.dart';
@@ -39,7 +40,9 @@ class BilgaApp extends StatelessWidget {
         builder: (context, child) => AppLock(
           child: CoreAccessGate(child: child ?? const SizedBox.shrink()),
         ),
-        home: const NotesWidgetHost(child: TodoHost(child: HomePage())),
+        home: const NotesWidgetHost(
+          child: TodoHost(child: ModuleReminderHost(child: HomePage())),
+        ),
       );
     },
   );

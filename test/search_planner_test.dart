@@ -172,7 +172,7 @@ void main() {
     notes = await NoteDatabase.openAt('${dir.path}/notes.db');
     todos = await TodoDatabase.openAt('${dir.path}/todos.db');
     search = SearchRepository(notesDb: notes, todoDb: todos);
-    expect(await notes.getVersion(), 18);
+    expect(await notes.getVersion(), 19);
     expect(await todos.getVersion(), 13);
     expect((await search.search('Orchid')).map((h) => h.id).toSet(), {
       'legacy-note',
