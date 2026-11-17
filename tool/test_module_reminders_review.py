@@ -94,6 +94,10 @@ def main():
             raise RuntimeError('Alarm deadline elapsed before process-death observation')
         wait_until = time.monotonic() + (at - device_now) / 1000 + 3
         while time.monotonic() < wait_until:
+            # Exclude an owner reopening Review during the wait. Leave a small
+            # margin for device clock rounding and the alarm receiver itself.
+            if time.monotonic() < wait_until - 5 and pid():
+                raise RuntimeError('Review process restarted before its alarm deadline; process-death acceptance not proved')
             time.sleep(min(2, max(.05, wait_until - time.monotonic())))
         deadline = time.monotonic() + 40
         delivered = False

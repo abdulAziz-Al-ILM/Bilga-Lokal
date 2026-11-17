@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-17",
+  "runtime_source": "9a6b121ebc2cb4a3818f6502baae10b6a54dcb74",
+  "test_target": "integration_test/product_completion_review_test.dart",
+  "result": "PASS",
+  "actual_cases": 55,
+  "including_setup_teardown": 57,
+  "seconds": 1247,
+  "test_apk": "build/review/bilga-product-completion-tests-2026-11-17.apk",
+  "apk_sha256": "b063872755b74ea6e35960b96b235ce4610e93e5ab27bcbc080913f9d4f7dc44",
+  "device": "Tab16NEU0045423",
+  "package": "com.ilmmizan.bilga.review",
+  "secure_sqlcipher": true,
+  "fake_speech_only": true,
+  "actual_recognition_proved": false,
+  "coverage": [
+    "Advanced Habits data, guides, calendar, goals and reminder opt-in",
+    "Finance exact planning, backup18, migration20, debt deadline, real forms",
+    "All-six Help Hub and actual Notes/Tasks guides",
+    "Voice cancellation, preview and actual module writes/search/financial confirmation",
+    "Experiences history, attachments/data, task links and guides",
+    "TXT/EPUB/PDF500 pages, locators, cards, encrypted full-media restore and links"
+  ],
+  "native_companion": {
+    "apk": "build/review/bilga-final-native-companion-2026-11-17.apk",
+    "sha256": "25697aa78a45397d461f06ad8703ff7e0919a3c9cc213d5c632f42a8aec9cc63",
+    "notes_widget_checks": 13,
+    "tasks_checks": 46,
+    "result": "PASS",
+    "speech_capability": {
+      "system": true,
+      "onDevice": true,
+      "microphone_previously_granted": false,
+      "capture_performed": false
+    }
+  },
+  "test_restarts": 0,
+  "production_operations": false,
+  "log_sha256": "341f06062df881d807c453037d6ae34b37495f8d774bca91a41a63617f3797a1",
+  "native_log_sha256": "24bac292272c903136d35728d87e7fe5f54bee13bb1cffe65306977e86325441"
+}

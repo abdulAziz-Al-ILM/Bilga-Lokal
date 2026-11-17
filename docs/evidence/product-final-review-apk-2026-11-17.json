@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-17",
+  "runtime_source": "9a6b121ebc2cb4a3818f6502baae10b6a54dcb74",
+  "latest_test_fixes": "359496e4ce62cdb344e6853bbde3335d10878ce1",
+  "apk": "build/review/bilga-review-2026-11-17.apk",
+  "sha256": "6fdbfebc08c8b20f78ca917a3ffcd6a60e3c5401af131ee2838eeac233c0b7e7",
+  "bytes": 217902184,
+  "package": "com.ilmmizan.bilga.review",
+  "signer": "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0",
+  "default_main_verified": true,
+  "integration_entrypoints_absent": true,
+  "zip_crc_and_signature_verified": true,
+  "installed_in_place": true,
+  "launch_status": "ok",
+  "launch_state": "WARM",
+  "debug_activity_launch_ms": 4711,
+  "release_performance_claimed": false,
+  "notes_capability": 20,
+  "finance_portable": 18,
+  "production_metadata_identical": true,
+  "production_metadata": [
+    "userId=11022",
+    "    versionCode=9 minSdk=26 targetSdk=36",
+    "    versionName=1.4.0",
+    "    firstInstallTime=2026-10-06 07:57:29",
+    "    lastUpdateTime=2026-10-23 20:00:52"
+  ],
+  "production_data_read_or_modified": false,
+  "uninstall_or_clear_used": false,
+  "real_speech": {
+    "status": "PASS with owner correction; owner-confirmed real Notes search",
+    "verification_source": "owner manual physical-tablet report",
+    "language": "uz-UZ",
+    "engine_mode": "system (explicit provider privacy consent)",
+    "initial_on_device_request": "owner reported language unavailable",
+    "reported_proper_noun_error": {
+      "spoken": "Bilga",
+      "recognized": "belgi"
+    },
+    "uncorrected_transcript_accuracy_claimed": false,
+    "offline_uzbek_support_claimed": false,
+    "owner_correction_and_real_search_requested": true,
+    "audio_recorded_by_bilga": false,
+    "owner_correction_and_real_search_confirmed": true,
+    "search_result": "empty as expected for an unseeded test phrase; no record created"
+  },
+  "process_death_alarms": {
+    "habit": "PASS",
+    "finance": "PASS",
+    "original_mirror_restored": true,
+    "synthetic_notifications_removed": true,
+    "no_personal_records_created": true
+  },
+  "full_ci": {
+    "run": 44104409723,
+    "attempt": 2,
+    "source": "359496e4ce62cdb344e6853bbde3335d10878ce1",
+    "result": "SUCCESS",
+    "flutter_tests": 339,
+    "backend_tests": 17,
+    "manifest_tests": 12,
+    "android_debug_build": "PASS"
+  },
+  "owner_review_ready": true,
+  "final_ordinary_app_return": {
+    "status": "ok",
+    "launch_state": "COLD",
+    "debug_activity_launch_ms": 3991,
+    "integration_runner_left_installed_as_owner_app": false
+  }
+}
