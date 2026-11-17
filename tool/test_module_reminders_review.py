@@ -79,6 +79,10 @@ def main():
             # alarms for force-stopped packages. Never target production here.
             subprocess.run(adb + ['shell', 'am', 'kill', REVIEW], check=True)
         stopped = pid()
+        kill_deadline = time.monotonic() + 5
+        while stopped and time.monotonic() < kill_deadline:
+            time.sleep(.1)
+            stopped = pid()
         if stopped:
             raise RuntimeError('Review process is still running; process-death acceptance not proved')
         print('Review process absent; real ' + args.kind + ' alarm scheduled:', at, flush=True)

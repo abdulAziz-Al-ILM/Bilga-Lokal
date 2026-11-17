@@ -15,6 +15,7 @@ import 'package:bilga/features/private_space/record_store.dart';
 import 'package:bilga/features/private_space/space_page.dart';
 import 'package:bilga/features/search/library_page.dart';
 import 'package:bilga/features/habits/habit_store.dart';
+import 'package:bilga/features/habits/habit_statistics_page.dart';
 import 'package:bilga/features/books/reading/reading_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -333,6 +334,15 @@ void registerVoiceUiCases({
           h.plan.entries[dayKey(DateTime.now())]['note'],
           'Actual earlier minutes',
         );
+        // SQLite can expose the committed check-in before the action's async
+        // continuation has pushed its result route. Wait for the actual UI,
+        // rather than racing a Back gesture against that continuation.
+        final opening = Stopwatch()..start();
+        while (find.byType(HabitStatisticsPage).evaluate().isEmpty &&
+            opening.elapsed < const Duration(seconds: 20)) {
+          await settleIo(t);
+        }
+        expect(find.byType(HabitStatisticsPage), findsOneWidget);
         await t.pageBack();
         await settleIo(t);
         await command(t, 'open book: Actual book');

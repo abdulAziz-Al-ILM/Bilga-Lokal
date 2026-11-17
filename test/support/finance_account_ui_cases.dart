@@ -12,21 +12,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'settle_io.dart';
+
 void registerFinanceAccountUiTests({
   Future<Directory> Function()? createDirectory,
   bool secure = false,
   bool includeCompact = true,
   VoidCallback? onUiVerified,
 }) {
-  Future<void> settle(WidgetTester tester) async {
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 10)),
-      );
-    }
-    await tester.pumpAndSettle();
-  }
+  Future<void> settle(WidgetTester tester) => settleIo(tester);
 
   Finder field(String label) => find.byWidgetPredicate(
     (widget) => widget is TextField && widget.decoration?.labelText == label,
