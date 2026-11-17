@@ -11,8 +11,10 @@ import org.json.JSONArray
 
 /** Device tests use reserved synthetic cache IDs, never notes/model/user files. */
 class NotesWidgetChecks : Instrumentation() {
+    private var speechChecks=false
     private var moduleOperation:String?=null
     private var moduleFixtureId:String?=null
+    private var moduleKind="habit"
     private var fixtureTodo = false
     private var verifyTodo = false
     private var verifyEmpty = false
@@ -20,8 +22,10 @@ class NotesWidgetChecks : Instrumentation() {
     override fun onCreate(arguments: Bundle?) {
         check(targetContext.packageName=="com.ilmmizan.bilga.review" &&
             targetContext.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE!=0)
+        speechChecks=arguments?.getString("speechChecks")=="true"
         moduleOperation=arguments?.getString("moduleOperation")
         moduleFixtureId=arguments?.getString("moduleId")
+        moduleKind=arguments?.getString("moduleKind")?:"habit"
         fixtureTodo = arguments?.getString("fixtureTodo") == "true"
         verifyTodo = arguments?.getString("todoChecks") == "true"
         verifyEmpty = arguments?.getString("verifyEmptySnapshots") == "true"
@@ -29,8 +33,9 @@ class NotesWidgetChecks : Instrumentation() {
         super.onCreate(arguments); start()
     }
     override fun onStart() {
+        if(speechChecks){val (ok,report)=SpeechChecks.run(targetContext);finish(if(ok)Activity.RESULT_OK else Activity.RESULT_CANCELED,Bundle().apply{putString("stream",report)});return}
         moduleOperation?.let { op ->
-            val (ok,report)=ModuleReminderChecks.run(targetContext,op,moduleFixtureId?:"invalid")
+            val (ok,report)=ModuleReminderChecks.run(targetContext,op,moduleFixtureId?:"invalid",moduleKind)
             finish(if(ok) Activity.RESULT_OK else Activity.RESULT_CANCELED,Bundle().apply { putString("stream",report) });return
         }
         if(fixtureTodo) {

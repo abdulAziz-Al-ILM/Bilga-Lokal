@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-16",
+  "source": "a0743142e05c28d38b85d86e6acc90d6949d2ab2",
+  "path": "build/review/bilga-habits-advanced-review-app.apk",
+  "sha256": "5a18a5c7a56c8d12645904a1a5000a2a9fe3faaeebe2665bb4aa93d0de40742d",
+  "bytes": 217902184,
+  "notes_capability": 19,
+  "tasks_capability": 13,
+  "ordinary_default_main": true,
+  "integration_runners_absent": true,
+  "required_feature_kernel_symbols_verified": true,
+  "signer": "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0",
+  "manifest": "PASS via guarded build",
+  "installation": "PENDING tablet reconnection",
+  "device_acceptance": "not yet run",
+  "production_data_operations": false,
+  "log": "/tmp/bilga-habits-ordinary-build1.log"
+}

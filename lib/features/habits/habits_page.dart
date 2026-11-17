@@ -22,7 +22,8 @@ import 'habit_template_page.dart';
 class HabitsPage extends StatefulWidget {
   final HabitStore? store;
   final AgentAccess? access;
-  const HabitsPage({super.key, this.store, this.access});
+  final bool tutorial;
+  const HabitsPage({super.key, this.store, this.access, this.tutorial = false});
   @override
   State<HabitsPage> createState() => _HabitsState();
 }
@@ -61,6 +62,11 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     reload();
+    if (widget.tutorial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) run(() => edit(null, null, true));
+      });
+    }
   }
 
   @override

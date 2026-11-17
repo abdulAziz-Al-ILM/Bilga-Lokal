@@ -318,7 +318,7 @@ void registerExperienceDataCases({
         (await upgraded.query('private_records')).single['payload'],
         payload,
       );
-      expect(await upgraded.getVersion(), 19);
+      expect(await upgraded.getVersion(), 20);
       final history = (await upgraded.query('module_data')).single;
       expect(ModuleData.decode(history)['entryRevision'], 7);
       expect(ModuleData.decode(history)['snapshot']['body'], contains('نص'));

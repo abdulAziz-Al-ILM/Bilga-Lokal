@@ -6,6 +6,7 @@ This is not a substitute for Play Console or real-device acceptance.
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from verify_voice_scope import verify_voice
 
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 
@@ -23,10 +24,8 @@ def verify_manifest(xml):
     version = billing.get(ANDROID + 'value', '')
     if int(version.split('.')[0]) < 8:
         raise ValueError('Play Billing 7 and earlier are no longer supported for submissions')
-    for node in root:
-        if node.tag.startswith('uses-permission') and node.get(ANDROID + 'name') == 'android.permission.RECORD_AUDIO':
-            raise ValueError('Microphone permission is outside the release scope')
-    return f"PASS package identity; target API {sdk.get(ANDROID + 'targetSdkVersion')}; Billing {version}; no microphone permission"
+    voice=verify_voice(root)
+    return f"PASS package identity; target API {sdk.get(ANDROID + 'targetSdkVersion')}; Billing {version}; {voice}"
 
 
 if __name__ == '__main__':

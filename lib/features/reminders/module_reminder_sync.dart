@@ -1,6 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
+
+import '../finance/ledger.dart';
+import '../finance/finance_planning.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
@@ -121,6 +126,54 @@ class ModuleReminderSync extends ChangeNotifier {
     return rows;
   }
 
+  static Future<List<Map<String, dynamic>>> financeRows(Database db) async {
+    final rows = <Map<String, dynamic>>[];
+    var after = '';
+    while (true) {
+      final source = await db.query(
+        'private_records',
+        columns: ['id', 'payload'],
+        where: "kind='finance' AND id>? AND json_type(payload,'\$.planning.debts')='object'",
+        whereArgs: [after],
+        orderBy: 'id',
+        limit: 1,
+      );
+      if (source.isEmpty) break;
+      after = source.single['id'] as String;
+      final data = jsonDecode(
+        source.single['payload'] as String,
+      ) as Map<String, dynamic>;
+      Ledger.validate(data);
+      final entries = {for (final e in data['entries']) e['id']: e};
+      for (final item in (FinancePlanning.plan(data)['debts'] as Map).entries) {
+        final debt = entries[item.key], policy = item.value as Map;
+        if (policy['minute'] == null ||
+            debt['void'] == true ||
+            Ledger.outstanding(
+                  data,
+                  debt,
+                  throughDate: policy['date'] as String,
+                ) <=
+                0) {
+          continue;
+        }
+        if (rows.length == 5000) throw const FormatException('reminder_limit');
+        final id = sha256
+            .convert(utf8.encode(jsonEncode([after, item.key])))
+            .toString();
+        rows.add({
+          'id': 'finance:$id',
+          'target': after,
+          'kind': 'finance',
+          'date': policy['date'],
+          'minute': policy['minute'],
+          'config': jsonEncode([policy['date'], policy['minute']]),
+        });
+      }
+    }
+    return rows;
+  }
+
   Future<void> _run() async {
     while (_dirty && !_closed) {
       _dirty = false;
@@ -132,7 +185,11 @@ class ModuleReminderSync extends ChangeNotifier {
           continue;
         }
         final db = provided ?? await NoteDatabase.database;
-        final rows = await habitRows(db, DateTime.now());
+        final rows = [
+          ...await habitRows(db, DateTime.now()),
+          ...await financeRows(db),
+        ];
+        if (rows.length > 5000) throw const FormatException('reminder_limit');
         if (!canRead() || _closed) continue;
         final language = AppSettings.instance.language;
         await ModuleReminderBridge.channel.invokeMethod<void>('publish', {

@@ -1,3 +1,4 @@
+import '../finance/finance_planning.dart';
 import '../notes/rich_note_widgets.dart';
 
 import 'dart:async';
@@ -42,11 +43,15 @@ String kindKey(String kind) => switch (kind) {
 class LibraryPage extends StatefulWidget {
   final bool readOnly, assistant;
   final SearchRepository? repository;
+  final String initialQuery;
+  final String? initialKind;
   const LibraryPage({
     super.key,
     this.readOnly = false,
     this.assistant = false,
     this.repository,
+    this.initialQuery = '',
+    this.initialKind,
   });
   @override
   State<LibraryPage> createState() => _LibraryPageState();
@@ -63,6 +68,8 @@ class _LibraryPageState extends State<LibraryPage> {
   @override
   void initState() {
     super.initState();
+    query.text = widget.initialQuery;
+    kind = widget.initialKind;
     load();
   }
 
@@ -400,6 +407,12 @@ class _DocumentPageState extends State<DocumentPage> {
         for (final entry in payload['entries'] as List) entry['id']: entry,
       };
       return [
+        FinancePlanning.readable(
+          payload,
+          label: context.tr,
+          date: date,
+          through: DateTime.now().toIso8601String().substring(0, 10),
+        ),
         context.tr('fAccounts'),
         for (final account in accounts)
           '${account['name']} · ${account['currency']}\n${context.tr('fAccountOpening')}: ${moneyText(account['opening'] as int, account['currency'] as String)}\n${context.tr('fAccountCurrent')}: ${moneyText(balances[account['id']]!, account['currency'] as String)}'

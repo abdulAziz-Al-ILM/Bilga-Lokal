@@ -1,3 +1,26 @@
+# Active final product checkpoint — November 17, 2026
+
+The owner’s accelerated directive (attachment c4cb84d0) supersedes the historical non-voice restriction below. Push-to-talk and button-gated microphone permission are authorized; continuous listening, paid speech APIs, production-app modification, main merge and Play publication are excluded. Work remains active; final physical acceptance is pending.
+
+All six modules are integrated in the working tree. Finance now has category hierarchies, exact minor-unit budgets/goals, explicitly posted recurring intentions, debt deadlines/reminders, export and guided workflows. Notes capability20/portable Finance18 protect migrations and backup restoration. Searchable Help Hub launches real-control guides across all six modules. Voice provides editable Uzbek/English/Russian commands, real module editors/search, actual target selection and separate financial confirmation; Android system/on-device recognition is explicit and lifecycle-cancelled. No real ASR/offline success is claimed.
+
+Last pushed source: a074314. Owner-installed Review still 2cb48a6/Notes18. Original production UID11022/v1.4.0+9 remains unchanged (metadata rechecked November17). Do not install a lower-capability historical APK after current Notes20 opens owner data. Owner reference ZIP remains untracked and preserved.
+
+Current final verification:
+- Full host regression2: 337 passed / one Help Hub test visibility failure, 566s. This is not an all-pass result. Corrected the test helper to scroll the vertical list; no data assertions removed.
+- After that fix and a debt reminder cutoff correction, 34 affected Help/Finance/reminder tests passed39s. Full current discovery is expected339 cases; obtain all-pass on current-head CI.
+- Earlier current-risk batch20 passed54s; 13 Book/Finance I/O readiness, Home layout and widget-loading cases passed72s. Host readiness now yields real I/O instead of starving SQLite; large public catalogs preload outside widget FakeAsync.
+- Analyzer: no issues (final rerun pending);277 Dart files format-clean;43×1056 catalogs, scoped microphone policy and12 manifest tests passed. Purchase backend17 passed. Native calendar policy passed. English fallback remains for non-EN/UZ/RU additions; no native-speaker acceptance claim.
+- One consolidated tablet target `integration_test/product_completion_review_test.dart` contains55 actual scoped secure/native cases, including fake-speech real-module flows and PDF/reading. Native build1 found a speech-bridge Kotlin parenthesis error; fixed, build2 running. Native companion adds speech capability only (no microphone capture), plus existing widget/task guards.
+
+Exact remaining sequence: finish consolidated APK/companion build; commit/push this substantial batch and obtain current-head full CI; run consolidated secure tablet cases; run guarded native widget/task/speech capability checks; build/install ordinary default-main Review APK; prove Habit and Finance alarms after Review process death with encrypted mirror restored; real Uzbek speech with owner present; ordinary app smoke and production metadata comparison; record hashes/evidence and update draft PR1. No per-feature full suites/builds. One expensive job at a time via `.bilga-tools/build.lock`.
+
+Native alarm harness compares against device clock and waits with monotonic time; a minimum30s window prevents false process-death acceptance. PASS evidence is written only after the original mirror is restored. It requires exact already-installed ordinary `--app-apk` and `--kind habit|finance`. Never use production or clear/uninstall Review.
+
+Actual speech/offline language support, reboot/Doze/second-device delivery, manual accessibility and live Play purchase remain unverified. Tablet Tab16NEU0045423 is authorized and connected. An owner-presence question is pending before real microphone testing. Historical November16 results below are historical, not current completion claims.
+
+---
+
 # Active non-voice completion checkpoint — 2026-11-16
 
 Implementation remains active; the requested whole-product completion is NOT achieved. Branch development/global-launch, draft PR1, starting a8a353c. No main merge, Play publication, voice/microphone, paid deployment, original-production data operations or subagents. User ZIP `Bilga_references_qayta.zip` is preserved untracked.

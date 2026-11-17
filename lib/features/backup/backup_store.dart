@@ -212,9 +212,17 @@ class BackupStore {
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
       'notesSchema':
-          (data['habits'] as List).any(
-            (r) => HabitPlan.decode(r['details'] as String).advanced,
+          (data['private_records'] as List).any(
+            (r) =>
+                r['kind'] == 'finance' &&
+                (jsonDecode(r['payload'] as String) as Map).containsKey(
+                  'planning',
+                ),
           )
+          ? 18
+          : (data['habits'] as List).any(
+              (r) => HabitPlan.decode(r['details'] as String).advanced,
+            )
           ? 17
           : (data['module_data'] as List).isNotEmpty
           ? 16
@@ -252,6 +260,7 @@ class BackupStore {
           15,
           16,
           17,
+          18,
         ].contains(payload['notesSchema']) ||
         ![6, 7, 8, 9, 10, 11].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
@@ -259,6 +268,19 @@ class BackupStore {
     }
     final raw = payload['data'];
     if (raw is! Map) throw const FormatException('backup_invalid');
+    if ((payload['notesSchema'] as int) < 18 &&
+        raw['private_records'] is List &&
+        (raw['private_records'] as List).any(
+          (r) =>
+              r is Map &&
+              r['kind'] == 'finance' &&
+              r['payload'] is String &&
+              (jsonDecode(r['payload'] as String) as Map).containsKey(
+                'planning',
+              ),
+        )) {
+      throw const FormatException('finance_planning_schema');
+    }
     if ((payload['notesSchema'] as int) < 17 &&
         raw['habits'] is List &&
         (raw['habits'] as List).any(

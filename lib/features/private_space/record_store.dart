@@ -1,3 +1,5 @@
+import '../reminders/module_reminder_changes.dart';
+
 import 'dart:convert';
 import 'dart:math';
 
@@ -193,6 +195,7 @@ class RecordStore {
     } else {
       await write(db);
     }
+    if (kind == 'finance') ModuleReminderChanges.committed();
     return PrivateRecord(id, kind, rev, Map.from(data));
   }
 
@@ -223,5 +226,6 @@ class RecordStore {
         );
       }
     });
+    if (r.kind == 'finance') ModuleReminderChanges.committed();
   }
 }

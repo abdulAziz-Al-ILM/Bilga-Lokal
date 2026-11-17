@@ -1,3 +1,5 @@
+import 'settle_io.dart';
+
 import 'dart:io';
 
 import 'package:bilga/core/strings.dart';
@@ -36,15 +38,7 @@ void registerExperienceUiCases({
   bool secure = false,
   bool includeCompact = true,
 }) {
-  Future<void> settle(WidgetTester t) async {
-    for (var i = 0; i < 25; i++) {
-      await t.pump(const Duration(milliseconds: 40));
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 15)),
-      );
-    }
-    await t.pumpAndSettle();
-  }
+  Future<void> settle(WidgetTester t) => settleIo(t);
 
   Future<void> tap(WidgetTester t, String key, {double direction = 300}) async {
     final f = find.byKey(Key(key));

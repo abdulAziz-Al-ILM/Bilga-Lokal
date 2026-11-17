@@ -20,7 +20,14 @@ class ExperiencesPage extends StatefulWidget {
   final RecordStore? records;
   final ExperienceStore? store;
   final AgentAccess? access;
-  const ExperiencesPage({super.key, this.records, this.store, this.access});
+  final bool tutorial;
+  const ExperiencesPage({
+    super.key,
+    this.records,
+    this.store,
+    this.access,
+    this.tutorial = false,
+  });
   @override
   State<ExperiencesPage> createState() => _ExperiencesState();
 }
@@ -68,6 +75,11 @@ class _ExperiencesState extends State<ExperiencesPage> {
   void initState() {
     super.initState();
     load();
+    if (widget.tutorial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) guide.start();
+      });
+    }
   }
 
   @override

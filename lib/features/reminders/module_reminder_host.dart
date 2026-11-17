@@ -108,8 +108,9 @@ class _ModuleReminderHostState extends State<ModuleReminderHost>
       } else if (value['kind'] == 'finance') {
         final record = await RecordStore().get(id);
         if (!mounted || record.kind != 'finance' || !allowed) return;
-        await Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => const FinancePage()));
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => FinancePage(initialLedgerId: id)),
+        );
       }
     } catch (_) {
       /* A deleted source is never recreated. */

@@ -179,7 +179,7 @@ void registerAdvancedHabitDataCases({
       throwsStateError,
     );
     notes = await NoteDatabase.openAt(path, secure: secure);
-    expect(await notes.getVersion(), 19);
+    expect(await notes.getVersion(), 20);
     expect(await notes.query('habits'), before);
   });
 }

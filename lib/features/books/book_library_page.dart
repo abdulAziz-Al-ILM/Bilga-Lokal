@@ -27,6 +27,7 @@ class BookLibraryPage extends StatefulWidget {
   final RecordStore? records;
   final BookLibraryStore? library;
   final AgentAccess? access;
+  final bool tutorial;
   final ReadingStore? reading;
   final Future<List<Map<String, dynamic>>> Function()? picker;
   final Future<ImportCandidate> Function(Map<String, dynamic>)? prepareImport;
@@ -35,6 +36,7 @@ class BookLibraryPage extends StatefulWidget {
     this.records,
     this.library,
     this.access,
+    this.tutorial = false,
     this.reading,
     this.picker,
     this.prepareImport,
@@ -81,6 +83,11 @@ class _LibraryState extends State<BookLibraryPage> {
   void initState() {
     super.initState();
     load(refreshFilters: true);
+    if (widget.tutorial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) guide.start();
+      });
+    }
   }
 
   @override

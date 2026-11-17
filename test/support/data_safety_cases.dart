@@ -115,7 +115,7 @@ void registerDataSafetyTests() {
       await old.close();
       final db = await NoteDatabase.openAt(path);
       opened.add(db);
-      expect(await db.getVersion(), 19);
+      expect(await db.getVersion(), 20);
       expect(await db.query('habits'), isEmpty);
       final rows = await db.query('notes');
       expect(rows.single['body'], 'matn');

@@ -1,3 +1,5 @@
+import '../guidance/guide_controller.dart';
+
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 import 'rich_note_codec.dart';
@@ -21,8 +23,17 @@ class NoteEditorPage extends StatefulWidget {
   final Note? note;
   final String? folderId;
   final NoteService? service;
+  final GuideController? guide;
+  final Map<String, GlobalKey> guideTargets;
 
-  const NoteEditorPage({super.key, this.note, this.folderId, this.service});
+  const NoteEditorPage({
+    super.key,
+    this.note,
+    this.folderId,
+    this.service,
+    this.guide,
+    this.guideTargets = const {},
+  });
 
   @override
   State<NoteEditorPage> createState() => _NoteEditorPageState();
@@ -164,6 +175,8 @@ class _NoteEditorPageState extends State<NoteEditorPage>
   }
 
   void _changed(String _) {
+    widget.guide?.satisfy('titleEntered', valid: _title.text.trim().isNotEmpty);
+    widget.guide?.satisfy('bodyEntered', valid: _bodyText.trim().isNotEmpty);
     _debounce?.cancel();
     setState(() {});
     _debounce = Timer(const Duration(milliseconds: 700), () {
@@ -261,6 +274,7 @@ class _NoteEditorPageState extends State<NoteEditorPage>
       setState(() => _busy = false);
       return;
     }
+    if (_inserted) widget.guide?.event('saved');
     await _pop();
   }
 
@@ -479,6 +493,7 @@ class _NoteEditorPageState extends State<NoteEditorPage>
               ],
             ),
             IconButton(
+              key: widget.guideTargets['save'],
               tooltip: context.tr('save'),
               onPressed: _busy ? null : _close,
               icon: const Icon(Icons.check),
@@ -489,21 +504,24 @@ class _NoteEditorPageState extends State<NoteEditorPage>
           padding: EdgeInsets.all(compact ? 12 : 20),
           child: Column(
             children: [
-              TextField(
-                autocorrect: false,
-                enableSuggestions: false,
-                enableIMEPersonalizedLearning: false,
-                key: const Key('note-title'),
-                controller: _title,
-                readOnly: _busy || _formatFailure,
-                onChanged: _changed,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  hintText: context.tr('title'),
-                  border: InputBorder.none,
+              KeyedSubtree(
+                key: widget.guideTargets['title'],
+                child: TextField(
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  enableIMEPersonalizedLearning: false,
+                  key: const Key('note-title'),
+                  controller: _title,
+                  readOnly: _busy || _formatFailure,
+                  onChanged: _changed,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: context.tr('title'),
+                    border: InputBorder.none,
+                  ),
                 ),
               ),
               if (!compact)
@@ -531,6 +549,7 @@ class _NoteEditorPageState extends State<NoteEditorPage>
               ),
               const SizedBox(height: 8),
               Expanded(
+                key: widget.guideTargets['body'],
                 child: noteQuillLocalizations(
                   context,
                   quill.QuillEditor(

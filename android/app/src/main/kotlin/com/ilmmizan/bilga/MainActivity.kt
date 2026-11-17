@@ -20,6 +20,7 @@ open class MainActivity : AudioServiceFragmentActivity() {
     private var todoBridge: TodoBridge? = null
     private var notesWidget: NotesWidgetBridge? = null
     private var moduleReminders: ModuleReminderBridge? = null
+    private var speech: SpeechBridge? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         launchAgent = intent?.action == "com.ilmmizan.bilga.OPEN_AGENT"
@@ -43,6 +44,7 @@ open class MainActivity : AudioServiceFragmentActivity() {
         todoBridge = TodoBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         notesWidget = NotesWidgetBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         moduleReminders = ModuleReminderBridge(this,flutterEngine.dartExecutor.binaryMessenger)
+        speech?.close();speech=SpeechBridge(this,flutterEngine.dartExecutor.binaryMessenger)
         VaultBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         TrialBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         files = FilesBridge(this, flutterEngine.dartExecutor.binaryMessenger)
@@ -89,11 +91,15 @@ open class MainActivity : AudioServiceFragmentActivity() {
         moduleReminders?.ready()
     }
 
-    override fun onStart() { super.onStart(); TodoReminders.foreground=true; stopService(Intent(this,TodoOverlayService::class.java)) }
-    override fun onStop() { TodoReminders.foreground=false; super.onStop() }
+    override fun onStart() { super.onStart(); speech?.foreground(true); TodoReminders.foreground=true; stopService(Intent(this,TodoOverlayService::class.java)) }
+    override fun onStop() { speech?.foreground(false);TodoReminders.foreground=false; super.onStop() }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (files?.activityResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
     }
-    override fun onDestroy() { moduleReminders?.close();moduleReminders=null; todoBridge?.close(); todoBridge=null; notesWidget?.close(); notesWidget = null; files?.close(); files = null; assistant = null; super.onDestroy() }
+    override fun onRequestPermissionsResult(requestCode:Int,permissions:Array<out String>,grantResults:IntArray){
+        if(speech?.permissionResult(requestCode,grantResults)==true)return
+        super.onRequestPermissionsResult(requestCode,permissions,grantResults)
+    }
+    override fun onDestroy() { speech?.close();speech=null; moduleReminders?.close();moduleReminders=null; todoBridge?.close(); todoBridge=null; notesWidget?.close(); notesWidget = null; files?.close(); files = null; assistant = null; super.onDestroy() }
 }

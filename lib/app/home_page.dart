@@ -1,3 +1,6 @@
+import '../features/voice/voice_page.dart';
+import '../features/guidance/help_hub.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -194,6 +197,18 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         actions: [
+          IconButton(
+            key: const Key('home-voice-open'),
+            tooltip: context.tr('voiceTitle'),
+            onPressed: () => open(const VoicePage()),
+            icon: const Icon(Icons.mic_none),
+          ),
+          IconButton(
+            key: const Key('home-help-hub'),
+            tooltip: context.tr('helpHub'),
+            onPressed: () => open(const HelpHubPage()),
+            icon: const Icon(Icons.help_outline),
+          ),
           IconButton(
             tooltip: context.tr('search'),
             onPressed: () => open(const LibraryPage()),

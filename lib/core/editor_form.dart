@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'strings.dart';
 
+/// A user cancelled a confirmation; keep the draft without a storage error.
+class EditorSaveCancelled implements Exception {
+  const EditorSaveCancelled();
+}
+
 void failure(BuildContext c) {
   ScaffoldMessenger.of(c)
       .showSnackBar(SnackBar(content: Text(c.tr('saveError'))));
@@ -151,11 +156,13 @@ class _FormState extends State<_FormPage> {
                     });
                     try {
                       await widget.onSave?.call(values);
-                    } catch (_) {
+                    } catch (failure) {
                       if (mounted) {
                         setState(() {
                           saving = false;
-                          error = context.tr('saveError');
+                          error = failure is EditorSaveCancelled
+                              ? null
+                              : context.tr('saveError');
                         });
                       }
                       return;

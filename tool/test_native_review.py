@@ -58,7 +58,7 @@ def main():
             if fingerprints(old) != proposed:
                 raise SystemExit('Review signer mismatch; preserve existing app and test data')
     subprocess.run(adb + ['install', '-r', '-t', str(args.apk)], check=True)
-    for options in ([], ['-e', 'todoChecks', 'true']):
+    for options in ([], ['-e', 'todoChecks', 'true'], ['-e', 'speechChecks', 'true']):
         result = subprocess.run(adb + ['shell', 'am', 'instrument', '-w', '-r'] + options + [
             REVIEW + '.test/com.ilmmizan.bilga.NotesWidgetChecks'],
             capture_output=True, text=True, check=True, timeout=180)

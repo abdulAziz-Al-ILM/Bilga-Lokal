@@ -34,11 +34,11 @@ class NoteDatabase {
       secure: secure,
       verifyOnOpen: true,
       diagnostic: NotesWidgetLoading.trace,
-      // v19 protects versioned advanced Habit payloads from older binaries.
+      // v20 protects versioned Finance planning; v19 protects advanced Habit payloads from older binaries.
       // v18 adds Experience history; v17 adds independently revisioned reading data; v16 added finance accounts. PrivateDatabase refuses a lower
       // configured version; older binaries without that guard remain unsafe to
       // install over this database. Existing Notes rows need no rewrite.
-      version: 19,
+      version: 20,
 
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');

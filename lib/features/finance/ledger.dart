@@ -1,3 +1,4 @@
+import 'finance_planning.dart';
 import 'account_ledger.dart';
 import 'transaction_edits.dart';
 
@@ -159,6 +160,7 @@ class Ledger {
     }
     AccountLedger.validate(data, maxMoney: maxMoney);
     TransactionEdits.validate(data, maxMoney: maxMoney);
+    FinancePlanning.validate(data);
   }
 
   static int balance(Map<String, dynamic> d, {String? throughDate}) =>
@@ -181,10 +183,22 @@ class Ledger {
     return r;
   }
 
-  static int outstanding(Map<String, dynamic> data, Map debt) =>
+  static int outstanding(
+    Map<String, dynamic> data,
+    Map debt, {
+    String? throughDate,
+  }) =>
       (debt['amount'] as int) -
       (data['entries'] as List)
-          .where((e) => e['void'] != true && e['parent'] == debt['id'])
+          .where(
+            (e) =>
+                e['void'] != true &&
+                e['parent'] == debt['id'] &&
+                e['type'] ==
+                    (debt['type'] == 'lent' ? 'repaymentIn' : 'repaymentOut') &&
+                (throughDate == null ||
+                    (e['date'] as String).compareTo(throughDate) <= 0),
+          )
           .fold<int>(0, (total, e) => total + (e['amount'] as int));
   static int income(
     Map<String, dynamic> data,

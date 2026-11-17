@@ -50,6 +50,25 @@ class ReviewManifestChecks(unittest.TestCase):
                 verify_review(self.manifest.replace('<uses-sdk ', f'<{tag} android:name="android.permission.RECORD_AUDIO"/><uses-sdk '))
 
 
+class AuthorizedVoiceManifestChecks(unittest.TestCase):
+    def voice(self, source):
+        return source.replace('<uses-sdk ', '<uses-permission android:name="android.permission.RECORD_AUDIO"/><queries><intent><action android:name="android.speech.RecognitionService"/></intent></queries><uses-sdk ').replace('</application>', '<meta-data android:name="bilga.voice.mode" android:value="push_to_talk"/></application>')
+
+    def test_explicit_push_to_talk_is_authorized(self):
+        self.assertIn('push-to-talk',verify_manifest(self.voice(MANIFEST)))
+        self.assertIn('push-to-talk',verify_review(self.voice(ReviewManifestChecks.manifest)))
+
+    def test_background_microphone_remains_forbidden(self):
+        source=self.voice(MANIFEST)
+        for bad in [source.replace('<uses-sdk ', '<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/><uses-sdk '),source.replace('</application>','<service android:name=".Capture" android:foregroundServiceType="microphone"/></application>')]:
+            with self.assertRaises(ValueError):verify_manifest(bad)
+
+    def test_microphone_requires_queries_and_explicit_mode(self):
+        source=self.voice(MANIFEST)
+        for old,new in [('push_to_talk','always_listening'),('android.speech.RecognitionService','missing.Service')]:
+            with self.assertRaises(ValueError):verify_manifest(source.replace(old,new))
+
+
 class NativeReviewManifestChecks(unittest.TestCase):
     manifest = '''<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ilmmizan.bilga.review.test">
     <instrumentation android:name="com.ilmmizan.bilga.NotesWidgetChecks" android:targetPackage="com.ilmmizan.bilga.review"/>

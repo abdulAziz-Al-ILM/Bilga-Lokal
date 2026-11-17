@@ -26,6 +26,7 @@ Future<void> editReadingCard(
   bool Function() allowed, {
   ReadingRow? previous,
   String text = '',
+  String front = '',
   Map<String, dynamic>? location,
   String type = 'idea',
   VoidCallback? onSaved,
@@ -60,7 +61,7 @@ Future<void> editReadingCard(
       'tags': context.tr('tags'),
     },
     initial: {
-      'front': old?['front'] ?? '',
+      'front': old?['front'] ?? front,
       'back': old?['back'] ?? text,
       'explanation': old?['explanation'] ?? '',
       'tags': (old?['tags'] as List? ?? []).join(', '),

@@ -1,3 +1,5 @@
+import 'settle_io.dart';
+
 import 'dart:io';
 
 import 'package:bilga/core/strings.dart';
@@ -18,15 +20,7 @@ void registerFinanceTransactionUiTests({
   bool includeCompact = true,
   VoidCallback? onUiVerified,
 }) {
-  Future<void> settle(WidgetTester tester) async {
-    for (var i = 0; i < 25; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 10)),
-      );
-    }
-    await tester.pumpAndSettle();
-  }
+  Future<void> settle(WidgetTester tester) => settleIo(tester);
 
   Finder field(String label) => find.byWidgetPredicate(
     (widget) => widget is TextField && widget.decoration?.labelText == label,

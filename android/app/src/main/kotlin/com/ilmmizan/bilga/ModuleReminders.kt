@@ -44,7 +44,7 @@ internal object ModuleReminders {
         require(row.getString("id").length in 1..2048 && row.getString("target").length in 1..2048 && row.getString("config").length<=1024*1024)
         when(row.getString("kind")) {
             "habit" -> { require(row.getInt("minute") in 0..1439);date(row.getString("created"));scheduleFor(row,LocalDate.now());val a=row.getJSONArray("completed");require(a.length()<=400);for(i in 0 until a.length())date(a.getString(i)) }
-            "finance" -> require(row.getLong("at")>0)
+            "finance" -> { date(row.getString("date"));require(row.getInt("minute") in 0..1439) }
             "review" -> require(review && row.getString("id").startsWith("bilga-review-module-") && row.getLong("at")>0)
             else -> error("module_kind")
         }
@@ -52,7 +52,11 @@ internal object ModuleReminders {
     private fun fired(root:JSONObject,id:String,key:String):Boolean {val a=root.optJSONObject("delivered")?.optJSONArray(id) ?: return false;return (0 until a.length()).any { a.getString(it)==key }}
     fun next(root:JSONObject,row:JSONObject,now:Long):Candidate? {
         val id=row.getString("id")
-        if(row.getString("kind")!="habit") { val at=row.getLong("at");val key="once:$at";return if(!fired(root,id,key)&&at>=row.optLong("notBefore"))Candidate(row,at,key) else null }
+        if(row.getString("kind")!="habit") {
+            val at=if(row.getString("kind")=="finance")ModuleReminderMath.atMillis(date(row.getString("date")),row.getInt("minute"),ZoneId.systemDefault()) else row.getLong("at")
+            val key=if(row.getString("kind")=="finance")"once:${row.getString("date")}/${row.getInt("minute")}" else "once:$at"
+            return if(!fired(root,id,key)&&at>=row.optLong("notBefore"))Candidate(row,at,key) else null
+        }
         val zone=ZoneId.systemDefault();val today=Instant.ofEpochMilli(now).atZone(zone).toLocalDate();val created=date(row.getString("created"));val minute=row.getInt("minute")
         val a=row.getJSONArray("completed");val completed=(0 until a.length()).map { date(a.getString(it)) }.toSet()
         val lower=Instant.ofEpochMilli(row.optLong("notBefore")).atZone(zone).toLocalDate()

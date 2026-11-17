@@ -1,3 +1,4 @@
+import '../guidance/guide_controller.dart';
 import 'reminders/todo_reminder_store.dart';
 import 'reminders/todo_bridge.dart';
 import 'reminders/todo_settings_page.dart';
@@ -23,7 +24,22 @@ class TodoEditorPage extends StatefulWidget {
   final Map<String, Object?>? todo;
   final String? folderId;
   final Database? database;
-  const TodoEditorPage({super.key, this.todo, this.folderId, this.database});
+  final String initialTitle, initialDescription;
+  final DateTime? initialDue, initialReminder;
+  final GuideController? guide;
+  final Map<String, GlobalKey> guideTargets;
+  const TodoEditorPage({
+    super.key,
+    this.todo,
+    this.folderId,
+    this.database,
+    this.initialTitle = '',
+    this.initialDescription = '',
+    this.initialDue,
+    this.initialReminder,
+    this.guide,
+    this.guideTargets = const {},
+  });
   @override
   State<TodoEditorPage> createState() => _TodoEditorPageState();
 }
@@ -62,12 +78,27 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
   @override
   void initState() {
     super.initState();
-    title = TextEditingController(text: widget.todo?['title'] as String? ?? '');
+    title = TextEditingController(
+      text: widget.todo?['title'] as String? ?? widget.initialTitle,
+    );
     description = TextEditingController(
-      text: widget.todo?['description'] as String? ?? '',
+      text: widget.todo?['description'] as String? ?? widget.initialDescription,
+    );
+    title.addListener(
+      () => widget.guide?.satisfy(
+        'titleEntered',
+        valid: title.text.trim().isNotEmpty,
+      ),
     );
     priority = widget.todo?['priority'] as int? ?? 0;
-    due = DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')?.toLocal();
+    due =
+        DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')?.toLocal() ??
+        widget.initialDue;
+    if (widget.todo == null && widget.initialReminder != null) {
+      remindAt = widget.initialReminder;
+      reminder = true;
+      reminderExplicit = true;
+    }
     loadReminder();
     loadSeries();
     loadChecklist();
@@ -369,6 +400,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
         }
       });
       TodoChanges.committed();
+      widget.guide?.event('saved');
       if (!mounted) return;
       setState(() => allowPop = true);
       await WidgetsBinding.instance.endOfFrame;
@@ -412,6 +444,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
                   ),
           ),
           IconButton(
+            key: widget.guideTargets['save'],
             tooltip: context.tr('save'),
             onPressed:
                 busy || !reminderLoaded || !seriesLoaded || !checklistLoaded
@@ -429,6 +462,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
             if (!reminderLoaded || !seriesLoaded || !checklistLoaded)
               const LinearProgressIndicator(),
             TextField(
+              key: widget.guideTargets['title'],
               autocorrect: false,
               enableSuggestions: false,
               enableIMEPersonalizedLearning: false,
@@ -441,6 +475,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
               autocorrect: false,
               enableSuggestions: false,
               enableIMEPersonalizedLearning: false,
+              key: widget.guideTargets['body'],
               controller: description,
               minLines: 3,
               maxLines: 8,
