@@ -19,6 +19,9 @@ val bilgaReview = providers.gradleProperty("bilgaReview").orNull == "true"
 
 
 android {
+    if (bilgaReview && providers.gradleProperty("bilgaReviewProfileTest").orNull == "true") {
+        testBuildType = "profile"
+    }
     namespace = "com.ilmmizan.bilga"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

@@ -364,6 +364,12 @@ class _HomePageState extends State<HomePage> {
                         Image.asset(
                           'assets/ambience/${keys[index]}.jpg',
                           fit: BoxFit.cover,
+                          cacheWidth:
+                              (MediaQuery.sizeOf(context).width *
+                                      MediaQuery.devicePixelRatioOf(context) *
+                                      .68)
+                                  .round()
+                                  .clamp(280, 840),
                         ),
                         const ColoredBox(color: Color(0x55000000)),
                         Center(

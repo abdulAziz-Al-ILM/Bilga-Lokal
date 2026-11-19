@@ -12,4 +12,8 @@ export PUB_CACHE="$PWD/.bilga-tools/pub-cache"
 export DART_SUPPRESS_ANALYTICS=true
 export GRADLE_OPTS="-Dorg.gradle.daemon=false"
 test -f .bilga-tools/review-signing/debug.keystore
+if [[ "${BILGA_REVIEW_PROFILE:-}" == 1 ]]; then
+  exec ./android/gradlew -p android :app:assembleProfileAndroidTest \
+    -PbilgaReview=true -PbilgaReviewProfileTest=true
+fi
 exec ./android/gradlew -p android :app:assembleDebugAndroidTest -PbilgaReview=true
