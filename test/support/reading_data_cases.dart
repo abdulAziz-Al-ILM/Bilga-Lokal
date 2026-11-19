@@ -491,7 +491,7 @@ void registerReadingDataCases({
     expect(await notes.query('private_records'), before);
     expect((await store.records.get(original.id)).data['characters'], 'Kept');
     expect(await notes.query('book_reading'), isEmpty);
-    expect(await notes.getVersion(), 20);
+    expect(await notes.getVersion(), 21);
   });
   test('Strict normalized data rejects future versions and malformed highlight geometry', () {
     final p = {

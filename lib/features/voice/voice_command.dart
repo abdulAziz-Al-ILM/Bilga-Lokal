@@ -16,6 +16,11 @@ enum VoiceAction {
   continueBook,
   card,
   search,
+  today,
+  pendingHabits,
+  lastFriday,
+  weeklySpending,
+  readFolder,
   unknown,
 }
 
@@ -44,7 +49,51 @@ class VoiceCommand {
           '',
         )
         .trim();
-    final lower = value.toLowerCase();
+    final lower = value.toLowerCase().replaceFirst(RegExp(r'[?.!]+$'), '');
+    const questions = <VoiceAction, List<String>>{
+      VoiceAction.today: [
+        "bugun nima qilishim kerak",
+        "bugun nima qilay",
+        'what should i do today',
+        'что мне делать сегодня',
+      ],
+      VoiceAction.pendingHabits: [
+        "bugun qaysi odatlar bajarilmagan",
+        "bugun qaysi odatlarimni bajarmadim",
+        'which habits have i not completed today',
+        'which habits are left today',
+        'какие привычки я не выполнил сегодня',
+      ],
+      VoiceAction.lastFriday: [
+        "o'tgan juma kuni nima yozdim",
+        "o'tgan juma nima yozdim",
+        'what did i write last friday',
+        'что я написал в прошлую пятницу',
+      ],
+      VoiceAction.weeklySpending: [
+        'bu hafta qancha sarfladim',
+        'shu hafta qancha sarfladim',
+        'how much did i spend this week',
+        'сколько я потратил на этой неделе',
+      ],
+      VoiceAction.continueBook: [
+        'continue my book',
+        'kitobimni davom ettir',
+        'продолжи мою книгу',
+      ],
+    };
+    for (final rule in questions.entries) {
+      if (rule.value.contains(lower)) return VoiceCommand(rule.key, '');
+    }
+    final folder = RegExp(
+      r"^(?:read (?:my )?(.+?) folder|(.+?) papkasini o'qib ber|прочитай папку (.+))$",
+    ).firstMatch(lower);
+    if (folder != null) {
+      return VoiceCommand(
+        VoiceAction.readFolder,
+        (folder[1] ?? folder[2] ?? folder[3])!.trim(),
+      );
+    }
     const prefixes = <VoiceAction, List<String>>{
       VoiceAction.findFinance: [
         'moliyadan qidir',

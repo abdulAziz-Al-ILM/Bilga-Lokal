@@ -97,6 +97,8 @@ void registerFinanceAccountUiTests({
           ),
         );
         await settle(tester);
+        await tester.tap(find.byKey(const Key('finance-all-features')));
+        await settle(tester);
         await tester.tap(find.byKey(const Key('finance-accounts-open')));
         await settle(tester);
         await tester.tap(find.byKey(const Key('finance-account-add')));
@@ -189,24 +191,18 @@ void registerFinanceAccountUiTests({
         expect(Ledger.balance(saved.data), 147450);
         await tester.pageBack();
         await settle(tester);
-        await tester.tap(find.byType(FloatingActionButton));
+        await tester.tap(find.byKey(const Key('finance-add-expense')));
         await settle(tester);
-        await tester.tap(
-          find.descendant(
-            of: find.byType(SimpleDialog),
-            matching: find.text('Expense'),
-          ),
-        );
+        await tester.tap(find.text('Advanced options'));
         await settle(tester);
-        await tester.tap(
-          find.descendant(
-            of: find.byType(SimpleDialog),
-            matching: find.text('Renamed bank'),
-          ),
-        );
+        final selector = find.byType(DropdownButtonFormField<String>);
+        await tester.ensureVisible(selector);
+        await tester.tap(selector);
+        await settle(tester);
+        await tester.tap(find.text('Renamed bank').last);
         await settle(tester);
         await fill(tester, 'Amount (USD)', '1.23');
-        await fill(tester, 'Description', 'Selected account expense');
+        await fill(tester, 'Paid to (optional)', 'Selected account expense');
         await save(tester);
         saved = await read(tester, store);
         expect(saved.data['entries'].last['account'], bank);

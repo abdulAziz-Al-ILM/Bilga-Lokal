@@ -118,6 +118,7 @@ void registerFinancePlanningUiCases({
       ),
     );
     await settle(t);
+    await key(t, 'finance-all-features');
     await key(t, 'finance-planning-open');
     return r;
   }

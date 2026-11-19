@@ -1,3 +1,5 @@
+import '../../../core/review_performance.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show mapEquals;
@@ -229,7 +231,11 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
       final pref = await widget.store.one(widget.book.id, 'settings');
       source = src;
       final f =
-          relinked?.file ?? await BookImporter(widget.store).materialize(src);
+          relinked?.file ??
+          await ReviewPerformance.measure<File>(
+            'book.materialize',
+            () => BookImporter(widget.store).materialize(src),
+          );
       if (!mounted) {
         await f.parent.delete(recursive: true);
         return;
@@ -247,9 +253,9 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
       fraction = (old?.data['fraction'] as num?)?.toDouble() ?? 0;
       if (src.data['format'] == 'pdf') {
         await pdfrxFlutterInitialize();
-        final doc = await PdfDocument.openFile(
-          f.path,
-          passwordProvider: () => null,
+        final doc = await ReviewPerformance.measure(
+          'pdf.open',
+          () => PdfDocument.openFile(f.path, passwordProvider: () => null),
         );
         if (!mounted) {
           await doc.dispose();

@@ -1,3 +1,4 @@
+import '../organization/organization_store.dart';
 import '../modules/module_data.dart';
 import '../search/search_index.dart';
 import '../books/reading/reading_data.dart';
@@ -38,7 +39,7 @@ class NoteDatabase {
       // v18 adds Experience history; v17 adds independently revisioned reading data; v16 added finance accounts. PrivateDatabase refuses a lower
       // configured version; older binaries without that guard remain unsafe to
       // install over this database. Existing Notes rows need no rewrite.
-      version: 20,
+      version: 21,
 
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
@@ -49,6 +50,7 @@ class NoteDatabase {
         await createRecords(db);
         await ReadingData.createSchema(db);
         await ModuleData.createSchema(db);
+        await OrganizationStore.upgrade(db);
         await createHabits(db);
         await db.execute(
           "ALTER TABLE habits ADD COLUMN details TEXT NOT NULL DEFAULT '{}'",
@@ -103,6 +105,7 @@ class NoteDatabase {
         }
         if (oldVersion < 17) await ReadingData.createSchema(db);
         if (oldVersion < 18) await ModuleData.createSchema(db);
+        if (oldVersion < 21) await OrganizationStore.upgrade(db);
         if (oldVersion < 9) {
           await createHabits(db);
         }

@@ -649,7 +649,7 @@ void main() {
     final path = db.path;
     await db.close();
     db = await NoteDatabase.openAt(path);
-    expect(await db.getVersion(), 20);
+    expect(await db.getVersion(), 21);
     for (final table in tables) {
       expect(await db.query(table), before[table]);
     }

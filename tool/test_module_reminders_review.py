@@ -20,7 +20,7 @@ def main():
     parser.add_argument('serial')
     parser.add_argument('test_apk', type=Path)
     parser.add_argument('--app-apk', type=Path, required=True, help='Exact already-installed ordinary Review APK')
-    parser.add_argument('--kind', choices=['habit','finance'], default='habit')
+    parser.add_argument('--kind', choices=['habit','finance','recurring'], default='habit')
     parser.add_argument('--evidence', type=Path, default=ROOT / 'build/review/evidence/module-reminder-delivery.json')
     args = parser.parse_args()
     env = os.environ.copy()

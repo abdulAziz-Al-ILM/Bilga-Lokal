@@ -1,3 +1,4 @@
+import '../features/reminders/notification_center.dart';
 import '../features/voice/voice_page.dart';
 import '../features/guidance/help_hub.dart';
 
@@ -202,6 +203,12 @@ class _HomePageState extends State<HomePage> {
             tooltip: context.tr('voiceTitle'),
             onPressed: () => open(const VoicePage()),
             icon: const Icon(Icons.mic_none),
+          ),
+          IconButton(
+            key: const Key('home-notification-center'),
+            tooltip: context.tr('ncTitle'),
+            onPressed: () => open(const NotificationCenter()),
+            icon: const Icon(Icons.notifications_none),
           ),
           IconButton(
             key: const Key('home-help-hub'),

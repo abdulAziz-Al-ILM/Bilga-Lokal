@@ -126,6 +126,8 @@ class Ledger {
           !AccountLedger.validDate(e['date']) ||
           e['category'] is! String ||
           e['description'] is! String ||
+          e['party'] != null &&
+              (e['party'] is! String || (e['party'] as String).length > 200) ||
           e['void'] is! bool) {
         throw const FormatException('entry');
       }
@@ -237,6 +239,7 @@ class Ledger {
         'Currency',
         'Category',
         'Description',
+        'Counterparty',
         'Voided',
         'Account',
         'From account',
@@ -253,6 +256,7 @@ class Ledger {
           entry['currency'] ?? data['currency'],
           entry['category'],
           entry['description'],
+          entry['party'] ?? '',
           entry['void'],
           entry['type'] == 'transfer'
               ? ''

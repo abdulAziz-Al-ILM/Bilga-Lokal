@@ -381,7 +381,6 @@ class _DetailsState extends State<BookDetailsEditor> {
                     Text(context.tr('bLabelsInfo')),
                     input('categories'),
                     input('tags'),
-                    input('shelves'),
                   ],
                 ),
               ],

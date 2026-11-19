@@ -4,6 +4,7 @@ import '../../core/strings.dart';
 import '../habits/habits_page.dart';
 import '../notes/note_editor_page.dart';
 import '../todo/todo_editor_page.dart';
+import '../todo/todo_database.dart';
 import 'planner_repository.dart';
 
 class TodayPage extends StatefulWidget {
@@ -125,7 +126,20 @@ class _TodayPageState extends State<TodayPage> {
                           ? null
                           : Text(_date(t['due_at'] as String)),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => open(TodoEditorPage(todo: t)),
+                      onTap: () async {
+                        final db =
+                            widget.repository?.todoDb ??
+                            await TodoDatabase.database;
+                        final rows = await db.query(
+                          'todos',
+                          where: 'id=? AND is_deleted=0',
+                          whereArgs: [t['id']],
+                        );
+                        if (!mounted || rows.isEmpty) return;
+                        await open(
+                          TodoEditorPage(todo: rows.single, database: db),
+                        );
+                      },
                     ),
                   ),
               ],
@@ -144,7 +158,7 @@ class _TodayPageState extends State<TodayPage> {
                   child: ListTile(
                     title: Text(h.title),
                     subtitle: Text(
-                      '${h.plan.amount(now, h.days)} / ${h.plan.target} ${h.plan.unit}',
+                      '${h.plan.amount(now, h.days)} / ${h.plan.targetAt(now)} ${h.plan.unit}',
                     ),
                     leading: Icon(
                       h.plan.done(now, h.days)

@@ -1,3 +1,12 @@
+import '../books/reading/reading_hub.dart';
+import '../books/reading/reading_store.dart';
+import '../finance/finance_planning_page.dart';
+import '../books/book_library_page.dart';
+import '../experiences/experiences_page.dart';
+import '../todo/todo_database.dart';
+import '../todo/todo_editor_page.dart';
+import 'notification_center.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -105,11 +114,63 @@ class _ModuleReminderHostState extends State<ModuleReminderHost>
             ),
           ),
         );
+      } else if (value['kind'] == 'task') {
+        final db = await TodoDatabase.database;
+        final task = await db.query(
+          'todos',
+          where: 'id=? AND is_deleted=0 AND is_done=0',
+          whereArgs: [id],
+        );
+        if (!mounted || !allowed || task.isEmpty) return;
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => TodoEditorPage(todo: task.single, database: db),
+          ),
+        );
+      } else if (value['kind'] == 'book' && value['event'] == 'bookCards') {
+        final store = ReadingStore();
+        final cards = await store.due(id);
+        if (!mounted || !allowed) return;
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => FlashcardPage(
+              store: store,
+              cards: cards,
+              allowed: () => allowed,
+            ),
+          ),
+        );
+      } else if (value['kind'] == 'book' ||
+          value['kind'] == 'experience' ||
+          value['kind'] == 'center') {
+        if (!mounted || !allowed) return;
+        final page = switch (value['kind']) {
+          'book' => const BookLibraryPage(),
+          'experience' => const ExperiencesPage(),
+          _ => const NotificationCenter(),
+        };
+        await Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => page));
       } else if (value['kind'] == 'finance') {
         final record = await RecordStore().get(id);
         if (!mounted || record.kind != 'finance' || !allowed) return;
+        final section = switch (value['event']) {
+          'financeDebt' => 'debts',
+          'financeRecurring' => 'recurring',
+          'budgetNear' || 'budgetExceeded' => 'budgets',
+          _ => null,
+        };
         await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => FinancePage(initialLedgerId: id)),
+          MaterialPageRoute(
+            builder: (_) => section == null
+                ? FinancePage(initialLedgerId: id)
+                : FinancePlanningPage(
+                    ledger: record,
+                    store: RecordStore(),
+                    access: AgentAccess.instance,
+                    initialSection: section,
+                  ),
+          ),
         );
       }
     } catch (_) {

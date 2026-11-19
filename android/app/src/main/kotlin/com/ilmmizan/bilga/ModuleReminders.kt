@@ -17,6 +17,8 @@ internal object ModuleReminders {
     private const val CHANNEL="bilga.modules.quiet.v1"
     private const val NOTIFICATION=903
     private val executor=Executors.newSingleThreadExecutor { r -> Thread(r,"bilga-module-reminders").apply { isDaemon=true } }
+    private val alertEvents = setOf("taskDue","taskSoon","habitEvening","financeRecurring",
+        "budgetNear","budgetExceeded","experienceReview","bookReading","bookCards")
     data class Candidate(val row:JSONObject,val at:Long,val key:String)
     fun rows(root:JSONObject):List<JSONObject> = root.optJSONArray("rows")?.let { a -> (0 until a.length()).map { a.getJSONObject(it) } } ?: emptyList()
     fun root(c:Context)=TodoStore.read(c,STORE) ?: JSONObject().put("v",1).put("rows",JSONArray())
@@ -42,6 +44,13 @@ internal object ModuleReminders {
     }
     fun validate(row:JSONObject,review:Boolean=false) {
         require(row.getString("id").length in 1..2048 && row.getString("target").length in 1..2048 && row.getString("config").length<=1024*1024)
+        if (row.has("event")) {
+            require(row.getString("event") in alertEvents &&
+                row.getString("kind") in setOf("task","finance","center","experience","book"))
+            date(row.getString("date"))
+            require(row.getInt("minute") in 0..1439 && row.optInt("cadence") in setOf(0,1,7))
+            return
+        }
         when(row.getString("kind")) {
             "habit" -> { require(row.getInt("minute") in 0..1439);date(row.getString("created"));scheduleFor(row,LocalDate.now());val a=row.getJSONArray("completed");require(a.length()<=400);for(i in 0 until a.length())date(a.getString(i)) }
             "finance" -> { date(row.getString("date"));require(row.getInt("minute") in 0..1439) }
@@ -52,6 +61,32 @@ internal object ModuleReminders {
     private fun fired(root:JSONObject,id:String,key:String):Boolean {val a=root.optJSONObject("delivered")?.optJSONArray(id) ?: return false;return (0 until a.length()).any { a.getString(it)==key }}
     fun next(root:JSONObject,row:JSONObject,now:Long):Candidate? {
         val id=row.getString("id")
+        if (row.has("event")) {
+            val zone = ZoneId.systemDefault()
+            val minute = row.getInt("minute")
+            val cadence = row.optInt("cadence")
+            var day = date(row.getString("date"))
+            val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+            if (cadence > 0 && day.isBefore(today)) {
+                val difference = java.time.temporal.ChronoUnit.DAYS.between(day, today)
+                day = day.plusDays((difference / cadence) * cadence)
+            }
+            val first = ModuleReminderMath.atMillis(day, minute, zone)
+            val at = when {
+                row.optBoolean("immediate") -> row.getLong("notBefore")
+                row.optLong("at") > 0L -> row.getLong("at")
+                else -> first
+            }
+            val key = if (cadence > 0) "repeat:$day" else "once:alert"
+            if (!fired(root,id,key) && at >= row.optLong("notBefore")) {
+                return Candidate(row,at,key)
+            }
+            if (cadence > 0) {
+                val later = day.plusDays(cadence.toLong())
+                return Candidate(row,ModuleReminderMath.atMillis(later,minute,zone),"repeat:$later")
+            }
+            return null
+        }
         if(row.getString("kind")!="habit") {
             val at=if(row.getString("kind")=="finance")ModuleReminderMath.atMillis(date(row.getString("date")),row.getInt("minute"),ZoneId.systemDefault()) else row.getLong("at")
             val key=if(row.getString("kind")=="finance")"once:${row.getString("date")}/${row.getInt("minute")}" else "once:$at"
@@ -101,16 +136,17 @@ internal object ModuleReminders {
     @Synchronized fun fire(c:Context) {
         val root=root(c);val now=System.currentTimeMillis();val due=rows(root).mapNotNull { next(root,it,now) }.filter { it.at<=now }
         val delivered=root.optJSONObject("delivered")?:JSONObject().also { root.put("delivered",it) }
-        for(item in due){val id=item.row.getString("id");val old=delivered.optJSONArray(id)?:JSONArray();val keep=JSONArray();val cutoff=LocalDate.now().minusDays(35).toString();for(i in 0 until old.length()){val key=old.getString(i);if(key.startsWith("once:")||key.take(10)>=cutoff)keep.put(key)};keep.put(item.key);delivered.put(id,keep)}
+        for(item in due){val id=item.row.getString("id");val old=delivered.optJSONArray(id)?:JSONArray();val keep=JSONArray();val cutoff=LocalDate.now().minusDays(35).toString();for(i in 0 until old.length()){val key=old.getString(i);if(key.startsWith("once:")||key.removePrefix("repeat:").take(10)>=cutoff)keep.put(key)};keep.put(item.key);delivered.put(id,keep)}
         TodoStore.write(c,root,STORE) // Claim delivery before posting; reboot cannot replay it.
-        if(enabled(c))for(item in due){val row=item.row;val labels=root.optJSONObject("labels")?:JSONObject();val kind=row.getString("kind");val label=labels.optString(if(kind=="finance")"finance" else "habit","Bilga");val text=labels.optString("message","Bilga")
-            val open=Intent(c,MainActivity::class.java).setAction(OPEN).setData(Uri.parse("bilga-module://$kind/${Uri.encode(row.getString("target"))}")).putExtra("module_kind",if(kind=="review")"habit" else kind).putExtra("module_target",row.getString("target"))
+        if(enabled(c))for(item in due){val row=item.row;val labels=root.optJSONObject("labels")?:JSONObject();val kind=row.getString("kind");val label=labels.optString(row.optString("event").ifEmpty { if(kind=="finance")"financeDebt" else "habit" },"Bilga");val text=labels.optString("message","Bilga")
+            val open=Intent(c,MainActivity::class.java).setAction(OPEN).setData(Uri.parse("bilga-module://$kind/${Uri.encode(row.getString("target"))}/${Uri.encode(row.optString("event"))}")).putExtra("module_kind",if(kind=="review")"habit" else kind).putExtra("module_target",row.getString("target")).putExtra("module_event",row.optString("event",if(kind=="finance")"financeDebt" else ""))
             val intent=PendingIntent.getActivity(c,813,open,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            val notification=Notification.Builder(c,channel(c)).setSmallIcon(R.drawable.todo_notification).setContentTitle("Bilga · $label").setContentText(text).setVisibility(Notification.VISIBILITY_PRIVATE).setCategory(Notification.CATEGORY_REMINDER).setOnlyAlertOnce(true).setAutoCancel(true).setContentIntent(intent).build()
+            val notification=Notification.Builder(c,channel(c)).setSmallIcon(R.drawable.todo_notification).setContentTitle("Bilga · $label").setContentText(text).setVisibility(Notification.VISIBILITY_PRIVATE).setGroup("bilga.module.$kind").setCategory(Notification.CATEGORY_REMINDER).setOnlyAlertOnce(true).setAutoCancel(true).setContentIntent(intent).build()
             c.getSystemService(NotificationManager::class.java).notify(row.getString("id"),NOTIFICATION,notification)
         }
         schedule(c,root)
     }
+    fun enqueue(action: () -> Unit) { executor.execute(action) }
     fun receive(c:Context,intent:Intent,pending:BroadcastReceiver.PendingResult){executor.execute {try{if(intent.action==WAKE)fire(c)else schedule(c)}catch(_:Exception){/* Keep encrypted state; never use plaintext/DB fallback. */}finally{pending.finish()}}}
 }
 class ModuleReminderReceiver:BroadcastReceiver(){override fun onReceive(c:Context,intent:Intent){ModuleReminders.receive(c,intent,goAsync())}}

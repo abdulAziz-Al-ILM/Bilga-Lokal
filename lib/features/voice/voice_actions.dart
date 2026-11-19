@@ -1,3 +1,8 @@
+import 'personal_answers.dart';
+import 'voice_answer_page.dart';
+import '../notes/note_database.dart';
+import '../organization/organization_store.dart';
+
 import 'voice_book_picker.dart';
 
 import 'package:flutter/material.dart';
@@ -63,7 +68,11 @@ class VoiceActions {
       ],
     ),
   );
-  Future<void> execute(BuildContext c, VoiceCommand command) async {
+  Future<void> execute(
+    BuildContext c,
+    VoiceCommand command, {
+    String language = 'uz-UZ',
+  }) async {
     final argument = command.argument;
     switch (command.action) {
       case VoiceAction.findNotes:
@@ -102,9 +111,157 @@ class VoiceActions {
       case VoiceAction.continueBook:
       case VoiceAction.card:
         await book(c, argument, command.action);
+      case VoiceAction.today:
+      case VoiceAction.pendingHabits:
+      case VoiceAction.lastFriday:
+      case VoiceAction.weeklySpending:
+      case VoiceAction.readFolder:
+        await answer(c, command, language);
       case VoiceAction.unknown:
         throw StateError('voice_unknown');
     }
+  }
+
+  Future<void> answer(
+    BuildContext c,
+    VoiceCommand command,
+    String language,
+  ) async {
+    final repository = PersonalAnswers(notesDb, tasksDb);
+    final now = DateTime.now();
+    final code = language.split('-').first;
+    await Strings.load(code: code);
+    String label(String key) => Strings.get(code, key);
+    if (!c.mounted) return;
+    final result = command.action == VoiceAction.readFolder
+        ? await readFolder(c, command.argument)
+        : switch (command.action) {
+            VoiceAction.today => await repository.plan(now, label),
+            VoiceAction.pendingHabits => await repository.plan(
+              now,
+              label,
+              onlyHabits: true,
+            ),
+            VoiceAction.lastFriday => await repository.written(
+              PersonalAnswers.previousFriday(now),
+              label,
+            ),
+            VoiceAction.weeklySpending => await repository.spentThisWeek(
+              now,
+              label,
+            ),
+            _ => <String>[],
+          };
+    if (!c.mounted || result.isEmpty) return;
+    await page(
+      c,
+      VoiceAnswerPage(
+        title: label('voiceAction${command.action.name}'),
+        language: language,
+        excerpts: result,
+      ),
+    );
+  }
+
+  Future<List<String>> readFolder(BuildContext c, String name) async {
+    final db = notesDb ?? await NoteDatabase.database;
+    final noteFolders = await db.rawQuery(
+      """
+      WITH RECURSIVE active(id,name,path) AS (
+        SELECT id,name,name FROM folders WHERE is_deleted=0 AND parent_id IS NULL
+        UNION ALL SELECT f.id,f.name,a.path || ' / ' || f.name
+        FROM folders f JOIN active a ON a.id=f.parent_id WHERE f.is_deleted=0
+      )
+      SELECT id,path FROM active WHERE lower(name)=lower(?) ORDER BY path LIMIT 100
+    """,
+      [name],
+    );
+    final options = <String, ({String name, String id, String module})>{
+      for (final folder in noteFolders)
+        'note:${folder['id']}': (
+          name: folder['path'] as String,
+          id: folder['id'] as String,
+          module: 'note',
+        ),
+    };
+    for (final module in ['book', 'experience']) {
+      final folders = await OrganizationStore(module, provided: db).folders();
+      final index = {for (final folder in folders) folder.id: folder};
+      for (final folder in folders.where(
+        (folder) => folder.name.toLowerCase() == name.toLowerCase(),
+      )) {
+        final names = <String>[];
+        final seen = <String>{};
+        RecordFolder? current = folder;
+        while (current != null && !current.deleted && seen.add(current.id)) {
+          names.insert(0, current.name);
+          current = index[current.parent];
+        }
+        if (current != null) continue;
+        options['$module:${folder.id}'] = (
+          name: names.join(' / '),
+          id: folder.id,
+          module: module,
+        );
+      }
+    }
+    if (!c.mounted) return [];
+    if (options.isEmpty) {
+      showError(c, 'voiceNoMatch');
+      return [];
+    }
+    final option = options.length == 1
+        ? options.keys.single
+        : await choose(c, c.tr('vaChooseFolder'), {
+            for (final option in options.entries)
+              option.key:
+                  "${c.tr(switch (option.value.module) {
+                    'book' => 'xBooks',
+                    'experience' => 'xExperience',
+                    _ => 'notes',
+                  })} · ${option.value.name}",
+          });
+    if (option == null || !c.mounted) return [];
+    final source = options[option]!;
+    if (source.module != 'note') {
+      final items = await OrganizationStore(
+        source.module,
+        provided: db,
+      ).items(folder: source.id, query: '');
+      return [source.name, ...items.take(50).map((item) => item.title)];
+    }
+    final notes = await db.query(
+      'notes',
+      columns: ['id', 'title'],
+      where: 'folder_id=? AND is_deleted=0',
+      whereArgs: [source.id],
+      orderBy: 'title',
+      limit: 50,
+    );
+    if (!c.mounted) return [];
+    final selected = await choose(c, c.tr('vaReadFolder'), {
+      '': c.tr('vaReadTitles'),
+      for (final row in notes) row['id'] as String: row['title'] as String,
+    });
+    if (selected == null || !c.mounted) return [];
+    if (selected.isEmpty) {
+      return [source.name, ...notes.map((row) => row['title'] as String)];
+    }
+    final fields = await db.query(
+      'notes',
+      columns: ['title', 'body'],
+      where: 'id=? AND folder_id=? AND is_deleted=0',
+      whereArgs: [selected, source.id],
+      limit: 1,
+    );
+    if (fields.isEmpty) return [];
+    final row = fields.single;
+    final content = (row['body'] as String).runes.toList();
+    return [
+      row['title'] as String,
+      for (var i = 0; i < content.length; i += 1000)
+        String.fromCharCodes(content.skip(i).take(1000)),
+    ];
   }
 
   Future<void> note(BuildContext c, String text) async {
@@ -357,16 +514,24 @@ class VoiceActions {
   Future<void> book(BuildContext c, String query, VoiceAction action) async {
     if (action == VoiceAction.card) require();
     final library = BookLibraryStore(records: records);
-    final id = await Navigator.push<String>(
-      c,
-      MaterialPageRoute(
-        builder: (_) => VoiceBookPicker(
-          store: library,
-          query: action == VoiceAction.card ? '' : query,
-          sort: action == VoiceAction.continueBook ? 'opened' : 'title',
-        ),
-      ),
-    );
+    String? lastOpened;
+    if (action == VoiceAction.continueBook && query.isEmpty) {
+      final latest = (await library.page(sort: 'opened', limit: 1)).firstOrNull;
+      if (latest?.opened != null) lastOpened = latest!.id;
+    }
+    if (!c.mounted) return;
+    final id =
+        lastOpened ??
+        await Navigator.push<String>(
+          c,
+          MaterialPageRoute(
+            builder: (_) => VoiceBookPicker(
+              store: library,
+              query: action == VoiceAction.card ? '' : query,
+              sort: action == VoiceAction.continueBook ? 'opened' : 'title',
+            ),
+          ),
+        );
     if (id == null || !c.mounted) return;
     final book = await records.get(id), store = ReadingStore(records: records);
     if (!c.mounted) return;

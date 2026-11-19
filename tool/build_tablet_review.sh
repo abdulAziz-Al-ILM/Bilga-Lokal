@@ -21,10 +21,15 @@ test -f .bilga-tools/review-signing/debug.keystore || {
   echo 'Missing isolated development keystore. Do not replace any production signing key.' >&2
   exit 1
 }
-"$bilga_flutter" build apk --debug --no-pub "$@"
+bilga_mode=debug
+if [[ "${BILGA_REVIEW_PROFILE:-}" == 1 ]]; then
+  bilga_mode=profile
+fi
+"$bilga_flutter" build apk "--$bilga_mode" --no-pub "$@"
 mkdir -p build/review
-cp build/app/outputs/flutter-apk/app-debug.apk build/review/bilga-review-debug.apk
-"$bilga_sdk/cmdline-tools/latest/bin/apkanalyzer" manifest print build/review/bilga-review-debug.apk > build/review/manifest.xml
+bilga_output="build/review/bilga-review-$bilga_mode.apk"
+cp "build/app/outputs/flutter-apk/app-$bilga_mode.apk" "$bilga_output"
+"$bilga_sdk/cmdline-tools/latest/bin/apkanalyzer" manifest print "$bilga_output" > build/review/manifest.xml
 python3 tool/verify_review_manifest.py build/review/manifest.xml
-"$bilga_sdk/build-tools/36.0.0/apksigner" verify --verbose build/review/bilga-review-debug.apk
-sha256sum build/review/bilga-review-debug.apk
+"$bilga_sdk/build-tools/36.0.0/apksigner" verify --verbose "$bilga_output"
+sha256sum "$bilga_output"

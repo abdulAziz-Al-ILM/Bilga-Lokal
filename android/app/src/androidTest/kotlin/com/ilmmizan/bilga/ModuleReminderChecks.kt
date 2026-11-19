@@ -9,7 +9,7 @@ import java.time.*
 /** Debug instrumentation touches only its scoped synthetic alarm cache. */
 internal object ModuleReminderChecks {
     fun run(c:Context,operation:String,id:String,kind:String="habit"):Pair<Boolean,String> {
-        require(c.packageName=="com.ilmmizan.bilga.review" && id.startsWith("bilga-review-module-") && id.length<200 && kind in listOf("habit","finance"))
+        require(c.packageName=="com.ilmmizan.bilga.review" && id.startsWith("bilga-review-module-") && id.length<200 && kind in listOf("habit","finance","recurring"))
         return try {
             val tag="$kind:$id"
             when(operation) {
@@ -23,7 +23,24 @@ internal object ModuleReminderChecks {
                     if(at.toInstant().toEpochMilli()<now+30000)at=at.plusMinutes(1)
                     val schedule=JSONObject().put("type","weekdays").put("weekdays",JSONArray(listOf(1,2,3,4,5,6,7))).put("interval",1).put("quota",1).put("target",1).put("start",LocalDate.now().toString()).put("pauses",JSONArray())
                     val windows=JSONArray().put(JSONObject().put("from","0001-01-01").put("schedule",schedule))
-                    val row=JSONObject().put("id",tag).put("target",id).put("kind",kind).put("date",at.toLocalDate().toString()).put("minute",at.hour*60+at.minute).put("created",LocalDate.now().toString()).put("windows",windows).put("completed",JSONArray()).put("config",id).put("notBefore",now)
+                    val row=JSONObject().put("id",tag).put("target",id).put("kind",if (kind=="recurring") "finance" else kind).put("date",at.toLocalDate().toString()).put("minute",at.hour*60+at.minute).put("created",LocalDate.now().toString()).put("windows",windows).put("completed",JSONArray()).put("config",id).put("notBefore",now)
+                    if (kind=="recurring") {
+                        row.put("event","financeRecurring").put("cadence",0)
+                        val originalZone = java.util.TimeZone.getDefault()
+                        try {
+                            val candidate = JSONObject(row.toString())
+                                .put("date","2032-04-17").put("minute",600)
+                            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Tashkent"))
+                            val tashkent = ModuleReminders.next(JSONObject(),candidate,now)?.at
+                                ?: error("missing_tashkent_candidate")
+                            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("UTC"))
+                            val utc = ModuleReminders.next(JSONObject(),candidate,now)?.at
+                                ?: error("missing_utc_candidate")
+                            check(utc-tashkent == 5L*60*60*1000)
+                        } finally {
+                            java.util.TimeZone.setDefault(originalZone)
+                        }
+                    }
                     ModuleReminders.validate(row)
                     val root=JSONObject().put("v",1).put("rows",JSONArray().put(row)).put("labels",JSONObject().put("habit","Bilga Review").put("finance","Bilga Review").put("message","Synthetic reminder"))
                     TodoStore.write(c,root,ModuleReminders.STORE);ModuleReminders.schedule(c,root)

@@ -6,6 +6,7 @@ import '../../features/experiences/experience_model.dart';
 class ActivityCalendar extends StatelessWidget {
   final DateTime month;
   final String? selected;
+  final bool showRecordedZero;
   final Map<String, int> values;
   final ValueChanged<DateTime> onMonth, onDay;
   const ActivityCalendar({
@@ -15,6 +16,7 @@ class ActivityCalendar extends StatelessWidget {
     required this.onMonth,
     required this.onDay,
     this.selected,
+    this.showRecordedZero = false,
   });
   @override
   Widget build(BuildContext context) {
@@ -96,7 +98,9 @@ class ActivityCalendar extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(local.formatDecimal(d)),
-                                  if (value > 0)
+                                  if (value > 0 ||
+                                      showRecordedZero &&
+                                          values.containsKey(key))
                                     Text(
                                       local.formatDecimal(value),
                                       style: Theme.of(c).textTheme.labelSmall,

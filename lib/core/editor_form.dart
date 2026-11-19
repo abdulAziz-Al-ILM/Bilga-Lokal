@@ -46,6 +46,11 @@ Future<Map<String, String>?> editFields(
   GlobalKey? saveKey,
   void Function(String field, String value)? onChanged,
   Widget Function(Widget child)? pageWrapper,
+  WidgetBuilder? extra,
+  Set<String> advancedFields = const {},
+  Map<String, Widget Function(BuildContext, TextEditingController, bool)>
+      customFields =
+      const {},
 }) => Navigator.push(
   c,
   MaterialPageRoute(
@@ -64,6 +69,9 @@ Future<Map<String, String>?> editFields(
         fieldKeys,
         saveKey,
         onChanged,
+        extra,
+        advancedFields,
+        customFields,
       );
       return pageWrapper?.call(page) ?? page;
     },
@@ -80,6 +88,10 @@ class _FormPage extends StatefulWidget {
   final Map<String, GlobalKey> fieldKeys;
   final GlobalKey? saveKey;
   final void Function(String field, String value)? onChanged;
+  final WidgetBuilder? extra;
+  final Set<String> advancedFields;
+  final Map<String, Widget Function(BuildContext, TextEditingController, bool)>
+  customFields;
   const _FormPage(
     this.title,
     this.labels,
@@ -94,6 +106,9 @@ class _FormPage extends StatefulWidget {
     this.fieldKeys,
     this.saveKey,
     this.onChanged,
+    this.extra,
+    this.advancedFields,
+    this.customFields,
   );
   @override
   State<_FormPage> createState() => _FormState();
@@ -104,7 +119,7 @@ class _FormState extends State<_FormPage> {
     for (final k in widget.labels.keys)
       k: TextEditingController(text: widget.initial[k] ?? ''),
   };
-  bool leaving = false, saving = false;
+  bool leaving = false, saving = false, expanded = false;
   String? error;
   bool get dirty => controllers.entries.any(
     (e) => e.value.text != (widget.initial[e.key] ?? ''),
@@ -194,11 +209,15 @@ class _FormState extends State<_FormPage> {
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
-            for (final e in controllers.entries)
+            for (final e in controllers.entries.where(
+              (e) => !widget.advancedFields.contains(e.key) || expanded,
+            ))
               Padding(
                 key: widget.fieldKeys[e.key],
                 padding: const EdgeInsets.only(bottom: 20),
-                child: widget.weekdayFields.contains(e.key)
+                child: widget.customFields.containsKey(e.key)
+                    ? widget.customFields[e.key]!(context, e.value, saving)
+                    : widget.weekdayFields.contains(e.key)
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -289,6 +308,13 @@ class _FormState extends State<_FormPage> {
                           border: const OutlineInputBorder(),
                         ),
                       ),
+              ),
+            if (widget.extra != null) widget.extra!(context),
+            if (widget.advancedFields.isNotEmpty)
+              TextButton.icon(
+                onPressed: () => setState(() => expanded = !expanded),
+                icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+                label: Text(context.tr('orgAdvanced')),
               ),
           ],
         ),

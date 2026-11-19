@@ -1,3 +1,5 @@
+import 'package:bilga/features/organization/organization_store.dart';
+
 import 'settle_io.dart';
 
 import 'dart:io';
@@ -147,7 +149,6 @@ void registerBookLibraryUiTests({
         expect(await read(tester, store), isEmpty);
         await fill(tester, 'isbn', '978-0-306-40615-7');
         await fill(tester, 'tags', 'Study, personal');
-        await fill(tester, 'shelves', 'Home');
         await press(tester, const Key('book-detail-favorite'));
         for (final item in {
           'title': 'Personal library book',
@@ -201,7 +202,27 @@ void registerBookLibraryUiTests({
         expect(meta['currentPage'], 42);
         expect(meta['favorite'], true);
         expect(meta['tags'], ['Study', 'personal']);
-        expect(meta['shelves'], ['Home']);
+        expect(meta['shelves'], isEmpty);
+        await tester.pageBack();
+        await settle(tester);
+        final folders = OrganizationStore('book', provided: db);
+        await tester.runAsync(
+          () => folders.saveFolder('Home', allowed: () => true),
+        );
+        await press(tester, const Key('book-folders-open'));
+        await tester.tap(find.byTooltip('Move to folder').last);
+        await settle(tester);
+        await tester.tap(find.text('Home').last);
+        await settle(tester);
+        await tester.tap(find.text('Move here'));
+        await settle(tester);
+        final folder = (await tester.runAsync(folders.folders))!.single;
+        expect(
+          (await tester.runAsync(
+            () => folders.items(folder: folder.id, query: ''),
+          ))!.single.id,
+          saved.id,
+        );
         await tester.pageBack();
         await settle(tester);
         if (find
@@ -336,8 +357,7 @@ void registerBookLibraryUiTests({
         gate.complete();
         await settle(tester);
         await press(tester, const Key('book-library-organize'));
-        await show(tester, find.byKey(const Key('book-filter-shelves-')));
-        expect(find.byKey(const Key('book-filter-shelves-')), findsOneWidget);
+        await show(tester, find.byKey(const Key('book-filter-tags-')));
         expect(find.byKey(const Key('book-filter-tags-')), findsOneWidget);
         await show(
           tester,
@@ -442,8 +462,10 @@ class _DelayedBookLibrary extends BookLibraryStore {
   final Future<void> gate;
   _DelayedBookLibrary(RecordStore records, this.gate) : super(records: records);
   @override
-  Future<Map<String, List<String>>> filters() async {
+  Future<Map<String, List<String>>> filters({
+    bool includeShelves = true,
+  }) async {
     await gate;
-    return super.filters();
+    return super.filters(includeShelves: includeShelves);
   }
 }

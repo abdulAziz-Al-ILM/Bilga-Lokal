@@ -209,6 +209,11 @@ class RecordStore {
           1) {
         throw StateError('record_changed');
       }
+      await txn.delete(
+        'module_data',
+        where: "module=? AND kind='folder_item' AND owner=?",
+        whereArgs: [r.kind, r.id],
+      );
       if (r.kind == 'experience') {
         await txn.delete(
           'module_data',

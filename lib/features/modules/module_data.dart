@@ -1,3 +1,5 @@
+import '../organization/organization_store.dart';
+
 import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
@@ -52,7 +54,7 @@ class ModuleData {
         )) {
       throw const FormatException('module_row');
     }
-    if (row['kind'] == 'category'
+    if ({'category', 'folder'}.contains(row['kind'])
         ? row['owner'] != ''
         : (row['owner'] as String).isEmpty) {
       throw const FormatException('module_owner');
@@ -65,6 +67,31 @@ class ModuleData {
   }
 
   static void validate(String module, String kind, Map<String, dynamic> data) {
+    if (OrganizationStore.modules.contains(module)) {
+      if (kind == 'folder') {
+        if (data['name'] is! String ||
+            (data['name'] as String).trim().isEmpty ||
+            (data['name'] as String).length > 100 ||
+            data['parent'] is! String ||
+            data['deleted'] is! bool ||
+            !OrganizationStore.icons.contains(data['icon']) ||
+            data['color'] is! int ||
+            data['color'] < 0 ||
+            data['color'] > 5) {
+          throw const FormatException('folder');
+        }
+        return;
+      }
+      if (kind == 'folder_item') {
+        if (data['folder'] is! String ||
+            (data['folder'] as String).isEmpty ||
+            data['entry'] is! String ||
+            (data['entry'] == '') == (module == 'finance')) {
+          throw const FormatException('folder_item');
+        }
+        return;
+      }
+    }
     if (!['experience', 'habit', 'finance'].contains(module)) {
       throw const FormatException('module');
     }

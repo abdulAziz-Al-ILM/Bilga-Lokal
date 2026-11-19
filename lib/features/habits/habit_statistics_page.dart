@@ -183,7 +183,10 @@ class _HabitStatisticsState extends State<HabitStatisticsPage>
     final values = <String, int>{};
     {
       for (final d in days(month, DateTime(month.year, month.month + 1))) {
-        if (p.done(d, h.days)) values[dayKey(d)] = 1;
+        final key = dayKey(d);
+        if (p.entries.containsKey(key) || h.days.contains(key)) {
+          values[key] = p.amount(d, h.days);
+        }
       }
     }
     return GuideHost(
@@ -221,6 +224,7 @@ class _HabitStatisticsState extends State<HabitStatisticsPage>
                         month: month,
                         values: values,
                         selected: dayKey(selected),
+                        showRecordedZero: true,
                         onMonth: (v) => setState(() => month = v),
                         onDay: (d) async {
                           setState(() => selected = d);
@@ -260,7 +264,8 @@ class _HabitStatisticsState extends State<HabitStatisticsPage>
                             if (p.entries.containsKey(dayKey(selected)) ||
                                 h.days.contains(dayKey(selected)))
                               Text(
-                                '${p.amount(selected, h.days)} / ${p.targetAt(selected)}',
+                                '${p.amount(selected, h.days)} / ${p.targetAt(selected)} ${p.unit}'
+                                    .trimRight(),
                               ),
                             if ('${p.entries[dayKey(selected)]?['note'] ?? ''}'
                                 .isNotEmpty)

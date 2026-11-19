@@ -1,3 +1,5 @@
+import '../organization/folders_page.dart';
+import '../organization/organization_store.dart';
 import '../reminders/module_reminder_status.dart';
 import 'habit_statistics_page.dart';
 
@@ -151,6 +153,27 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
           reload();
         });
       }
+    }
+  }
+
+  Future<void> adjust(Habit habit, DateTime date, int delta) async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      requireAccess();
+      await store.adjust(habit.id, date, delta);
+      final updated = await store.get(habit.id);
+      final current = await loading;
+      if (!mounted) return;
+      setState(
+        () => loading = Future.value([
+          for (final row in current) row.id == habit.id ? updated : row,
+        ]),
+      );
+    } catch (_) {
+      if (mounted) failure(context);
+    } finally {
+      if (mounted) setState(() => busy = false);
     }
   }
 
@@ -371,6 +394,35 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
     if (date != null && mounted) await check(h, date);
   }
 
+  Future<void> folders() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FoldersPage(
+          store: OrganizationStore('habit', provided: store.provided),
+          allowed: () => access.has(AgentAccess.core),
+          open: (item) async {
+            try {
+              await Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => HabitStatisticsPage(
+                    store: store,
+                    habitId: item.id,
+                    access: access,
+                  ),
+                ),
+              );
+            } catch (_) {
+              if (mounted) failure(context);
+            }
+          },
+        ),
+      ),
+    );
+    if (mounted) setState(reload);
+  }
+
   @override
   Widget build(BuildContext context) => GuideHost(
     controller: guide,
@@ -379,6 +431,11 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: Text(context.tr('xHabits')),
         actions: [
+          IconButton(
+            tooltip: context.tr('orgFolders'),
+            onPressed: folders,
+            icon: const Icon(Icons.folder_outlined),
+          ),
           IconButton(
             key: const Key('habit-help'),
             tooltip: context.tr('gHelp'),
@@ -465,14 +522,17 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                             value: active.isEmpty ? 0 : done / active.length,
                           ),
                           const SizedBox(height: 12),
-                          Text(c.tr('hEncourage')),
-                          const SizedBox(height: 12),
-                          Text(c.tr('hgAbout')),
+                          if (all.isEmpty) Text(c.tr('hgAbout')),
                           organization(all),
                           if (all.any(
                             (h) => h.plan.reminderMinute != null && !h.archived,
                           ))
-                            const ModuleReminderStatus(),
+                            ExpansionTile(
+                              tilePadding: EdgeInsets.zero,
+                              title: Text(c.tr('reminderSettings')),
+                              leading: const Icon(Icons.notifications_outlined),
+                              children: const [ModuleReminderStatus()],
+                            ),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
@@ -504,16 +564,18 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                     );
                   }
                   final h = list[index - 1], p = h.plan;
-                  var planned = 0, completed = 0;
-                  for (var i = 0; i < 28; i++) {
-                    final d = DateTime(now.year, now.month, now.day - i);
-                    if (dayKey(d).compareTo(dayKey(h.created)) >= 0 &&
-                        p.scheduled(d) &&
-                        !p.skipped(d)) {
-                      planned++;
-                      if (p.done(d, h.days)) completed++;
-                    }
-                  }
+                  final amount = p.amount(now, h.days);
+                  final target = p.targetAt(now);
+                  final quantitative = target > 1 || p.unit.isNotEmpty;
+                  final percentage = (amount * 100 / target).round();
+                  final day = p.dayPlan(now);
+                  final streak = p.streak(
+                    h.days,
+                    now,
+                    created: day.start == null
+                        ? h.created
+                        : DateTime.parse(day.start!),
+                  );
                   return Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -593,8 +655,27 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                               ),
                             ],
                           ),
+                          if (quantitative) ...[
+                            Text(
+                              '$amount / $target ${p.unit}'.trimRight(),
+                              key: Key('habit-quantity-${h.id}'),
+                              style: Theme.of(c).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            LinearProgressIndicator(
+                              key: Key('habit-progress-${h.id}'),
+                              minHeight: 8,
+                              borderRadius: BorderRadius.circular(8),
+                              value: (amount / target).clamp(0.0, 1.0),
+                              semanticsValue: '${percentage.clamp(0, 100)}%',
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '$percentage%${amount < target ? ' · ${c.tr('fRemaining')} ${target - amount} ${p.unit}'.trimRight() : ''}',
+                            ),
+                          ],
                           Text(
-                            '${p.amount(now, h.days)} / ${p.targetAt(now)} ${p.unit} · ${p.streak(h.days, now, created: p.dayPlan(now).start == null ? h.created : DateTime.parse(p.dayPlan(now).start!))} ${c.tr(['weekly', 'monthly'].contains(p.dayPlan(now).type) ? 'haStreak_${p.dayPlan(now).type}' : 'hStreak')}',
+                            '$streak ${c.tr(['weekly', 'monthly'].contains(day.type) ? 'haStreak_${day.type}' : 'hStreak')}',
                           ),
                           if (p.category.isNotEmpty) Text(p.category),
                           if (p.tags.isNotEmpty)
@@ -635,73 +716,48 @@ class _HabitsState extends State<HabitsPage> with WidgetsBindingObserver {
                           if (p.reason.isNotEmpty)
                             Text('${c.tr('hReason')}: ${p.reason}'),
                           const SizedBox(height: 12),
-                          Text(
-                            ['weekly', 'monthly'].contains(p.dayPlan(now).type)
-                                ? '${c.tr('h28Days')}: $completed'
-                                : '${c.tr('h28Days')}: $completed / $planned',
-                          ),
-                          const SizedBox(height: 8),
-                          if (![
-                            'weekly',
-                            'monthly',
-                          ].contains(p.dayPlan(now).type))
-                            LinearProgressIndicator(
-                              value: planned == 0 ? 0 : completed / planned,
-                            ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 5,
-                            runSpacing: 4,
-                            children: List.generate(28, (i) {
-                              final d = DateTime(
-                                now.year,
-                                now.month,
-                                now.day - 27 + i,
-                              );
-                              return ActionChip(
-                                label: Text('${d.day}/${d.month}'),
-                                avatar: Icon(
-                                  p.done(d, h.days)
-                                      ? Icons.check_circle
-                                      : p.skipped(d)
-                                      ? Icons.pause_circle_outline
-                                      : p.amount(d, h.days) > 0
-                                      ? Icons.timelapse
-                                      : Icons.circle_outlined,
-                                  size: 16,
-                                ),
-                                onPressed: busy || h.archived
-                                    ? null
-                                    : () => run(() => check(h, d)),
-                              );
-                            }),
-                          ),
                           if (!h.archived)
                             Wrap(
                               spacing: 8,
                               children: [
-                                FilledButton.icon(
-                                  onPressed: busy
-                                      ? null
-                                      : () => run(() async {
-                                          requireAccess();
-                                          await store.mark(
-                                            h.id,
-                                            now,
-                                            !p.done(now, h.days),
-                                          );
-                                        }),
-                                  icon: Icon(
-                                    p.done(now, h.days)
-                                        ? Icons.undo
-                                        : Icons.check,
+                                if (quantitative) ...[
+                                  OutlinedButton(
+                                    key: Key('habit-minus-${h.id}'),
+                                    onPressed: busy || amount == 0
+                                        ? null
+                                        : () => adjust(h, now, -1),
+                                    child: const Text('−1'),
                                   ),
-                                  label: Text(
-                                    c.tr(
-                                      p.done(now, h.days) ? 'undo' : 'hDone',
+                                  FilledButton(
+                                    key: Key('habit-plus-${h.id}'),
+                                    onPressed: busy || amount == 1000000
+                                        ? null
+                                        : () => adjust(h, now, 1),
+                                    child: const Text('+1'),
+                                  ),
+                                ] else
+                                  FilledButton.icon(
+                                    onPressed: busy
+                                        ? null
+                                        : () => run(() async {
+                                            requireAccess();
+                                            await store.mark(
+                                              h.id,
+                                              now,
+                                              !p.done(now, h.days),
+                                            );
+                                          }),
+                                    icon: Icon(
+                                      p.done(now, h.days)
+                                          ? Icons.undo
+                                          : Icons.check,
+                                    ),
+                                    label: Text(
+                                      c.tr(
+                                        p.done(now, h.days) ? 'undo' : 'hDone',
+                                      ),
                                     ),
                                   ),
-                                ),
                                 OutlinedButton(
                                   onPressed: busy
                                       ? null

@@ -146,9 +146,11 @@ class BookLibraryStore {
     return rows.map(BookSummary.row).toList();
   }
 
-  Future<Map<String, List<String>>> filters() async {
+  Future<Map<String, List<String>>> filters({
+    bool includeShelves = true,
+  }) async {
     final result = <String, List<String>>{};
-    for (final field in ['shelves', 'tags', 'categories']) {
+    for (final field in [if (includeShelves) 'shelves', 'tags', 'categories']) {
       final rows = await (await database).rawQuery(
         "SELECT DISTINCT value FROM private_records,json_each(payload,'\$.library.$field') WHERE kind='book' ORDER BY value COLLATE NOCASE",
       );

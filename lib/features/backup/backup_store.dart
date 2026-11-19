@@ -1,3 +1,5 @@
+import '../finance/finance_planning.dart';
+import '../organization/organization_store.dart';
 import '../habits/habit_changes.dart';
 import '../modules/module_data.dart';
 import '../notes/rich_note_codec.dart';
@@ -212,13 +214,26 @@ class BackupStore {
       'version': 1,
       // Portable content schema. Device-local widget consent (DB v13) is excluded.
       'notesSchema':
-          (data['private_records'] as List).any(
-            (r) =>
-                r['kind'] == 'finance' &&
-                (jsonDecode(r['payload'] as String) as Map).containsKey(
-                  'planning',
-                ),
-          )
+          (data['module_data'] as List).any(
+                (row) => {'folder', 'folder_item'}.contains(row['kind']),
+              ) ||
+              (data['private_records'] as List).any(
+                (row) =>
+                    row['kind'] == 'finance' &&
+                    FinancePlanning.hasCategoryManagement(
+                      Map<String, dynamic>.from(
+                        jsonDecode(row['payload'] as String),
+                      ),
+                    ),
+              )
+          ? 19
+          : (data['private_records'] as List).any(
+              (r) =>
+                  r['kind'] == 'finance' &&
+                  (jsonDecode(r['payload'] as String) as Map).containsKey(
+                    'planning',
+                  ),
+            )
           ? 18
           : (data['habits'] as List).any(
               (r) => HabitPlan.decode(r['details'] as String).advanced,
@@ -261,6 +276,7 @@ class BackupStore {
           16,
           17,
           18,
+          19,
         ].contains(payload['notesSchema']) ||
         ![6, 7, 8, 9, 10, 11].contains(payload['todoSchema']) ||
         DateTime.tryParse(payload['createdAt'] as String? ?? '') == null) {
@@ -268,6 +284,19 @@ class BackupStore {
     }
     final raw = payload['data'];
     if (raw is! Map) throw const FormatException('backup_invalid');
+    if ((payload['notesSchema'] as int) < 19 &&
+        raw['private_records'] is List &&
+        (raw['private_records'] as List).any(
+          (row) =>
+              row is Map &&
+              row['kind'] == 'finance' &&
+              row['payload'] is String &&
+              FinancePlanning.hasCategoryManagement(
+                Map<String, dynamic>.from(jsonDecode(row['payload'])),
+              ),
+        )) {
+      throw const FormatException('finance_category_schema');
+    }
     if ((payload['notesSchema'] as int) < 18 &&
         raw['private_records'] is List &&
         (raw['private_records'] as List).any(
@@ -639,12 +668,70 @@ class BackupStore {
         .where((r) => r['kind'] == 'experience')
         .map((r) => r['id'])
         .toSet();
+    final folderRows = {
+      for (final row in result['module_data']!.where(
+        (r) => r['kind'] == 'folder',
+      ))
+        row['id']: row,
+    };
+    final recordRows = {
+      for (final row in result['private_records']!) row['id']: row,
+    };
+    final habitIds = result['habits']!.map((row) => row['id']).toSet();
+    final ledgerEntries = <Object?, Set<Object?>>{};
+    final memberships = <(Object?, Object?, Object?, Object?)>{};
+    for (final row in result['module_data']!.where(
+      (r) => {'folder', 'folder_item'}.contains(r['kind']),
+    )) {
+      if ((payload['notesSchema'] as int) < 19) {
+        throw const FormatException('folder_schema');
+      }
+      final data = ModuleData.decode(row);
+      final module = row['module'];
+      if (row['kind'] == 'folder') {
+        final seen = {row['id']};
+        var parent = data['parent'] as String;
+        while (parent.isNotEmpty) {
+          final folder = folderRows[parent];
+          if (!seen.add(parent) ||
+              folder == null ||
+              folder['module'] != module) {
+            throw const FormatException('folder_tree');
+          }
+          parent = ModuleData.decode(folder)['parent'] as String;
+        }
+      } else {
+        final owner = row['owner'];
+        final source = recordRows[owner];
+        if (folderRows[data['folder']]?['module'] != module ||
+            (module == 'habit'
+                ? !habitIds.contains(owner)
+                : source?['kind'] != module) ||
+            !memberships.add((module, owner, data['folder'], data['entry']))) {
+          throw const FormatException('folder_membership');
+        }
+        if (module == 'finance' &&
+            !ledgerEntries
+                .putIfAbsent(
+                  owner,
+                  () => {
+                    for (final entry in jsonDecode(
+                      source!['payload'] as String,
+                    )['entries'])
+                      entry['id'],
+                  },
+                )
+                .contains(data['entry'])) {
+          throw const FormatException('folder_entry');
+        }
+      }
+    }
     final uniqueModule = <String>{};
     final moduleTargets = <String>{};
     for (final row in result['module_data']!) {
       final d = ModuleData.decode(row);
       if (row['module'] == 'experience' &&
-          row['kind'] != 'category' &&
+          !{'category', 'folder'}.contains(row['kind']) &&
           !experiences.contains(row['owner'])) {
         throw const FormatException('module_owner');
       }
@@ -928,12 +1015,21 @@ class BackupStore {
           if (row['kind'] == 'category' && data['parent'] != null) {
             data['parent'] = '$prefix${data['parent']}';
           }
+          if (row['kind'] == 'folder' && data['parent'] != '') {
+            data['parent'] = '$prefix${data['parent']}';
+          }
+          if (row['kind'] == 'folder_item') {
+            data['folder'] = '$prefix${data['folder']}';
+          }
           await _insert(txn, 'module_data', {
             ...row,
             'id': '$prefix${row['id']}',
             'owner': row['owner'] == '' ? '' : '$prefix${row['owner']}',
             'payload': jsonEncode(data),
           });
+        }
+        if ((payload['notesSchema'] as int) < 19) {
+          await OrganizationStore.importShelves(txn, prefix: prefix);
         }
         for (final row in tables['book_reading']!) {
           final data = Map<String, dynamic>.from(

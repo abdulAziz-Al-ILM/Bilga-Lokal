@@ -164,7 +164,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     if (value == null || value.action == VoiceAction.unknown || acting) return;
     setState(() => acting = true);
     try {
-      await actions.execute(context, value);
+      await actions.execute(context, value, language: language);
     } catch (_) {
       if (mounted) failure(context);
     } finally {

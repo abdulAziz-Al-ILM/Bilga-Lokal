@@ -1,3 +1,5 @@
+import '../../core/review_performance.dart';
+
 import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
@@ -82,9 +84,13 @@ class SearchRepository {
     final expression = SearchIndex.expression(query);
     if (query.trim().isNotEmpty && expression.isEmpty) return [];
     final all = <SearchHit>[];
-    for (final db in [await notes, await todos]) {
-      final rows = await db.rawQuery(
-        '''SELECT id, kind, title, updated, archived,
+    final useTasks = kind == null || kind == 'todo' || kind == 'todoFolder';
+    final useNotes = kind != 'todo' && kind != 'todoFolder';
+    for (final db in [if (useNotes) await notes, if (useTasks) await todos]) {
+      final rows = await ReviewPerformance.measure(
+        'search.query',
+        () => db.rawQuery(
+          '''SELECT id, kind, title, updated, archived,
         CASE
           WHEN kind IN ('note', 'todo', 'folder', 'todoFolder') THEN substr(body, 1, 241)
           WHEN kind = 'habit' THEN json_object(
@@ -105,7 +111,8 @@ class SearchRepository {
         ${includeArchived ? '' : "AND CAST(archived AS INTEGER) = 0"}
         ${kind == null ? '' : 'AND kind = ?'}
         ORDER BY updated DESC, kind, id LIMIT ?''',
-        [if (expression.isNotEmpty) expression, ?kind, offset + limit],
+          [if (expression.isNotEmpty) expression, ?kind, offset + limit],
+        ),
       );
       all.addAll(
         rows.map(SearchHit.row).where((h) => kind == null || h.kind == kind),

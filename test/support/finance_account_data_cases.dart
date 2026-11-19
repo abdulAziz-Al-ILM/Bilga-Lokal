@@ -76,7 +76,7 @@ void registerFinanceAccountDataTests({
       secure: secure,
     );
     store = RecordStore(database: db);
-    expect(await db.getVersion(), 20);
+    expect(await db.getVersion(), 21);
     expect(await db.query('private_records'), records);
     expect(await db.query('notes'), notes);
     final restored = (await store.all('finance')).single;
@@ -243,7 +243,7 @@ void registerFinanceAccountDataTests({
       secure: secure,
     );
     store = RecordStore(database: db);
-    expect(await db.getVersion(), 20);
+    expect(await db.getVersion(), 21);
     expect(await db.query('private_records'), before);
     expect(Ledger.balance((await store.all('finance')).single.data), 150000);
   });

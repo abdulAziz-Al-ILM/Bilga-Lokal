@@ -159,10 +159,19 @@ class HabitStore {
     int amount, {
     String? note,
     bool skipped = false,
+  }) => _writeEntry(id, date, (_) => amount, note: note, skipped: skipped);
+
+  Future<void> adjust(String id, DateTime date, int delta) =>
+      _writeEntry(id, date, (current) => (current + delta).clamp(0, 1000000));
+
+  Future<void> _writeEntry(
+    String id,
+    DateTime date,
+    int Function(int) update, {
+    String? note,
+    bool skipped = false,
   }) async {
     if (dayKey(date).compareTo(dayKey(DateTime.now())) > 0 ||
-        amount < 0 ||
-        amount > 1000000 ||
         (note?.length ?? 0) > 2000) {
       throw ArgumentError('habit_entry');
     }
@@ -172,6 +181,8 @@ class HabitStore {
       final habit = Habit.fromMap(rows.single), key = dayKey(date);
       if (habit.archived) throw StateError('habit_archived');
       final target = habit.plan.targetAt(date);
+      final amount = update(habit.plan.amount(date, habit.days));
+      if (amount < 0 || amount > 1000000) throw ArgumentError('habit_entry');
       habit.plan.entries[key] = {
         'amount': amount,
         'target': target,

@@ -54,7 +54,11 @@ class FinancePlanning {
           categories.containsKey(c['name']) ||
           c['parent'] is! String ||
           (c['parent'] as String).length > 100 ||
-          c.keys.any((k) => !{'name', 'parent'}.contains(k))) {
+          c['label'] != null && !_text(c['label'], max: 100) ||
+          c['archived'] != null && c['archived'] is! bool ||
+          c.keys.any(
+            (k) => !{'name', 'parent', 'label', 'archived'}.contains(k),
+          )) {
         throw const FormatException('finance_category');
       }
       categories[c['name']] = c;
@@ -143,6 +147,16 @@ class FinancePlanning {
       }
     }
   }
+
+  static Map<String, String> categoryLabels(Map<String, dynamic> source) => {
+    for (final row in plan(source)['categories'])
+      row['name'] as String: (row['label'] ?? row['name']) as String,
+  };
+
+  static bool hasCategoryManagement(Map<String, dynamic> source) =>
+      (plan(source)['categories'] as List).any(
+        (row) => row.containsKey('label') || row.containsKey('archived'),
+      );
 
   static Set<String> descendants(Map<String, dynamic> data, String name) {
     final result = <String>{}, children = <String, List<String>>{};

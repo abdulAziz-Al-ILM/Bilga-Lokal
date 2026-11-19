@@ -1,3 +1,6 @@
+import '../organization/folders_page.dart';
+import '../organization/organization_store.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -54,7 +57,7 @@ class _LibraryState extends State<BookLibraryPage> {
   final search = TextEditingController();
   List<BookSummary> books = [], current = [];
   Map<String, List<String>> choices = {};
-  String status = 'all', shelf = '', tag = '', category = '', sort = 'opened';
+  String status = 'all', tag = '', category = '', sort = 'opened';
   bool favorites = false,
       loading = false,
       acting = false,
@@ -102,7 +105,9 @@ class _LibraryState extends State<BookLibraryPage> {
     final token = ++generation;
     setState(() => loading = true);
     try {
-      final filters = refreshFilters ? await store.filters() : choices;
+      final filters = refreshFilters
+          ? await store.filters(includeShelves: false)
+          : choices;
       if (!mounted) return;
       if (token != generation) {
         if (refreshFilters) {
@@ -111,7 +116,6 @@ class _LibraryState extends State<BookLibraryPage> {
         }
         return;
       }
-      final sh = (filters['shelves'] ?? []).contains(shelf) ? shelf : '';
       final tg = (filters['tags'] ?? []).contains(tag) ? tag : '';
       final cat = (filters['categories'] ?? []).contains(category)
           ? category
@@ -120,23 +124,19 @@ class _LibraryState extends State<BookLibraryPage> {
         query: search.text,
         status: status == 'all' ? null : status,
         favoritesOnly: favorites,
-        shelf: sh.isEmpty ? null : sh,
         tag: tg.isEmpty ? null : tg,
         category: cat.isEmpty ? null : cat,
         sort: sort,
         offset: append ? books.length : 0,
         limit: 51,
       );
-      final ongoing = await store.page(
-        status: 'reading',
-        sort: 'opened',
-        limit: 6,
-      );
+      final ongoing = refreshFilters || current.isEmpty
+          ? await store.page(status: 'reading', sort: 'opened', limit: 6)
+          : current;
       if (!mounted || token != generation) return;
       final ids = append ? books.map((b) => b.id).toSet() : <String>{};
       setState(() {
         choices = filters;
-        shelf = sh;
         tag = tg;
         category = cat;
         books = [
@@ -274,7 +274,7 @@ class _LibraryState extends State<BookLibraryPage> {
         search.clear();
         status = 'all';
         favorites = false;
-        shelf = tag = category = '';
+        tag = category = '';
         sort = 'updated';
         await load(refreshFilters: true);
         guide.event('imported');
@@ -590,6 +590,26 @@ class _LibraryState extends State<BookLibraryPage> {
     );
   }
 
+  Future<void> folders() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FoldersPage(
+          store: OrganizationStore('book', provided: store.records.database),
+          allowed: () => access.has(AgentAccess.core),
+          open: (item) async {
+            try {
+              await openRecord(await store.load(item.id));
+            } catch (_) {
+              if (mounted) failure(context);
+            }
+          },
+        ),
+      ),
+    );
+    if (mounted) await load();
+  }
+
   @override
   Widget build(BuildContext c) => GuideHost(
     controller: guide,
@@ -598,6 +618,12 @@ class _LibraryState extends State<BookLibraryPage> {
       appBar: AppBar(
         title: Text(c.tr('xBooks')),
         actions: [
+          IconButton(
+            key: const Key('book-folders-open'),
+            tooltip: c.tr('orgFolders'),
+            onPressed: folders,
+            icon: const Icon(Icons.folder_outlined),
+          ),
           IconButton(
             key: const Key('book-help'),
             tooltip: c.tr('rHelp'),
@@ -841,8 +867,6 @@ class _LibraryState extends State<BookLibraryPage> {
                                 load();
                               },
                       ),
-                      if ((choices['shelves'] ?? []).isNotEmpty)
-                        filter('shelves', shelf, 'bShelves', (v) => shelf = v),
                       if ((choices['tags'] ?? []).isNotEmpty)
                         filter('tags', tag, 'tags', (v) => tag = v),
                       if ((choices['categories'] ?? []).isNotEmpty)

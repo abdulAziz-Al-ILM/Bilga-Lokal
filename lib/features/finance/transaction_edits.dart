@@ -10,6 +10,7 @@ class TransactionEdits {
     'date',
     'category',
     'description',
+    'party',
     'account',
   };
   static const actions = {'edit', 'void', 'restore'};
@@ -133,6 +134,9 @@ class TransactionEdits {
             !AccountLedger.validDate(row['date']) ||
             row['category'] is! String ||
             row['description'] is! String ||
+            row['party'] != null &&
+                (row['party'] is! String ||
+                    (row['party'] as String).length > 200) ||
             row['void'] is! bool) {
           throw const FormatException('transaction_history_snapshot');
         }

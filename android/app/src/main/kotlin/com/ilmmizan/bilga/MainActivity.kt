@@ -21,6 +21,7 @@ open class MainActivity : AudioServiceFragmentActivity() {
     private var notesWidget: NotesWidgetBridge? = null
     private var moduleReminders: ModuleReminderBridge? = null
     private var speech: SpeechBridge? = null
+    private var speechOutput: SpeechOutput? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         launchAgent = intent?.action == "com.ilmmizan.bilga.OPEN_AGENT"
@@ -45,6 +46,8 @@ open class MainActivity : AudioServiceFragmentActivity() {
         notesWidget = NotesWidgetBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         moduleReminders = ModuleReminderBridge(this,flutterEngine.dartExecutor.binaryMessenger)
         speech?.close();speech=SpeechBridge(this,flutterEngine.dartExecutor.binaryMessenger)
+        speechOutput?.close()
+        speechOutput = SpeechOutput(this, flutterEngine.dartExecutor.binaryMessenger)
         VaultBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         TrialBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         files = FilesBridge(this, flutterEngine.dartExecutor.binaryMessenger)
@@ -91,8 +94,8 @@ open class MainActivity : AudioServiceFragmentActivity() {
         moduleReminders?.ready()
     }
 
-    override fun onStart() { super.onStart(); speech?.foreground(true); TodoReminders.foreground=true; stopService(Intent(this,TodoOverlayService::class.java)) }
-    override fun onStop() { speech?.foreground(false);TodoReminders.foreground=false; super.onStop() }
+    override fun onStart() { super.onStart(); speech?.foreground(true); speechOutput?.foreground(true); TodoReminders.foreground=true; stopService(Intent(this,TodoOverlayService::class.java)) }
+    override fun onStop() { speech?.foreground(false); speechOutput?.foreground(false);TodoReminders.foreground=false; super.onStop() }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (files?.activityResult(requestCode, resultCode, data) == true) return
         super.onActivityResult(requestCode, resultCode, data)
@@ -101,5 +104,5 @@ open class MainActivity : AudioServiceFragmentActivity() {
         if(speech?.permissionResult(requestCode,grantResults)==true)return
         super.onRequestPermissionsResult(requestCode,permissions,grantResults)
     }
-    override fun onDestroy() { speech?.close();speech=null; moduleReminders?.close();moduleReminders=null; todoBridge?.close(); todoBridge=null; notesWidget?.close(); notesWidget = null; files?.close(); files = null; assistant = null; super.onDestroy() }
+    override fun onDestroy() { speechOutput?.close(); speechOutput=null; speech?.close();speech=null; moduleReminders?.close();moduleReminders=null; todoBridge?.close(); todoBridge=null; notesWidget?.close(); notesWidget = null; files?.close(); files = null; assistant = null; super.onDestroy() }
 }

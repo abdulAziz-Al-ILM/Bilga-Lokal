@@ -31,9 +31,11 @@ class FinanceAccountsPage extends StatefulWidget {
   final PrivateRecord ledger;
   final RecordStore? store;
   final AgentAccess? access;
+  final bool startTransfer;
   const FinanceAccountsPage({
     super.key,
     required this.ledger,
+    this.startTransfer = false,
     this.store,
     this.access,
   });
@@ -57,6 +59,11 @@ class _FinanceAccountsPageState extends State<FinanceAccountsPage> {
       Ledger.validate(current.data);
     } catch (_) {
       failed = true;
+    }
+    if (widget.startTransfer && !failed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) run(transfer);
+      });
     }
   }
 

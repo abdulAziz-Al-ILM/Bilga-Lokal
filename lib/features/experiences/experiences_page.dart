@@ -1,3 +1,6 @@
+import '../organization/folders_page.dart';
+import '../organization/organization_store.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -341,6 +344,40 @@ class _ExperiencesState extends State<ExperiencesPage> {
     if (mounted) await load();
   }
 
+  Future<void> folders() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FoldersPage(
+          store: OrganizationStore(
+            'experience',
+            provided: store.records.database,
+          ),
+          allowed: () => access.has(AgentAccess.core),
+          open: (item) async {
+            try {
+              final record = await store.records.get(item.id);
+              if (!mounted) return;
+              await Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ExperiencePage(
+                    record: record,
+                    store: store,
+                    access: access,
+                  ),
+                ),
+              );
+            } catch (_) {
+              if (mounted) failure(context);
+            }
+          },
+        ),
+      ),
+    );
+    if (mounted) await load();
+  }
+
   @override
   Widget build(BuildContext c) => GuideHost(
     controller: guide,
@@ -349,6 +386,11 @@ class _ExperiencesState extends State<ExperiencesPage> {
       appBar: AppBar(
         title: Text(c.tr('xExperience')),
         actions: [
+          IconButton(
+            tooltip: c.tr('orgFolders'),
+            onPressed: folders,
+            icon: const Icon(Icons.folder_outlined),
+          ),
           IconButton(
             key: const Key('experience-help'),
             tooltip: c.tr('gHelp'),

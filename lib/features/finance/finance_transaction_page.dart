@@ -1,3 +1,6 @@
+import '../organization/folders_page.dart';
+import '../organization/organization_store.dart';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -56,6 +59,7 @@ class _TransactionState extends State<FinanceTransactionPage> {
         ? '${accountName(row['from'])} → ${accountName(row['to'])}'
         : accountName(row['account']),
     if ((row['category'] as String).isNotEmpty) row['category'],
+    if ((row['party'] as String? ?? '').isNotEmpty) row['party'],
     if ((row['description'] as String).isNotEmpty) row['description'],
     if (row['void'] == true) context.tr('fEntryVoided'),
   ].join('\n\n');
@@ -103,9 +107,7 @@ class _TransactionState extends State<FinanceTransactionPage> {
   }
 
   Future<void> reload() async {
-    final saved = (await widget.store.all('finance'))
-        .where((row) => row.id == current.id)
-        .first;
+    final saved = await widget.store.get(current.id);
     Ledger.validate(saved.data);
     if (mounted) {
       setState(() {
@@ -144,12 +146,17 @@ class _TransactionState extends State<FinanceTransactionPage> {
         'amount': '${context.tr('xAmount')} ($currency)',
         'date': context.tr('xDate'),
         'category': context.tr('xCategory'),
+        if (old['type'] == 'expense' || old['type'] == 'income')
+          'party': context.tr(
+            old['type'] == 'expense' ? 'fxPaidTo' : 'fxReceivedFrom',
+          ),
         'description': context.tr('description'),
       },
       initial: {
         'amount': moneyText(old['amount'] as int, currency).split(' ').first,
         'date': old['date'] as String,
         'category': old['category'] as String,
+        'party': old['party'] as String? ?? '',
         'description': old['description'] as String,
       },
       requiredFields: {'amount', 'date'},
@@ -164,6 +171,9 @@ class _TransactionState extends State<FinanceTransactionPage> {
             'amount': parseMoney(values['amount']!, currency),
             'date': values['date']!,
             'category': values['category']!,
+            if (old.containsKey('party') ||
+                (values['party'] ?? '').trim().isNotEmpty)
+              'party': values['party']!.trim(),
             'description': values['description']!,
             'account': account,
           },
@@ -255,6 +265,32 @@ class _TransactionState extends State<FinanceTransactionPage> {
       appBar: AppBar(
         title: Text(context.tr('x${row['type']}')),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.drive_file_move_outline),
+            tooltip: context.tr('orgMove'),
+            onPressed: busy
+                ? null
+                : () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FoldersPage(
+                        store: OrganizationStore(
+                          'finance',
+                          provided: widget.store.database,
+                        ),
+                        allowed: () => widget.access.has(AgentAccess.finance),
+                        open: (_) async {},
+                        moveItem: (
+                          id: current.id,
+                          entry: widget.entryId,
+                          title: row['description'] as String,
+                          subtitle: '',
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+
           IconButton(
             tooltip: context.tr('retry'),
             onPressed: busy ? null : () => run(reload),

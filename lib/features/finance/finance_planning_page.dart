@@ -18,12 +18,14 @@ class FinancePlanningPage extends StatefulWidget {
   final RecordStore store;
   final AgentAccess access;
   final String? initialTutorial;
+  final String initialSection;
   const FinancePlanningPage({
     super.key,
     required this.ledger,
     required this.store,
     required this.access,
     this.initialTutorial,
+    this.initialSection = 'overview',
   });
   @override
   State<FinancePlanningPage> createState() => _PlanningState();
@@ -31,8 +33,8 @@ class FinancePlanningPage extends StatefulWidget {
 
 class _PlanningState extends State<FinancePlanningPage> {
   late PrivateRecord current = widget.ledger;
-  String section = 'overview',
-      month = DateTime.now().toIso8601String().substring(0, 7);
+  late String section = widget.initialSection;
+  String month = DateTime.now().toIso8601String().substring(0, 7);
   bool busy = false, stale = false, archivedGoals = false;
   String guideFlow = 'category';
   String? guidedDebt;
@@ -281,7 +283,7 @@ class _PlanningState extends State<FinancePlanningPage> {
       );
   Map<String, String> get categories => {
     '': context.tr('fpAllCategories'),
-    for (final c in p['categories']) c['name'] as String: c['name'] as String,
+    ...FinancePlanning.categoryLabels(current.data),
   };
   Map<String, String> get accounts => {
     for (final a in AccountLedger.accounts(current.data))
@@ -296,23 +298,12 @@ class _PlanningState extends State<FinancePlanningPage> {
     });
     if (parent == null || !mounted) return;
     final original = current;
-    if (existing != null) {
-      await save(
-        FinancePlanning.change(original.data, (p) {
-          for (final row in p['categories']) {
-            if (row['name'] == existing['name']) row['parent'] = parent;
-          }
-        }),
-        original,
-      );
-      return;
-    }
     if (guide.active) guide.event('opened');
     await editFields(
       context,
       context.tr('fpCategory'),
       {'name': context.tr('title')},
-      initial: {'name': existing?['name'] ?? ''},
+      initial: {'name': existing?['label'] ?? existing?['name'] ?? ''},
       requiredFields: {'name'},
       fieldKeys: {'name': anchors['name']!},
       saveKey: anchors['save'],
@@ -324,19 +315,72 @@ class _PlanningState extends State<FinancePlanningPage> {
         await save(
           FinancePlanning.change(original.data, (p) {
             final rows = p['categories'] as List;
-            if (existing != null) {
-              // Renaming a category would change historical meaning. Reparent the existing name.
-              if (name != existing['name']) {
-                throw const FormatException('category_rename');
-              }
-              rows.removeWhere((c) => c['name'] == name);
+            if (rows.any(
+              (row) =>
+                  row['name'] != existing?['name'] &&
+                  (row['label'] ?? row['name']).toString().toLowerCase() ==
+                      name.toLowerCase(),
+            )) {
+              throw const FormatException('category_duplicate');
             }
-            rows.add({'name': name, 'parent': parent});
+            if (existing == null) {
+              if (rows.any((row) => row['name'] == name)) {
+                throw const FormatException('category_duplicate');
+              }
+              rows.add({'name': name, 'parent': parent});
+            } else {
+              final row = rows.firstWhere(
+                (row) => row['name'] == existing['name'],
+              ) as Map;
+              row['label'] = name;
+              row['parent'] = parent;
+            }
           }),
           original,
         );
         guide.event('saved');
       },
+    );
+  }
+
+  Future<void> removeCategory(Map row) async {
+    if (!await permitted() || !mounted) return;
+    final original = current;
+    final key = row['name'];
+    final referenced =
+        (original.data['entries'] as List).any(
+          (entry) =>
+              entry['category'] == key ||
+              (entry['versions'] as List? ?? []).any(
+                (v) => v['before'] is Map && v['before']['category'] == key,
+              ),
+        ) ||
+        [
+          'budgets',
+          'recurring',
+        ].any((table) => (p[table] as List).any((r) => r['category'] == key)) ||
+        (p['categories'] as List).any((r) => r['parent'] == key);
+    final archived = row['archived'] == true;
+    if (!archived &&
+        !await consent(
+          context,
+          context.tr(
+            referenced ? 'fxArchiveCategoryInfo' : 'fxDeleteCategoryInfo',
+          ),
+        )) {
+      return;
+    }
+    if (!mounted) return;
+    await save(
+      FinancePlanning.change(original.data, (plan) {
+        final rows = plan['categories'] as List;
+        if (!referenced && !archived) {
+          rows.removeWhere((r) => r['name'] == key);
+        } else {
+          rows.firstWhere((r) => r['name'] == key)['archived'] = !archived;
+        }
+      }),
+      original,
     );
   }
 
@@ -820,21 +864,37 @@ class _PlanningState extends State<FinancePlanningPage> {
                     () => run(() => category()),
                   ),
                 ),
-                Text(c.tr('fpCategoryNamesFixed')),
                 for (final row in data['categories'])
                   ListTile(
-                    title: Text(row['name']),
+                    title: Text(row['label'] ?? row['name']),
                     subtitle: Text(
-                      (row['parent'] as String).isEmpty
+                      row['archived'] == true
+                          ? c.tr('archive')
+                          : (row['parent'] as String).isEmpty
                           ? c.tr('fpNoParent')
-                          : row['parent'],
+                          : categories[row['parent']] ?? row['parent'],
                     ),
-                    trailing: IconButton(
-                      tooltip: c.tr('fpParent'),
-                      icon: const Icon(Icons.account_tree_outlined),
-                      onPressed: busy
-                          ? null
-                          : () => run(() => category(existing: row)),
+                    onTap: busy
+                        ? null
+                        : () => run(() => category(existing: row)),
+                    trailing: PopupMenuButton<String>(
+                      enabled: !busy,
+                      onSelected: (action) => run(
+                        () => action == 'edit'
+                            ? category(existing: row)
+                            : removeCategory(row),
+                      ),
+                      itemBuilder: (c) => [
+                        PopupMenuItem(value: 'edit', child: Text(c.tr('edit'))),
+                        PopupMenuItem(
+                          value: 'remove',
+                          child: Text(
+                            c.tr(
+                              row['archived'] == true ? 'restore' : 'delete',
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
               ],

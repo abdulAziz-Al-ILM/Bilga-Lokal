@@ -1,3 +1,5 @@
+import '../../reminders/module_reminder_changes.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -252,6 +254,7 @@ class ReadingStore {
         'updated_at': stamp,
       });
     });
+    ModuleReminderChanges.committed();
   }
 
   Future<List<Map<String, Object?>>> activity({String? book}) async =>
