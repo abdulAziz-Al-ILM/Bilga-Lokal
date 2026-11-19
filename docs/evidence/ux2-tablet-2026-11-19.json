@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-19",
+  "suite_source": "ef901db419bcfbfccf750a73fc28429e1658f0ac",
+  "owner_runtime_correction": "3b0ddf066252e29d3959c8f3debee954d25d15ae",
+  "device": "Tab16NEU0045423",
+  "package": "com.ilmmizan.bilga.review",
+  "consolidated_tablet": {
+    "result": "PASS",
+    "cases": 17,
+    "including_suite_hooks": 19,
+    "seconds": 505,
+    "target": "integration_test/ux_review_test.dart",
+    "apk_sha256": "2a89fedbd5d7b2845f16e585a929a2c9a0ed9e7433a17a7011fc2a8f648366e3",
+    "log_sha256": "29f2ba0a58b4dd568f4c9df259f0c21c6e48fcbbdd8dbee947ed1600c3470eff",
+    "encrypted_scoped_fixtures": true,
+    "restart_count": 0
+  },
+  "native": {
+    "result": "PASS",
+    "notes_widget_cases": 13,
+    "task_cases": 46,
+    "companion_sha256": "c2c734df8d751e345414ee46d524556a6fa9873d6cf26f1748451044c9b9ca9f",
+    "capture_performed": false,
+    "recognizer_service_available": true
+  },
+  "speech_synthesis": {
+    "engine": "com.google.android.tts",
+    "en-US": "synthesis-complete",
+    "ru-RU": "synthesis-complete",
+    "uz-UZ": "no-installed-voice",
+    "data": "synthetic test phrases",
+    "acoustic_measurement": false,
+    "fresh_owner_microphone_confirmation": false
+  },
+  "CI_followup_host": {
+    "result": "PASS",
+    "cases": 18,
+    "seconds": 84,
+    "log_sha256": "40857369879dcbf3f2b9ca4d72f827ff4838805d99891716741d92f04280bb1b"
+  },
+  "previous_CI": {
+    "run": 44461920806,
+    "passed": 343,
+    "failed": 5,
+    "result": "FAIL",
+    "correction": "Compact Home rendering plus four fixture/readiness fixes"
+  },
+  "full_CI": {
+    "result": "SUCCESS",
+    "run": 44463568745,
+    "job": 135355865396,
+    "source": "3b0ddf066252e29d3959c8f3debee954d25d15ae",
+    "flutter_tests": 348,
+    "backend_tests": 17,
+    "manifest_tests": 12,
+    "android_debug": "PASS",
+    "android_debug_sha256": "77d83b24d84981abe30e9ae8bb1b42d3e0f8d8427437b98d30515b105c00b373",
+    "analyzer": "clean",
+    "languages": 43,
+    "catalog_keys": 1118
+  },
+  "final_affected_home_test": {
+    "result": "PASS",
+    "source": "14a5cc32ff94c8e455932ad7c8b81850938a994a"
+  }
+}
