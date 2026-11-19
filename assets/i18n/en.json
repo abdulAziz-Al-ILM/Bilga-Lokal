@@ -1023,6 +1023,7 @@
   "voiceConversationSpeaking": "Reading the answer…",
   "voiceSpeak": "Tap to speak",
   "voiceStop": "Finish speaking",
+  "voiceMicPreparing": "Getting the microphone ready…",
   "voiceListening": "Listening now. Cancel or leave this screen to stop.",
   "voiceProcessing": "Recognizing your words…",
   "voicePreview": "Recognized command — edit before continuing",

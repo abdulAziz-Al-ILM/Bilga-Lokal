@@ -205,7 +205,7 @@ void registerVoiceUiCases({
   }
 
   testWidgets(
-    'Conversation waits for playback, then accepts another question and stops on silence',
+    'Conversation recovers from a missed follow-up and ends when the listening window expires',
     (t) async {
       final playback = Completer<void>();
       final spoken = <String>[];
@@ -222,7 +222,12 @@ void registerVoiceUiCases({
         r.$4.owned.clear();
         r.$4.initialized = true;
         expect(r.$4.coreAllowed, isFalse);
+        await key(t, 'voice-device-only');
         await key(t, 'voice-conversation');
+        await tap(
+          t,
+          find.widgetWithText(FilledButton, Strings.get('en', 'continue')),
+        );
         expect(r.$5.followUps, [false]);
         r.$5.pending!.complete('Bugun nima qilishim kerak?');
         await settleIo(t);
@@ -234,14 +239,36 @@ void registerVoiceUiCases({
         playback.complete();
         await settleIo(t);
         expect(r.$5.followUps, [false, true]);
+        expect(
+          find.text(Strings.get('en', 'voiceMicPreparing')),
+          findsOneWidget,
+        );
+        expect(find.text(Strings.get('en', 'voiceListening')), findsNothing);
+        r.$5.pending!.completeError(PlatformException(code: 'no_match'));
+        await settleIo(t);
+        expect(r.$5.followUps, [false, true, true]);
+        expect(r.$5.calls.last, 'listen:uz-UZ:false');
+        expect(find.text(Strings.get('en', 'voiceNoSpeech')), findsNothing);
+        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .handlePlatformMessage(
+              'bilga/speech',
+              const StandardMethodCodec().encodeMethodCall(
+                const MethodCall('status', 'ready'),
+              ),
+              (_) {},
+            );
+        await settleIo(t);
+        expect(find.text(Strings.get('en', 'voiceListening')), findsOneWidget);
         r.$5.pending!.complete('Bu hafta qancha sarfladim?');
         await settleIo(t);
         expect(spoken, hasLength(2));
-        expect(r.$5.followUps, [false, true, true]);
+        expect(r.$5.followUps, [false, true, true, true]);
         expect(find.text(Strings.get('en', 'vaNoVoice')), findsOneWidget);
-        r.$5.pending!.completeError(PlatformException(code: 'no_speech'));
+        await t.pump(const Duration(seconds: 15));
+        expect(r.$5.calls.last, 'cancel');
+        r.$5.pending!.completeError(PlatformException(code: 'cancelled'));
         await settleIo(t);
-        expect(r.$5.followUps, [false, true, true]);
+        expect(r.$5.followUps, [false, true, true, true]);
         expect(
           find.text(Strings.get('en', 'voiceConversationStart')),
           findsOneWidget,

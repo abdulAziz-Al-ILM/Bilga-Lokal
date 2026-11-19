@@ -152,6 +152,46 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     await capture(++generation);
   }
 
+  Future<String?> listenForFollowUp(int attempt) async {
+    const maxAttempts = 4;
+    var expired = false;
+    final deadline = Timer(const Duration(seconds: 15), () {
+      expired = true;
+      if (mounted && attempt == generation) unawaited(speech.cancel());
+    });
+    try {
+      for (var retry = 0; retry < maxAttempts; retry++) {
+        // Give the recognizer and speaker time to release the previous turn.
+        await Future<void>.delayed(Duration(milliseconds: 700 + retry * 300));
+        if (!screenReady || attempt != generation) return null;
+        if (expired) break;
+        try {
+          final result = await speech.listen(
+            language: language,
+            onDevice: deviceOnly,
+            followUp: true,
+          );
+          if (expired) break;
+          if (result != null && result.trim().isNotEmpty) return result;
+        } on PlatformException catch (e) {
+          if (expired) break;
+          if (!const {'no_match', 'no_speech', 'busy'}.contains(e.code) ||
+              retry == maxAttempts - 1) {
+            rethrow;
+          }
+        }
+        if (!screenReady || attempt != generation) return null;
+        setState(() {
+          partial = '';
+          status = '';
+        });
+      }
+      throw PlatformException(code: 'timeout');
+    } finally {
+      deadline.cancel();
+    }
+  }
+
   Future<String?> capture(int attempt, {bool followUp = false}) async {
     setState(() {
       listening = true;
@@ -161,11 +201,9 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
       command = null;
     });
     try {
-      final result = await speech.listen(
-        language: language,
-        onDevice: deviceOnly,
-        followUp: followUp,
-      );
+      final result = followUp
+          ? await listenForFollowUp(attempt)
+          : await speech.listen(language: language, onDevice: deviceOnly);
       if (!mounted || attempt != generation) return null;
       if (result != null && result.trim().isNotEmpty) {
         setState(() => text.text = result);
@@ -385,9 +423,11 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             Semantics(
               liveRegion: true,
               child: Text(
-                c.tr(
-                  status == 'processing' ? 'voiceProcessing' : 'voiceListening',
-                ),
+                c.tr(switch (status) {
+                  'processing' => 'voiceProcessing',
+                  'ready' || 'listening' => 'voiceListening',
+                  _ => 'voiceMicPreparing',
+                }),
               ),
             ),
           if (speaking)
