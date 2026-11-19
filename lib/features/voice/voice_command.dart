@@ -51,23 +51,44 @@ class VoiceCommand {
     value = value
         .replaceFirst(
           RegExp(
-            r'^(?:iltimos[, ]+|please[, ]+|пожалуйста[, ]+|bilga[, ]+|menga\s+)',
+            r'^(?:(?:iltimos|please|пожалуйста|bilga)[, ]+|menga\s+)+',
             caseSensitive: false,
           ),
           '',
         )
         .trim();
-    final lower = value.toLowerCase().replaceFirst(RegExp(r'[?.!]+$'), '');
+    final lower = value.toLowerCase().replaceFirst(RegExp(r'\s*[?.!]+$'), '');
     const questions = <VoiceAction, List<String>>{
       VoiceAction.today: [
-        "bugun nima qilishim kerak",
-        "bugun nima qilay",
+        'bugun nima qilishim kerak',
+        'bugun nima qilish kerak',
+        'bugun nima qilay',
+        'bugun nima qilamiz',
+        'bugun nima qilaman',
+        'bugun nimalar qilaman',
+        'bugun nimalar qilishim kerak',
+        'bugun qanday vazifalarim bor',
+        'bugun nima ishlarim bor',
+        'bugungi rejam nima',
+        'bugungi rejamni ayt',
+        'bugungi rejani aytib ber',
+        "bugungi rejamni ko'rsat",
+        "bugungi rejani ko'rsat",
+        "bugungi vazifalarimni ko'rsat",
         'what should i do today',
+        "what's on my schedule today",
+        'show my plan for today',
         'что мне делать сегодня',
+        'какие у меня дела сегодня',
+        'покажи план на сегодня',
       ],
       VoiceAction.pendingHabits: [
-        "bugun qaysi odatlar bajarilmagan",
-        "bugun qaysi odatlarimni bajarmadim",
+        'bugun qaysi odatlar bajarilmagan',
+        'bugun qaysi odatlarimni bajarmadim',
+        'bugun qaysi odatlar qoldi',
+        'bugun qaysi odatlarim qoldi',
+        "qolgan odatlarimni ko'rsat",
+        "bugun bajarilmagan odatlarimni ko'rsat",
         'which habits have i not completed today',
         'which habits are left today',
         'какие привычки я не выполнил сегодня',
@@ -75,12 +96,16 @@ class VoiceCommand {
       VoiceAction.lastFriday: [
         "o'tgan juma kuni nima yozdim",
         "o'tgan juma nima yozdim",
+        "o'tgan juma kungi yozuvlarimni ko'rsat",
         'what did i write last friday',
         'что я написал в прошлую пятницу',
       ],
       VoiceAction.weeklySpending: [
         'bu hafta qancha sarfladim',
         'shu hafta qancha sarfladim',
+        'bu hafta qancha pul sarfladim',
+        'bu haftalik xarajatlarim qancha',
+        "bu haftadagi xarajatlarimni ko'rsat",
         'how much did i spend this week',
         'сколько я потратил на этой неделе',
       ],

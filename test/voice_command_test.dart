@@ -4,6 +4,45 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'Common questions and spoken requests match the same read-only intent',
+    () {
+      for (final phrase in [
+        'Bugun nima qilishim kerak?',
+        'Bugun nima qilish kerak?',
+        'Bugun nima qilaman?',
+        'Bilga, iltimos, bugun nima qilaman ?',
+        'Bugungi rejani ko‘rsat!',
+        'Menga bugungi rejamni ayt',
+        'Какие у меня дела сегодня?',
+        'Show my plan for today.',
+      ]) {
+        expect(
+          VoiceCommand.parse(phrase).action,
+          VoiceAction.today,
+          reason: phrase,
+        );
+      }
+      expect(
+        VoiceCommand.parse('Bugun qaysi odatlarim qoldi?').action,
+        VoiceAction.pendingHabits,
+      );
+      expect(
+        VoiceCommand.parse('Bu haftalik xarajatlarim qancha?').action,
+        VoiceAction.weeklySpending,
+      );
+      expect(
+        VoiceCommand.parse('O’tgan juma kungi yozuvlarimni ko‘rsat').action,
+        VoiceAction.lastFriday,
+      );
+      expect(VoiceCommand.parse('bugun ...').action, VoiceAction.unknown);
+      expect(
+        VoiceCommand.parse('Bugungi rejamni ayt deb vazifa yarat').action,
+        VoiceAction.task,
+      );
+    },
+  );
+
+  test(
     'Uzbek commands cover all six modules and preserve their actual content',
     () {
       final examples = {

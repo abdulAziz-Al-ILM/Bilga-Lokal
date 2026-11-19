@@ -30,6 +30,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   String? outputError;
   bool deviceOnly = true, listening = false, acting = false;
   bool conversation = false, speaking = false, authorizing = false;
+  bool conversationPaused = false;
   int generation = 0;
   bool get canListen =>
       !acting &&
@@ -44,7 +45,11 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         ModalRoute.isCurrentOf(context) != false;
   }
 
-  bool get controlsBusy => listening || acting || conversation || authorizing;
+  bool get controlsBusy =>
+      listening ||
+      acting ||
+      authorizing ||
+      (conversation && !conversationPaused);
   @override
   void initState() {
     super.initState();
@@ -117,6 +122,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     if (mounted) {
       setState(() {
         conversation = false;
+        conversationPaused = false;
         speaking = false;
         listening = false;
         partial = '';
@@ -153,18 +159,18 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   }
 
   Future<String?> listenForFollowUp(int attempt) async {
-    const maxAttempts = 4;
     var expired = false;
     final deadline = Timer(const Duration(seconds: 15), () {
       expired = true;
       if (mounted && attempt == generation) unawaited(speech.cancel());
     });
     try {
-      for (var retry = 0; retry < maxAttempts; retry++) {
+      for (var retry = 0; retry < 2; retry++) {
         // Give the recognizer and speaker time to release the previous turn.
         await Future<void>.delayed(Duration(milliseconds: 700 + retry * 300));
         if (!screenReady || attempt != generation) return null;
         if (expired) break;
+        final opening = Stopwatch()..start();
         try {
           final result = await speech.listen(
             language: language,
@@ -172,19 +178,20 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             followUp: true,
           );
           if (expired) break;
-          if (result != null && result.trim().isNotEmpty) return result;
+          return result;
         } on PlatformException catch (e) {
           if (expired) break;
-          if (!const {'no_match', 'no_speech', 'busy'}.contains(e.code) ||
-              retry == maxAttempts - 1) {
+          // Recover a failed startup once. A miss after readiness is the end
+          // of this listening turn, so background sounds cannot reopen it.
+          if (retry != 0 ||
+              opening.elapsed >= const Duration(seconds: 2) ||
+              status.isNotEmpty ||
+              partial.isNotEmpty ||
+              !const {'no_match', 'no_speech', 'busy'}.contains(e.code)) {
             rethrow;
           }
         }
         if (!screenReady || attempt != generation) return null;
-        setState(() {
-          partial = '';
-          status = '';
-        });
       }
       throw PlatformException(code: 'timeout');
     } finally {
@@ -209,17 +216,23 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         setState(() => text.text = result);
         return result;
       }
+      if (conversation) setState(() => conversationPaused = true);
     } on PlatformException catch (e) {
       if (mounted && attempt == generation && e.code != 'cancelled') {
-        setState(
-          () => error = switch (e.code) {
+        setState(() {
+          if (conversation &&
+              const {'no_match', 'no_speech', 'timeout'}.contains(e.code)) {
+            conversationPaused = true;
+            return;
+          }
+          error = switch (e.code) {
             'permission' => 'voicePermission',
             'language' => 'voiceLanguageUnavailable',
             'network' => 'voiceNetwork',
             'no_match' || 'no_speech' || 'timeout' => 'voiceNoSpeech',
             _ => 'voiceUnavailable',
-          },
-        );
+          };
+        });
       }
     } catch (_) {
       if (mounted && attempt == generation) {
@@ -244,13 +257,23 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
       return;
     }
     FocusManager.instance.primaryFocus?.unfocus();
-    final attempt = ++generation;
     setState(() {
       conversation = true;
       answer = null;
       outputError = null;
     });
-    var followUp = false;
+    await runConversation();
+  }
+
+  Future<void> resumeConversation() async {
+    if (!conversationPaused || !screenReady || controlsBusy) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => conversationPaused = false);
+    await runConversation(followUp: true);
+  }
+
+  Future<void> runConversation({bool followUp = false}) async {
+    final attempt = ++generation;
     try {
       while (screenReady && attempt == generation) {
         final result = await capture(attempt, followUp: followUp);
@@ -264,8 +287,11 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         if (!question.isConversationQuestion) {
           setState(() {
             command = question;
-            answer = null;
-            outputError = null;
+            conversationPaused = question.action == VoiceAction.unknown;
+            if (!conversationPaused) {
+              answer = null;
+              outputError = null;
+            }
           });
           break;
         }
@@ -300,7 +326,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     } finally {
       if (mounted && attempt == generation) {
         setState(() {
-          conversation = false;
+          conversation = conversationPaused;
           speaking = false;
         });
       }
@@ -310,6 +336,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   Future<void> execute() async {
     final value = command;
     if (value == null || value.action == VoiceAction.unknown || acting) return;
+    if (conversation) cancel();
     setState(() => acting = true);
     try {
       await actions.execute(context, value, language: language);
@@ -355,7 +382,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
               }.entries)
                 DropdownMenuItem(value: item.key, child: Text(item.value)),
             ],
-            onChanged: controlsBusy
+            onChanged: controlsBusy || conversation
                 ? null
                 : (v) => setState(() => language = v!),
           ),
@@ -365,7 +392,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
               title: Text(c.tr('voiceDeviceOnly')),
               subtitle: Text(c.tr('voiceDeviceLimit')),
               value: deviceOnly,
-              onChanged: controlsBusy
+              onChanged: controlsBusy || conversation
                   ? null
                   : (v) => setState(() => deviceOnly = v),
             ),
@@ -379,16 +406,24 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             spacing: 8,
             runSpacing: 8,
             children: [
-              FilledButton.icon(
-                key: const Key('voice-listen'),
-                onPressed: !canListen || conversation
-                    ? null
-                    : listening
-                    ? stop
-                    : listen,
-                icon: Icon(listening ? Icons.stop : Icons.mic_none),
-                label: Text(c.tr(listening ? 'voiceStop' : 'voiceSpeak')),
-              ),
+              if (!conversation)
+                FilledButton.icon(
+                  key: const Key('voice-listen'),
+                  onPressed: !canListen
+                      ? null
+                      : listening
+                      ? stop
+                      : listen,
+                  icon: Icon(listening ? Icons.stop : Icons.mic_none),
+                  label: Text(c.tr(listening ? 'voiceStop' : 'voiceSpeak')),
+                ),
+              if (conversationPaused)
+                FilledButton.icon(
+                  key: const Key('voice-resume-conversation'),
+                  onPressed: resumeConversation,
+                  icon: const Icon(Icons.mic_none),
+                  label: Text(c.tr('voiceConversationResume')),
+                ),
               FilledButton.tonalIcon(
                 key: const Key('voice-conversation'),
                 onPressed: conversation
@@ -419,6 +454,11 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 8),
           Text(c.tr('voiceConversationHint')),
+          if (conversationPaused)
+            Semantics(
+              liveRegion: true,
+              child: Text(c.tr('voiceConversationPaused')),
+            ),
           if (listening)
             Semantics(
               liveRegion: true,
