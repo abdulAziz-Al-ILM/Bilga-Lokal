@@ -1,4 +1,4 @@
-"""The owner authorized foreground push-to-talk on November 17, 2026."""
+"""Verify explicitly started speech interaction and exclude background capture."""
 ANDROID='{http://schemas.android.com/apk/res/android}'
 
 def verify_voice(root):
@@ -11,11 +11,13 @@ def verify_voice(root):
         return 'microphone absent (historical non-voice artifact)'
     app=root.find('application')
     mode=None if app is None else app.find(f"meta-data[@{ANDROID}name='bilga.voice.mode']")
-    if len(microphones)!=1 or microphones[0].tag!='uses-permission' or mode is None or mode.get(ANDROID+'value')!='push_to_talk':
-        raise ValueError('Microphone requires explicit push-to-talk scope metadata')
+    scope=None if mode is None else mode.get(ANDROID+'value')
+    if len(microphones)!=1 or microphones[0].tag!='uses-permission' or scope not in ['push_to_talk','foreground_session']:
+        raise ValueError('Microphone requires explicit foreground interaction metadata')
     if root.find(f"queries/intent/action[@{ANDROID}name='android.speech.RecognitionService']") is None:
         raise ValueError('Speech recognizer package query is missing')
     for service in app.findall('service'):
         if 'microphone' in service.get(ANDROID+'foregroundServiceType','').split('|'):
             raise ValueError('A microphone foreground service is not authorized')
-    return 'authorized foreground push-to-talk; no background microphone service'
+    label='push-to-talk' if scope=='push_to_talk' else 'voice session'
+    return f'authorized foreground {label}; no background microphone service'

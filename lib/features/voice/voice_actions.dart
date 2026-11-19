@@ -35,8 +35,10 @@ import '../books/reading/reading_store.dart';
 import '../books/reading/reading_hub.dart';
 import 'voice_command.dart';
 
-/// Uses existing validation, repositories and navigation. It never executes an
-/// unreviewed transcript, guesses a matching personal record, or invents money.
+typedef VoiceAnswer = ({String title, List<String> excerpts});
+
+/// Uses existing validation, repositories and navigation. Actions still use
+/// the review flow, while conversation can answer supported read-only questions.
 class VoiceActions {
   final Database? notesDb, tasksDb;
   final AgentAccess access;
@@ -127,12 +129,29 @@ class VoiceActions {
     VoiceCommand command,
     String language,
   ) async {
+    final result = await personalAnswer(c, command, language);
+    if (!c.mounted || result == null) return;
+    await page(
+      c,
+      VoiceAnswerPage(
+        title: result.title,
+        language: language,
+        excerpts: result.excerpts,
+      ),
+    );
+  }
+
+  Future<VoiceAnswer?> personalAnswer(
+    BuildContext c,
+    VoiceCommand command,
+    String language,
+  ) async {
     final repository = PersonalAnswers(notesDb, tasksDb);
     final now = DateTime.now();
     final code = language.split('-').first;
     await Strings.load(code: code);
     String label(String key) => Strings.get(code, key);
-    if (!c.mounted) return;
+    if (!c.mounted) return null;
     final result = command.action == VoiceAction.readFolder
         ? await readFolder(c, command.argument)
         : switch (command.action) {
@@ -152,14 +171,10 @@ class VoiceActions {
             ),
             _ => <String>[],
           };
-    if (!c.mounted || result.isEmpty) return;
-    await page(
-      c,
-      VoiceAnswerPage(
-        title: label('voiceAction${command.action.name}'),
-        language: language,
-        excerpts: result,
-      ),
+    if (!c.mounted || result.isEmpty) return null;
+    return (
+      title: label('voiceAction${command.action.name}'),
+      excerpts: result,
     );
   }
 

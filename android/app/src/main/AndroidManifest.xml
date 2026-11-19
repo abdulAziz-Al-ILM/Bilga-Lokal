@@ -16,7 +16,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <meta-data android:name="bilga.voice.mode" android:value="push_to_talk"/>
+        <meta-data android:name="bilga.voice.mode" android:value="foreground_session"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

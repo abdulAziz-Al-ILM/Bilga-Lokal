@@ -28,6 +28,14 @@ class VoiceCommand {
   final VoiceAction action;
   final String argument;
   const VoiceCommand(this.action, this.argument);
+
+  bool get isConversationQuestion => switch (action) {
+    VoiceAction.today ||
+    VoiceAction.pendingHabits ||
+    VoiceAction.lastFriday ||
+    VoiceAction.weeklySpending => true,
+    _ => false,
+  };
   static String normalize(String input) {
     var value = input.replaceAll(RegExp('[‘’ʻʼ`´]'), "'");
     for (final first in [0x660, 0x6f0, 0x966, 0x9e6]) {

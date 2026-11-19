@@ -58,8 +58,12 @@ class AuthorizedVoiceManifestChecks(unittest.TestCase):
         self.assertIn('push-to-talk',verify_manifest(self.voice(MANIFEST)))
         self.assertIn('push-to-talk',verify_review(self.voice(ReviewManifestChecks.manifest)))
 
+    def test_explicit_foreground_voice_session_is_authorized(self):
+        source=self.voice(ReviewManifestChecks.manifest).replace('push_to_talk','foreground_session')
+        self.assertIn('foreground voice session',verify_review(source))
+
     def test_background_microphone_remains_forbidden(self):
-        source=self.voice(MANIFEST)
+        source=self.voice(MANIFEST).replace('push_to_talk','foreground_session')
         for bad in [source.replace('<uses-sdk ', '<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/><uses-sdk '),source.replace('</application>','<service android:name=".Capture" android:foregroundServiceType="microphone"/></application>')]:
             with self.assertRaises(ValueError):verify_manifest(bad)
 

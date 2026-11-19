@@ -18,6 +18,7 @@ import 'package:bilga/features/habits/habit_store.dart';
 import 'package:bilga/features/habits/habit_statistics_page.dart';
 import 'package:bilga/features/books/reading/reading_store.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -26,6 +27,7 @@ import 'settle_io.dart';
 
 class ControlledSpeech extends SpeechBridge {
   final calls = <String>[];
+  final followUps = <bool>[];
   Completer<String?>? pending;
   bool available = true;
   @override
@@ -35,8 +37,13 @@ class ControlledSpeech extends SpeechBridge {
   }
 
   @override
-  Future<String?> listen({required String language, required bool onDevice}) {
+  Future<String?> listen({
+    required String language,
+    required bool onDevice,
+    bool followUp = false,
+  }) {
     calls.add('listen:$language:$onDevice');
+    followUps.add(followUp);
     pending = Completer<String?>();
     return pending!.future;
   }
@@ -183,6 +190,134 @@ void registerVoiceUiCases({
         await key(t, 'voice-review');
         expect(find.byKey(const Key('voice-execute')), findsNothing);
         expect(t.takeException(), isNull);
+      } finally {
+        await cleanup(t, r);
+      }
+    },
+  );
+
+  const output = MethodChannel('bilga/speech_output');
+  void mockOutput(Future<Object?> Function(MethodCall) handler) {
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(output, handler);
+    addTearDown(() => messenger.setMockMethodCallHandler(output, null));
+  }
+
+  testWidgets(
+    'Conversation waits for playback, then accepts another question and stops on silence',
+    (t) async {
+      final playback = Completer<void>();
+      final spoken = <String>[];
+      mockOutput((call) async {
+        if (call.method != 'speak') return null;
+        spoken.add(call.arguments['text'] as String);
+        expect(call.arguments['language'], 'uz-UZ');
+        if (spoken.length == 1) await playback.future;
+        if (spoken.length == 2) throw PlatformException(code: 'language');
+        return null;
+      });
+      final r = await setup(t);
+      try {
+        await key(t, 'voice-conversation');
+        expect(r.$5.followUps, [false]);
+        r.$5.pending!.complete('Bugun nima qilishim kerak?');
+        await settleIo(t);
+        expect(
+          spoken.single,
+          contains('${Strings.get('uz', 'todayPlan')} · 0'),
+        );
+        expect(r.$5.followUps, [false]);
+        playback.complete();
+        await settleIo(t);
+        expect(r.$5.followUps, [false, true]);
+        r.$5.pending!.complete('Bu hafta qancha sarfladim?');
+        await settleIo(t);
+        expect(spoken, hasLength(2));
+        expect(r.$5.followUps, [false, true, true]);
+        expect(find.text(Strings.get('en', 'vaNoVoice')), findsOneWidget);
+        r.$5.pending!.completeError(PlatformException(code: 'no_speech'));
+        await settleIo(t);
+        expect(r.$5.followUps, [false, true, true]);
+        expect(
+          find.text(Strings.get('en', 'voiceConversationStart')),
+          findsOneWidget,
+        );
+        expect(find.text(Strings.get('en', 'voiceNoSpeech')), findsOneWidget);
+        expect(find.text(Strings.get('en', 'vaNoVoice')), findsOneWidget);
+      } finally {
+        await cleanup(t, r);
+      }
+    },
+  );
+
+  testWidgets(
+    'Conversation asks for system provider consent and stops at a financial draft',
+    (t) async {
+      final r = await setup(t);
+      try {
+        await key(t, 'voice-device-only');
+        await key(t, 'voice-conversation');
+        expect(r.$5.followUps, isEmpty);
+        await tap(
+          t,
+          find.widgetWithText(FilledButton, Strings.get('en', 'continue')),
+        );
+        expect(r.$5.followUps, [false]);
+        expect(r.$5.calls.last, 'listen:uz-UZ:false');
+        r.$5.pending!.complete('xarajat yoz 50000 UZS');
+        await settleIo(t);
+        expect(find.byKey(const Key('voice-execute')), findsOneWidget);
+        expect(
+          find.text(Strings.get('en', 'voiceConversationStart')),
+          findsOneWidget,
+        );
+        expect(r.$5.followUps, [false]);
+        expect(
+          (await t.runAsync(() => r.$2.query('private_records')))!,
+          isEmpty,
+        );
+      } finally {
+        await cleanup(t, r);
+      }
+    },
+  );
+
+  testWidgets(
+    'Leaving the foreground stops an active answer and never reopens the mic',
+    (t) async {
+      final playback = Completer<void>();
+      final outputCalls = <String>[];
+      mockOutput((call) async {
+        outputCalls.add(call.method);
+        if (call.method == 'speak') await playback.future;
+        return null;
+      });
+      final r = await setup(t);
+      try {
+        await key(t, 'voice-conversation');
+        r.$5.pending!.complete('Bugun nima qilishim kerak?');
+        await settleIo(t);
+        expect(outputCalls, ['speak']);
+        for (final state in [
+          AppLifecycleState.inactive,
+          AppLifecycleState.hidden,
+          AppLifecycleState.paused,
+          AppLifecycleState.hidden,
+          AppLifecycleState.inactive,
+          AppLifecycleState.resumed,
+        ]) {
+          t.binding.handleAppLifecycleStateChanged(state);
+        }
+        await settleIo(t);
+        expect(outputCalls, ['speak', 'stop']);
+        playback.complete();
+        await settleIo(t);
+        expect(r.$5.followUps, [false]);
+        expect(
+          find.text(Strings.get('en', 'voiceConversationStart')),
+          findsOneWidget,
+        );
       } finally {
         await cleanup(t, r);
       }

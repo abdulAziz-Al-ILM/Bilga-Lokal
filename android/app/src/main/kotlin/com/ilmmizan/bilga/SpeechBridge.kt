@@ -16,7 +16,7 @@ import android.speech.SpeechRecognizer
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
-/** Explicit foreground push-to-talk. No service, restart loop or audio storage. */
+/** Bounded foreground utterances after the user starts a command or conversation. */
 internal class SpeechBridge(private val activity:Activity,messenger:BinaryMessenger) {
     private val channel=MethodChannel(messenger,"bilga/speech")
     private val handler=Handler(Looper.getMainLooper())
@@ -24,6 +24,7 @@ internal class SpeechBridge(private val activity:Activity,messenger:BinaryMessen
     private var pending:MethodChannel.Result?=null
     private var language="uz-UZ"
     private var deviceOnly=true
+    private var followUp=false
     private var foreground=true
     private var awaitingPermission=false
     private var generation=0
@@ -37,11 +38,13 @@ internal class SpeechBridge(private val activity:Activity,messenger:BinaryMessen
                     val requested=call.argument<String>("language")?:"uz-UZ"
                     if(!requested.matches(Regex("[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*"))) {result.error("language",null,null);return@setMethodCallHandler}
                     language=requested;deviceOnly=call.argument<Boolean>("onDevice")==true
+                    followUp=call.argument<Boolean>("followUp")==true
                     if(!foreground){result.error("background",null,null);return@setMethodCallHandler}
                     if(deviceOnly&&!onDevice() || !deviceOnly&&!SpeechRecognizer.isRecognitionAvailable(activity)){result.error("unavailable",null,null);return@setMethodCallHandler}
+                    val permitted=activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO)==PackageManager.PERMISSION_GRANTED
+                    if(followUp&&!permitted){result.error("permission",null,null);return@setMethodCallHandler}
                     generation++;pending=result
-                    // Permission is requested ONLY in this explicit button-initiated method.
-                    if(activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
+                    if(!permitted){
                         awaitingPermission=true;activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO),REQUEST)
                     }else start()
                 }
@@ -82,7 +85,7 @@ internal class SpeechBridge(private val activity:Activity,messenger:BinaryMessen
                 override fun onPartialResults(value:Bundle?){if(attempt==generation&&pending!=null)channel.invokeMethod("partial",value?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.take(4000)?:"")}
                 override fun onEvent(type:Int,value:Bundle?){}
             })
-            handler.postDelayed(deadline,45000)
+            handler.postDelayed(deadline,if(followUp) 15000L else 45000L)
             recognizer!!.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE,language)

@@ -1,4 +1,4 @@
-"""Legacy CI entrypoint: enforce the newly authorized Nov17 voice boundaries."""
+"""Check the native boundaries for explicitly started voice interaction."""
 import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -19,6 +19,7 @@ source=(root/'android/app/src/main/kotlin/com/ilmmizan/bilga/SpeechBridge.kt').r
 assert source.count('startListening(')==1
 assert source.count('requestPermissions(')==1
 assert source.index('"listen" ->')<source.index('requestPermissions(')<source.index('private fun onDevice')
+assert source.index('if(followUp&&!permitted)')<source.index('requestPermissions(')
 assert 'startForegroundService' not in source and 'startService(' not in source
 assert 'if(!value)cancel()' in source and 'old?.destroy()' in source
-print('PASS button-gated runtime permission, one recognition start, foreground cancellation and recognizer destruction')
+print('PASS button-gated permission, bounded utterances, foreground cancellation and recognizer destruction')

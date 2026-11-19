@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/app_lock.dart';
 import '../../core/strings.dart';
+import 'speech_bridge.dart';
 
 class VoiceAnswerPage extends StatefulWidget {
   final String title, language;
@@ -19,7 +20,6 @@ class VoiceAnswerPage extends StatefulWidget {
 }
 
 class _AnswerState extends State<VoiceAnswerPage> with WidgetsBindingObserver {
-  static const channel = MethodChannel('bilga/speech_output');
   int current = 0, generation = 0;
   bool speaking = false;
   double rate = 1;
@@ -57,11 +57,7 @@ class _AnswerState extends State<VoiceAnswerPage> with WidgetsBindingObserver {
       error = null;
     });
     try {
-      await channel.invokeMethod<void>('speak', {
-        'language': widget.language,
-        'text': String.fromCharCodes(text.runes.take(1100)),
-        'rate': rate,
-      });
+      await SpeechOutput.speak(text, widget.language, rate: rate);
     } on PlatformException catch (e) {
       if (mounted && attempt == generation && e.code != 'cancelled') {
         setState(
@@ -77,25 +73,17 @@ class _AnswerState extends State<VoiceAnswerPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> stopNative() async {
-    try {
-      await channel.invokeMethod<void>('stop');
-    } catch (_) {
-      // Text remains usable if the host has no speech engine.
-    }
-  }
-
   Future<void> stop() async {
     generation++;
     if (mounted) setState(() => speaking = false);
-    await stopNative();
+    await SpeechOutput.stop();
   }
 
   @override
   void dispose() {
     generation++;
     WidgetsBinding.instance.removeObserver(this);
-    stopNative();
+    SpeechOutput.stop();
     super.dispose();
   }
 

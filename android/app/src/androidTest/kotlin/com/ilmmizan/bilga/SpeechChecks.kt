@@ -12,7 +12,7 @@ internal object SpeechChecks {
         require(c.packageName=="com.ilmmizan.bilga.review" && c.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE!=0)
         return try {
             val app=c.packageManager.getApplicationInfo(c.packageName,PackageManager.GET_META_DATA)
-            check(app.metaData.getString("bilga.voice.mode")=="push_to_talk")
+            check(app.metaData.getString("bilga.voice.mode")=="foreground_session")
             val packageInfo=c.packageManager.getPackageInfo(c.packageName,PackageManager.GET_PERMISSIONS)
             val permissions=packageInfo.requestedPermissions.orEmpty()
             check(permissions.contains("android.permission.RECORD_AUDIO"))

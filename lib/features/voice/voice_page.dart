@@ -25,13 +25,27 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   final text = TextEditingController();
   Map<String, dynamic>? state;
   VoiceCommand? command;
+  VoiceAnswer? answer;
   String language = 'uz-UZ', partial = '', status = '', error = '';
+  String? outputError;
   bool deviceOnly = true, listening = false, acting = false;
+  bool conversation = false, speaking = false, authorizing = false;
   int generation = 0;
   bool get canListen =>
       !acting &&
+      !authorizing &&
       state != null &&
       (deviceOnly ? state!['onDevice'] == true : state!['available'] == true);
+  bool get screenReady {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    return mounted &&
+        (lifecycle == null || lifecycle == AppLifecycleState.resumed) &&
+        !AppLockScope.isLocked(context) &&
+        ModalRoute.isCurrentOf(context) != false &&
+        (!actions.access.initialized || actions.access.coreAllowed);
+  }
+
+  bool get controlsBusy => listening || acting || conversation || authorizing;
   @override
   void initState() {
     super.initState();
@@ -56,9 +70,9 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (listening &&
-        (AppLockScope.isLocked(context) ||
-            ModalRoute.isCurrentOf(context) == false)) {
+    final locked = AppLockScope.isLocked(context);
+    final visible = ModalRoute.isCurrentOf(context) != false;
+    if ((listening || conversation) && (locked || !visible)) {
       cancel();
     }
   }
@@ -91,6 +105,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState value) {
     if (value == AppLifecycleState.paused ||
+        value == AppLifecycleState.hidden ||
         value == AppLifecycleState.detached) {
       cancel();
     }
@@ -99,8 +114,11 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   void cancel() {
     generation++;
     unawaited(speech.cancel());
+    if (speaking) unawaited(SpeechOutput.stop());
     if (mounted) {
       setState(() {
+        conversation = false;
+        speaking = false;
         listening = false;
         partial = '';
         status = '';
@@ -108,14 +126,34 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     }
   }
 
+  Future<bool> confirmCapture({required bool handsFree}) async {
+    if (!canListen || controlsBusy || !screenReady) return false;
+    if (deviceOnly) return true;
+    final attempt = generation;
+    setState(() => authorizing = true);
+    try {
+      final privacy = context.tr('voiceSystemPrivacy');
+      final prompt = handsFree
+          ? '${context.tr('voiceConversationHint')}\n\n$privacy'
+          : privacy;
+      return await consent(context, prompt) &&
+          screenReady &&
+          attempt == generation;
+    } finally {
+      if (mounted) setState(() => authorizing = false);
+    }
+  }
+
   Future<void> listen() async {
-    if (listening || acting) return;
-    if (!deviceOnly &&
-        !await consent(context, context.tr('voiceSystemPrivacy'))) {
+    if (!await confirmCapture(handsFree: false) ||
+        !screenReady ||
+        controlsBusy) {
       return;
     }
-    if (!mounted) return;
-    final attempt = ++generation;
+    await capture(++generation);
+  }
+
+  Future<String?> capture(int attempt, {bool followUp = false}) async {
     setState(() {
       listening = true;
       partial = '';
@@ -127,10 +165,12 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
       final result = await speech.listen(
         language: language,
         onDevice: deviceOnly,
+        followUp: followUp,
       );
-      if (!mounted || attempt != generation) return;
+      if (!mounted || attempt != generation) return null;
       if (result != null && result.trim().isNotEmpty) {
         setState(() => text.text = result);
+        return result;
       }
     } on PlatformException catch (e) {
       if (mounted && attempt == generation && e.code != 'cancelled') {
@@ -139,7 +179,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             'permission' => 'voicePermission',
             'language' => 'voiceLanguageUnavailable',
             'network' => 'voiceNetwork',
-            'no_match' || 'no_speech' => 'voiceNoSpeech',
+            'no_match' || 'no_speech' || 'timeout' => 'voiceNoSpeech',
             _ => 'voiceUnavailable',
           },
         );
@@ -154,6 +194,77 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           listening = false;
           partial = '';
           status = '';
+        });
+      }
+    }
+    return null;
+  }
+
+  Future<void> startConversation() async {
+    if (!await confirmCapture(handsFree: true) ||
+        !screenReady ||
+        controlsBusy) {
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    final attempt = ++generation;
+    setState(() {
+      conversation = true;
+      answer = null;
+      outputError = null;
+    });
+    var followUp = false;
+    try {
+      while (screenReady && attempt == generation) {
+        final result = await capture(attempt, followUp: followUp);
+        if (!mounted ||
+            result == null ||
+            !screenReady ||
+            attempt != generation) {
+          break;
+        }
+        final question = VoiceCommand.parse(result);
+        if (!question.isConversationQuestion) {
+          setState(() {
+            command = question;
+            answer = null;
+            outputError = null;
+          });
+          break;
+        }
+        final reply = await actions.personalAnswer(context, question, language);
+        if (reply == null || !screenReady || attempt != generation) break;
+        setState(() {
+          answer = reply;
+          outputError = null;
+          speaking = true;
+        });
+        try {
+          await SpeechOutput.speak(reply.excerpts.join('\n\n'), language);
+        } on PlatformException catch (e) {
+          if (!mounted || attempt != generation || e.code == 'cancelled') break;
+          setState(
+            () => outputError = e.code == 'language'
+                ? 'vaNoVoice'
+                : 'vaUnavailable',
+          );
+        } catch (_) {
+          if (!mounted || attempt != generation) break;
+          setState(() => outputError = 'vaUnavailable');
+        }
+        if (!screenReady || attempt != generation) break;
+        setState(() => speaking = false);
+        followUp = true;
+      }
+    } catch (_) {
+      if (mounted && attempt == generation && screenReady) {
+        setState(() => error = 'voiceUnavailable');
+      }
+    } finally {
+      if (mounted && attempt == generation) {
+        setState(() {
+          conversation = false;
+          speaking = false;
         });
       }
     }
@@ -178,6 +289,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     SpeechBridge.channel.setMethodCallHandler(null);
     unawaited(speech.cancel());
+    if (speaking) unawaited(SpeechOutput.stop());
     actions.access.removeListener(accessChanged);
     text.dispose();
     super.dispose();
@@ -206,7 +318,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
               }.entries)
                 DropdownMenuItem(value: item.key, child: Text(item.value)),
             ],
-            onChanged: listening || acting
+            onChanged: controlsBusy
                 ? null
                 : (v) => setState(() => language = v!),
           ),
@@ -216,7 +328,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
               title: Text(c.tr('voiceDeviceOnly')),
               subtitle: Text(c.tr('voiceDeviceLimit')),
               value: deviceOnly,
-              onChanged: listening || acting
+              onChanged: controlsBusy
                   ? null
                   : (v) => setState(() => deviceOnly = v),
             ),
@@ -232,7 +344,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             children: [
               FilledButton.icon(
                 key: const Key('voice-listen'),
-                onPressed: !canListen
+                onPressed: !canListen || conversation
                     ? null
                     : listening
                     ? stop
@@ -240,7 +352,27 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                 icon: Icon(listening ? Icons.stop : Icons.mic_none),
                 label: Text(c.tr(listening ? 'voiceStop' : 'voiceSpeak')),
               ),
-              if (listening)
+              FilledButton.tonalIcon(
+                key: const Key('voice-conversation'),
+                onPressed: conversation
+                    ? cancel
+                    : canListen && !controlsBusy
+                    ? startConversation
+                    : null,
+                icon: Icon(
+                  conversation
+                      ? Icons.stop_circle_outlined
+                      : Icons.record_voice_over_outlined,
+                ),
+                label: Text(
+                  c.tr(
+                    conversation
+                        ? 'voiceConversationStop'
+                        : 'voiceConversationStart',
+                  ),
+                ),
+              ),
+              if (listening && !conversation)
                 OutlinedButton(
                   key: const Key('voice-cancel-listen'),
                   onPressed: cancel,
@@ -248,6 +380,8 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                 ),
             ],
           ),
+          const SizedBox(height: 8),
+          Text(c.tr('voiceConversationHint')),
           if (listening)
             Semantics(
               liveRegion: true,
@@ -256,6 +390,11 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                   status == 'processing' ? 'voiceProcessing' : 'voiceListening',
                 ),
               ),
+            ),
+          if (speaking)
+            Semantics(
+              liveRegion: true,
+              child: Text(c.tr('voiceConversationSpeaking')),
             ),
           if (partial.isNotEmpty) Text(partial),
           if (error == 'voicePermission')
@@ -273,11 +412,29 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                 style: TextStyle(color: Theme.of(c).colorScheme.error),
               ),
             ),
+          if (answer case final reply?)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(reply.title, style: Theme.of(c).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    SelectableText(reply.excerpts.join('\n\n')),
+                    if (outputError case final message?) ...[
+                      const SizedBox(height: 8),
+                      Text(c.tr(message)),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           const SizedBox(height: 16),
           TextField(
             key: const Key('voice-transcript'),
             controller: text,
-            readOnly: listening || acting,
+            readOnly: controlsBusy,
             minLines: 2,
             maxLines: 6,
             maxLength: 4000,
@@ -289,7 +446,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           ),
           FilledButton(
             key: const Key('voice-review'),
-            onPressed: listening || acting
+            onPressed: controlsBusy
                 ? null
                 : () {
                     setState(() => command = VoiceCommand.parse(text.text));
