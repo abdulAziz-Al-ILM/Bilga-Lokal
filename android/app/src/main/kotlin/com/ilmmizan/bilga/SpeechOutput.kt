@@ -6,11 +6,12 @@ import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.util.Locale
 
-/** Reads a bounded excerpt using an installed voice in the requested language. */
+/** Prefers an installed offline voice and falls back to the bundled synthesizer. */
 internal class SpeechOutput(private val activity: Activity, messenger: BinaryMessenger) {
     private val channel = MethodChannel(messenger, "bilga/speech_output")
     private val handler = Handler(Looper.getMainLooper())
@@ -22,6 +23,11 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
     private var engine: TextToSpeech? = null
     private var initialize: (() -> Unit)? = null
     private val expiry = Runnable { stop("unavailable") }
+    private val initializationExpiry = Runnable {
+        val action = initialize
+        initialize = null
+        action?.invoke()
+    }
 
     init {
         channel.setMethodCallHandler { call, result ->
@@ -39,14 +45,10 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
                     stop("cancelled")
                     pending = result
                     val attempt = generation
-                    if (embedded.available) {
-                        speakEmbedded(text, locale, rate, attempt)
-                        return@setMethodCallHandler
-                    }
                     val begin = { speak(text, locale, rate, attempt) }
                     if (ready != null) begin() else {
                         initialize = begin
-                        handler.postDelayed(expiry, 5000)
+                        handler.postDelayed(initializationExpiry, 1500)
                         if (engine == null) {
                             engine = TextToSpeech(activity.applicationContext) { state ->
                                 handler.post {
@@ -67,7 +69,7 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
     }
 
     private fun speak(text: String, locale: Locale, rate: Float, attempt: Int) {
-        handler.removeCallbacks(expiry)
+        handler.removeCallbacks(initializationExpiry)
         if (!foreground || generation != attempt || pending == null) return
         val tts = engine
         if (ready != true || tts == null) {
@@ -80,8 +82,8 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
                     (locale.language == "uz" && it.locale.language == "uzb")) &&
                     !it.isNetworkConnectionRequired &&
                     TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features.orEmpty() }
-                .sortedWith(compareByDescending<android.speech.tts.Voice> { it.locale.country == locale.country }
-                    .thenByDescending { it.quality }).firstOrNull()
+                .maxWithOrNull(compareBy<Voice> { it.quality }
+                    .thenBy { it.locale.country == locale.country })
             if (voice == null || tts.setVoice(voice) != TextToSpeech.SUCCESS) {
                 speakEmbedded(text, locale, rate, attempt)
                 return
@@ -89,10 +91,21 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
             tts.setSpeechRate(rate)
             val token = attempt.toString()
             tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                override fun onStart(id: String?) {}
+                private var started = false
+
+                override fun onStart(id: String?) {
+                    if (id == token) handler.post { started = true }
+                }
                 override fun onDone(id: String?) { if (id == token) handler.post { finish(attempt, null) } }
                 @Deprecated("Required by Android")
-                override fun onError(id: String?) { if (id == token) handler.post { finish(attempt, "unavailable") } }
+                override fun onError(id: String?) {
+                    if (id == token) handler.post {
+                        if (attempt == generation && pending != null) {
+                            if (started) finish(attempt, "unavailable")
+                            else speakEmbedded(text, locale, rate, attempt)
+                        }
+                    }
+                }
             })
             if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), token) != TextToSpeech.SUCCESS) {
                 speakEmbedded(text, locale, rate, attempt)
@@ -103,6 +116,7 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
     }
 
     private fun speakEmbedded(text: String, locale: Locale, rate: Float, attempt: Int) {
+        handler.removeCallbacks(expiry)
         if (!embedded.available) {
             finish(attempt, "language")
             return
@@ -122,6 +136,7 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
 
     private fun stop(reason: String) {
         initialize = null
+        handler.removeCallbacks(initializationExpiry)
         finish(generation, reason)
         generation++
         engine?.stop()

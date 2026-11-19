@@ -11,7 +11,6 @@ import '../../core/settings.dart';
 import 'voice_command.dart';
 import 'voice_actions.dart';
 import 'speech_bridge.dart';
-import 'voice_model.dart';
 
 class VoicePage extends StatefulWidget {
   final SpeechBridge? speech;
@@ -24,7 +23,6 @@ class VoicePage extends StatefulWidget {
 class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   late final speech = widget.speech ?? SpeechBridge();
   late final actions = widget.actions ?? VoiceActions();
-  final model = VoiceModel();
   final text = TextEditingController();
   StreamSubscription<MethodCall>? speechEvents;
   Map<String, dynamic>? state;
@@ -36,13 +34,10 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   bool deviceOnly = true, listening = false, acting = false;
   bool conversation = false, speaking = false, authorizing = false;
   bool conversationPaused = false;
-  bool modelAvailable = false, modelInstalled = false, interpreting = false;
-  double? modelDownload;
   int generation = 0;
   bool get canListen =>
       !acting &&
       !speaking &&
-      !interpreting &&
       !authorizing &&
       state != null &&
       (deviceOnly ? state!['onDevice'] == true : state!['available'] == true);
@@ -58,7 +53,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
       listening ||
       acting ||
       speaking ||
-      interpreting ||
       authorizing ||
       (conversation && !conversationPaused);
   @override
@@ -76,7 +70,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     });
     actions.access.addListener(accessChanged);
     load();
-    unawaited(loadModelState());
   }
 
   void accessChanged() {
@@ -88,12 +81,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     super.didChangeDependencies();
     final locked = AppLockScope.isLocked(context);
     final visible = ModalRoute.isCurrentOf(context) != false;
-    if ((listening ||
-            conversation ||
-            speaking ||
-            interpreting ||
-            modelDownload != null) &&
-        (locked || !visible)) {
+    if ((listening || conversation || speaking) && (locked || !visible)) {
       cancel();
     }
   }
@@ -134,7 +122,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
 
   void cancel() {
     generation++;
-    model.cancel();
     unawaited(speech.cancel());
     if (speaking) unawaited(SpeechOutput.stop());
     if (mounted) {
@@ -142,8 +129,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         conversation = false;
         conversationPaused = false;
         speaking = false;
-        interpreting = false;
-        modelDownload = null;
         listening = false;
         partial = '';
         status = '';
@@ -304,23 +289,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           break;
         }
         final question = VoiceCommand.parse(result);
-        if (question.action == VoiceAction.unknown && modelInstalled) {
-          final suggestion = await interpret(result, attempt);
-          if (!screenReady || attempt != generation) break;
-          if (suggestion?.reply case final reply?) {
-            if (!await playReply(_modelAnswer(reply), attempt)) break;
-            followUp = true;
-            continue;
-          }
-          if (suggestion?.command case final candidate?) {
-            setState(() {
-              command = candidate;
-              answer = null;
-              outputError = null;
-            });
-            break;
-          }
-        }
         if (!question.isConversationQuestion) {
           setState(() {
             command = question;
@@ -352,9 +320,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     }
   }
 
-  VoiceAnswer _modelAnswer(String reply) =>
-      (title: context.tr('voiceModelReply'), excerpts: [reply]);
-
   Future<bool> playReply(VoiceAnswer reply, int attempt) async {
     setState(() {
       answer = reply;
@@ -380,78 +345,9 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     return screenReady && attempt == generation;
   }
 
-  Future<void> loadModelState() async {
-    try {
-      final supported = await model.supported();
-      final installed = supported && await model.installed();
-      if (mounted) {
-        setState(() {
-          modelAvailable = supported;
-          modelInstalled = installed;
-        });
-      }
-    } catch (_) {
-      // Direct commands remain available when local inference is unavailable.
-    }
-  }
-
-  Future<void> downloadModel() async {
-    if (modelDownload != null || controlsBusy || conversation) return;
-    final attempt = generation;
-    setState(() => modelDownload = 0);
-    try {
-      await model.download((progress) {
-        if (mounted && attempt == generation) {
-          setState(() => modelDownload = progress);
-        }
-      });
-      if (mounted && attempt == generation) await loadModelState();
-    } catch (_) {
-      if (mounted && attempt == generation) {
-        setState(() => error = 'voiceModelError');
-      }
-    } finally {
-      if (mounted && attempt == generation) {
-        setState(() => modelDownload = null);
-      }
-    }
-  }
-
-  Future<VoiceInterpretation?> interpret(String utterance, int attempt) async {
-    setState(() => interpreting = true);
-    try {
-      return await model.interpret(utterance, language);
-    } catch (_) {
-      if (mounted && attempt == generation) {
-        setState(() => error = 'voiceModelError');
-      }
-      return null;
-    } finally {
-      if (mounted && attempt == generation) {
-        setState(() => interpreting = false);
-      }
-    }
-  }
-
-  Future<void> reviewCommand() async {
-    final utterance = text.text;
-    final direct = VoiceCommand.parse(utterance);
-    if (direct.action != VoiceAction.unknown ||
-        !modelInstalled ||
-        utterance.trim().isEmpty) {
-      setState(() => command = direct);
-      return;
-    }
-    if (conversation) cancel();
-    final attempt = ++generation;
-    final suggestion = await interpret(utterance, attempt);
-    if (!screenReady || attempt != generation) return;
-    if (suggestion?.reply case final reply?) {
-      setState(() => command = null);
-      await playReply(_modelAnswer(reply), attempt);
-    } else {
-      setState(() => command = suggestion?.command ?? direct);
-    }
+  void reviewCommand() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => command = VoiceCommand.parse(text.text));
   }
 
   Future<void> execute() async {
@@ -515,7 +411,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(speechEvents?.cancel());
     unawaited(speech.cancel());
-    model.cancel();
     if (speaking) unawaited(SpeechOutput.stop());
     actions.access.removeListener(accessChanged);
     text.dispose();
@@ -723,17 +618,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             onPressed: controlsBusy ? null : reviewCommand,
             child: Text(c.tr('voiceReview')),
           ),
-          if (interpreting)
-            Semantics(
-              liveRegion: true,
-              child: Row(
-                children: [
-                  Expanded(child: Text(c.tr('voiceModelThinking'))),
-                  if (!conversation)
-                    TextButton(onPressed: cancel, child: Text(c.tr('cancel'))),
-                ],
-              ),
-            ),
           if (command != null)
             Card(
               child: Padding(
@@ -795,33 +679,6 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             title: Text(c.tr('voiceScreenTitle')),
             onChanged: controlsBusy || conversation ? null : setScreenControls,
           ),
-          if (modelAvailable)
-            ListTile(
-              title: Text(c.tr('voiceModelTitle')),
-              subtitle: Text(
-                c.tr(
-                  modelInstalled ? 'voiceModelInstalled' : 'voiceModelDetails',
-                ),
-              ),
-              trailing: modelInstalled
-                  ? const Icon(Icons.check_circle_outline)
-                  : TextButton(
-                      onPressed: modelDownload != null
-                          ? cancel
-                          : controlsBusy || conversation
-                          ? null
-                          : downloadModel,
-                      child: Text(
-                        c.tr(
-                          modelDownload != null
-                              ? 'cancel'
-                              : 'voiceModelDownload',
-                        ),
-                      ),
-                    ),
-            ),
-          if (modelDownload case final progress?)
-            LinearProgressIndicator(value: progress),
         ],
       ),
     ),

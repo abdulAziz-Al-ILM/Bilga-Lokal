@@ -213,7 +213,14 @@ void registerFinancePlanningUiCases({
         expect(FinancePlanning.plan(data)['goals'].single['target'], 50000);
         expect(Ledger.balance(data), 0);
         expect(data['entries'], isEmpty);
-        await key(t, 'guide-next');
+        await tap(
+          t,
+          find.byElementPredicate(
+            (element) =>
+                element.widget.key == const Key('guide-next') &&
+                ModalRoute.isCurrentOf(element) != false,
+          ),
+        );
         await tap(t, find.text(Strings.get('en', 'archive')).last);
         expect(
           FinancePlanning.plan(

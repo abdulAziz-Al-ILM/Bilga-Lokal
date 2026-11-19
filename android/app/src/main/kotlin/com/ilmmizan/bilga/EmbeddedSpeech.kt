@@ -59,13 +59,14 @@ internal class EmbeddedSpeech(private val context: Context, private val main: Ha
     private fun render(text: String, language: String, rate: Float, attempt: Int): ByteArray? {
         val data = dataPath()
         if (attempt != generation.get()) return null
+        val wordsPerMinute = if (language == "uz") 150 else 165
         val child = ProcessBuilder(binary.path, "--path=${data.path}", "-b", "1", "-v", language,
-            "-s", (165 * rate).roundToInt().toString(), "--stdout", "--stdin")
+            "-s", (wordsPerMinute * rate).roundToInt().toString(), "--stdout", "--stdin")
             .redirectError(ProcessBuilder.Redirect.to(File("/dev/null"))).start()
         process = child
         try {
             if (attempt != generation.get()) return null
-            child.outputStream.use { it.write(text.toByteArray(Charsets.UTF_8)) }
+            child.outputStream.use { it.write("$text\n".toByteArray(Charsets.UTF_8)) }
             val wav = ByteArrayOutputStream()
             child.inputStream.use { input ->
                 val buffer = ByteArray(8192)

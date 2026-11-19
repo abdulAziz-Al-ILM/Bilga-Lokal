@@ -1,74 +1,62 @@
 import 'package:bilga/features/voice/voice_command.dart';
-import 'package:bilga/features/voice/voice_model.dart';
 import 'package:bilga/features/finance/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test(
-    'Voice opens actual sections and only accepts allowlisted model actions',
-    () {
-      final section = VoiceCommand.parse('Moliya bo‘limini ochib ber');
+  test('Natural requests open known sections and preserve explicit writes', () {
+    for (final phrase in [
+      'Moliya bo‘limini ochib ber',
+      'Moliya bo‘limiga o‘tishni xohlayman',
+      'Iltimos, moliyani ko‘rsata olasanmi?',
+    ]) {
+      final section = VoiceCommand.parse(phrase);
       expect(section.action, VoiceAction.openSection);
       expect(section.argument, VoiceSection.finance.name);
-      expect(VoiceCommand.parse('Открой заметки').argument, 'notes');
-      expect(
-        VoiceModel.decode('ACTION: today')?.command?.action,
-        VoiceAction.today,
-      );
-      expect(
-        VoiceModel.decode('ACTION: finance')?.command?.argument,
-        'finance',
-      );
-      expect(VoiceModel.decode('ACTION: expense'), isNull);
-      expect(VoiceModel.decode('ACTION: finance\nACTION: expense'), isNull);
-      final reply = VoiceModel.decode('SAY: Assalomu alaykum.');
-      expect(reply?.command, isNull);
-      expect(reply?.reply, 'Assalomu alaykum.');
-      expect(
-        VoiceModel.decode('Oy Yerning tabiiy yo‘ldoshi.')?.reply,
-        'Oy Yerning tabiiy yo‘ldoshi.',
-      );
-    },
-  );
+    }
+    expect(VoiceCommand.parse('Открой заметки').argument, 'notes');
+    expect(VoiceCommand.parse('ACTION: finance').action, VoiceAction.unknown);
+    expect(
+      VoiceCommand.parse('Xarajat yoz: 12 USD').action,
+      VoiceAction.expense,
+    );
+  });
 
-  test(
-    'Common questions and spoken requests match the same read-only intent',
-    () {
-      for (final phrase in [
-        'Bugun nima qilishim kerak?',
-        'Bugun nima qilish kerak?',
-        'Bugun nima qilaman?',
-        'Bilga, iltimos, bugun nima qilaman ?',
-        'Bugungi rejani ko‘rsat!',
-        'Menga bugungi rejamni ayt',
-        'Какие у меня дела сегодня?',
-        'Show my plan for today.',
-      ]) {
-        expect(
-          VoiceCommand.parse(phrase).action,
-          VoiceAction.today,
-          reason: phrase,
-        );
-      }
+  test('Common questions and spoken requests match the same read-only intent', () {
+    for (final phrase in [
+      'Bugun nima qilishim kerak?',
+      'Bugun nima qilish kerak?',
+      'Bugun nima qilaman?',
+      'Bilga, iltimos, bugun nima qilaman ?',
+      'Bugungi rejani ko‘rsat!',
+      'Menga bugungi rejamni ayt',
+      'Tongda ish boshlashdan avval bugungi ishlarim ro‘yxatini bilmoqchiman.',
+      'Какие у меня дела сегодня?',
+      'Show my plan for today.',
+    ]) {
       expect(
-        VoiceCommand.parse('Bugun qaysi odatlarim qoldi?').action,
-        VoiceAction.pendingHabits,
+        VoiceCommand.parse(phrase).action,
+        VoiceAction.today,
+        reason: phrase,
       );
-      expect(
-        VoiceCommand.parse('Bu haftalik xarajatlarim qancha?').action,
-        VoiceAction.weeklySpending,
-      );
-      expect(
-        VoiceCommand.parse('O’tgan juma kungi yozuvlarimni ko‘rsat').action,
-        VoiceAction.lastFriday,
-      );
-      expect(VoiceCommand.parse('bugun ...').action, VoiceAction.unknown);
-      expect(
-        VoiceCommand.parse('Bugungi rejamni ayt deb vazifa yarat').action,
-        VoiceAction.task,
-      );
-    },
-  );
+    }
+    expect(
+      VoiceCommand.parse('Bugun qaysi odatlarim qoldi?').action,
+      VoiceAction.pendingHabits,
+    );
+    expect(
+      VoiceCommand.parse('Bu haftalik xarajatlarim qancha?').action,
+      VoiceAction.weeklySpending,
+    );
+    expect(
+      VoiceCommand.parse('O’tgan juma kungi yozuvlarimni ko‘rsat').action,
+      VoiceAction.lastFriday,
+    );
+    expect(VoiceCommand.parse('bugun ...').action, VoiceAction.unknown);
+    expect(
+      VoiceCommand.parse('Bugungi rejamni ayt deb vazifa yarat').action,
+      VoiceAction.task,
+    );
+  });
 
   test(
     'Uzbek commands cover all six modules and preserve their actual content',

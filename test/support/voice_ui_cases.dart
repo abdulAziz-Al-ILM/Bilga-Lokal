@@ -204,6 +204,25 @@ void registerVoiceUiCases({
     addTearDown(() => messenger.setMockMethodCallHandler(output, null));
   }
 
+  test(
+    'Uzbek speech reads dates and amounts in words with their full precision',
+    () async {
+      final texts = <String>[];
+      mockOutput((call) async {
+        texts.add(call.arguments['text'] as String);
+        return null;
+      });
+      const excerpt = '2026-11-19\nXarajat · -12000.05 UZS\nVazifalar · 0';
+      await SpeechOutput.speak(excerpt, 'uz-UZ');
+      await SpeechOutput.speak(excerpt, 'en-US');
+      expect(texts, [
+        'o\'n to\'qqiz noyabr, ikki ming yigirma olti yil. '
+            'Xarajat, minus o\'n ikki ming butun nol besh UZS. Vazifalar, nol',
+        excerpt,
+      ]);
+    },
+  );
+
   testWidgets(
     'Conversation retries a failed startup once and pauses quietly after a listening miss',
     (t) async {
@@ -233,7 +252,7 @@ void registerVoiceUiCases({
         await settleIo(t);
         expect(
           spoken.single,
-          contains('${Strings.get('uz', 'todayPlan')} · 0'),
+          contains('${Strings.get('uz', 'todayPlan')}, nol'),
         );
         expect(r.$5.followUps, [false]);
         playback.complete();
@@ -468,8 +487,13 @@ void registerVoiceUiCases({
           ))!.single['revision'],
           1,
         );
-        await t.pageBack();
-        await settleIo(t);
+        await tap(
+          t,
+          find.descendant(
+            of: find.byType(ExperiencePage),
+            matching: find.byType(BackButton),
+          ),
+        );
         await command(t, 'qaydlardan qidir: unique');
         expect(find.byType(LibraryPage), findsOneWidget);
         expect(find.text('A unique voice idea'), findsWidgets);

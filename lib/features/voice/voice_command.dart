@@ -309,13 +309,51 @@ class VoiceCommand {
         );
       }
     }
+    final intent = _personalQuestion(lower);
+    if (intent != null) return VoiceCommand(intent, '');
     return VoiceCommand(VoiceAction.unknown, value);
+  }
+
+  static VoiceAction? _personalQuestion(String phrase) {
+    if (RegExp(r"\b(?:o'chir|o'zgartir|yarat|saqla|bajarildi|yop|to'la)\b")
+        .hasMatch(phrase)) {
+      return null;
+    }
+    final today = RegExp(r'\bbugun(?:gi)?\b').hasMatch(phrase);
+    if (today &&
+        phrase.contains('odat') &&
+        RegExp(r'qoldi|qolgan|bajarilmagan|bajarmadim').hasMatch(phrase)) {
+      return VoiceAction.pendingHabits;
+    }
+    if (today &&
+        RegExp(r'reja|ishlar|vazifa').hasMatch(phrase) &&
+        RegExp(r"qanday|nima|ro'yxat|bilmoq|ayt|ko'rsat").hasMatch(phrase)) {
+      return VoiceAction.today;
+    }
+    if (RegExp(r'\b(?:bu|shu) hafta(?:da|dagi|lik)?\b').hasMatch(phrase) &&
+        RegExp(r'sarfl|xarajat').hasMatch(phrase) &&
+        RegExp(r"qancha|jami|ko'rsat|bilmoq").hasMatch(phrase)) {
+      return VoiceAction.weeklySpending;
+    }
+    if (phrase.contains("o'tgan juma") &&
+        RegExp(r"yozdim|yozgan|yozuv|qayd").hasMatch(phrase) &&
+        RegExp(r"nima|ko'rsat|ayt|bilmoq").hasMatch(phrase)) {
+      return VoiceAction.lastFriday;
+    }
+    return null;
   }
 
   static VoiceSection? _openSection(String phrase) {
     final name = phrase
+        .replaceFirst(RegExp(r'^(?:men|i would like to|could you) '), '')
         .replaceFirst(RegExp(r'^(?:open|show|открой|покажи) '), '')
-        .replaceFirst(RegExp(r" (?:och(?:ib ber)?|ko'rsat|o't)$"), '')
+        .replaceFirst(
+          RegExp(
+            r" (?:och(?:ib ber|a olasanmi|ishni xohlayman)?|"
+            r"ko'rsat(?:a olasanmi|ib ber)?|o't(?:ishni xohlayman|moqchiman)?)$",
+          ),
+          '',
+        )
         .replaceFirst(RegExp(r" (?:bo'limini|bo'limiga|oynasini)$"), '');
     if (name == phrase) return null;
     return switch (name) {
