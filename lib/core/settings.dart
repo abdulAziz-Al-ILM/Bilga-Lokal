@@ -14,6 +14,8 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
   String avatar = '🌿';
   bool appLock = false;
   bool screenPrivacy = true;
+  bool voiceScreenControls = false;
+  String voiceLanguage = 'uz-UZ';
   String? backupOwner;
   String? lastBackup;
   bool _observing = false;
@@ -66,6 +68,11 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
     avatar = _prefs!.getString('bilga.avatar') ?? '🌿';
     appLock = _prefs!.getBool('bilga.appLock') ?? false;
     screenPrivacy = _prefs!.getBool('bilga.screenPrivacy') ?? true;
+    voiceScreenControls = _prefs!.getBool('bilga.voiceScreenControls') ?? false;
+    final speech = _prefs!.getString('bilga.voiceLanguage');
+    voiceLanguage = const {'uz-UZ', 'en-US', 'ru-RU'}.contains(speech)
+        ? speech!
+        : 'uz-UZ';
     backupOwner = _prefs!.getString('bilga.backupOwner');
     lastBackup = _prefs!.getString('bilga.lastBackup');
     await _secureWindow();
@@ -92,6 +99,8 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
       prefs.setString('bilga.avatar', avatar),
       prefs.setBool('bilga.appLock', appLock),
       prefs.setBool('bilga.screenPrivacy', screenPrivacy),
+      prefs.setBool('bilga.voiceScreenControls', voiceScreenControls),
+      prefs.setString('bilga.voiceLanguage', voiceLanguage),
       if (backupOwner != null)
         prefs.setString('bilga.backupOwner', backupOwner!),
       if (lastBackup != null) prefs.setString('bilga.lastBackup', lastBackup!),

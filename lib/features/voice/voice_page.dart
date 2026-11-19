@@ -7,9 +7,11 @@ import 'package:flutter/services.dart';
 
 import '../../core/strings.dart';
 import '../../core/editor_form.dart';
+import '../../core/settings.dart';
 import 'voice_command.dart';
 import 'voice_actions.dart';
 import 'speech_bridge.dart';
+import 'voice_model.dart';
 
 class VoicePage extends StatefulWidget {
   final SpeechBridge? speech;
@@ -22,18 +24,25 @@ class VoicePage extends StatefulWidget {
 class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   late final speech = widget.speech ?? SpeechBridge();
   late final actions = widget.actions ?? VoiceActions();
+  final model = VoiceModel();
   final text = TextEditingController();
+  StreamSubscription<MethodCall>? speechEvents;
   Map<String, dynamic>? state;
   VoiceCommand? command;
   VoiceAnswer? answer;
-  String language = 'uz-UZ', partial = '', status = '', error = '';
+  String language = AppSettings.instance.voiceLanguage;
+  String partial = '', status = '', error = '';
   String? outputError;
   bool deviceOnly = true, listening = false, acting = false;
   bool conversation = false, speaking = false, authorizing = false;
   bool conversationPaused = false;
+  bool modelAvailable = false, modelInstalled = false, interpreting = false;
+  double? modelDownload;
   int generation = 0;
   bool get canListen =>
       !acting &&
+      !speaking &&
+      !interpreting &&
       !authorizing &&
       state != null &&
       (deviceOnly ? state!['onDevice'] == true : state!['available'] == true);
@@ -48,13 +57,15 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   bool get controlsBusy =>
       listening ||
       acting ||
+      speaking ||
+      interpreting ||
       authorizing ||
       (conversation && !conversationPaused);
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    SpeechBridge.channel.setMethodCallHandler((call) async {
+    speechEvents = SpeechBridge.events.listen((call) {
       if (!mounted || !listening) return;
       if (call.method == 'partial') {
         setState(() => partial = call.arguments as String? ?? '');
@@ -65,6 +76,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     });
     actions.access.addListener(accessChanged);
     load();
+    unawaited(loadModelState());
   }
 
   void accessChanged() {
@@ -76,7 +88,12 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     super.didChangeDependencies();
     final locked = AppLockScope.isLocked(context);
     final visible = ModalRoute.isCurrentOf(context) != false;
-    if ((listening || conversation) && (locked || !visible)) {
+    if ((listening ||
+            conversation ||
+            speaking ||
+            interpreting ||
+            modelDownload != null) &&
+        (locked || !visible)) {
       cancel();
     }
   }
@@ -117,6 +134,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
 
   void cancel() {
     generation++;
+    model.cancel();
     unawaited(speech.cancel());
     if (speaking) unawaited(SpeechOutput.stop());
     if (mounted) {
@@ -124,6 +142,8 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         conversation = false;
         conversationPaused = false;
         speaking = false;
+        interpreting = false;
+        modelDownload = null;
         listening = false;
         partial = '';
         status = '';
@@ -284,6 +304,23 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           break;
         }
         final question = VoiceCommand.parse(result);
+        if (question.action == VoiceAction.unknown && modelInstalled) {
+          final suggestion = await interpret(result, attempt);
+          if (!screenReady || attempt != generation) break;
+          if (suggestion?.reply case final reply?) {
+            if (!await playReply(_modelAnswer(reply), attempt)) break;
+            followUp = true;
+            continue;
+          }
+          if (suggestion?.command case final candidate?) {
+            setState(() {
+              command = candidate;
+              answer = null;
+              outputError = null;
+            });
+            break;
+          }
+        }
         if (!question.isConversationQuestion) {
           setState(() {
             command = question;
@@ -295,28 +332,10 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           });
           break;
         }
+        if (!mounted) break;
         final reply = await actions.personalAnswer(context, question, language);
         if (reply == null || !screenReady || attempt != generation) break;
-        setState(() {
-          answer = reply;
-          outputError = null;
-          speaking = true;
-        });
-        try {
-          await SpeechOutput.speak(reply.excerpts.join('\n\n'), language);
-        } on PlatformException catch (e) {
-          if (!mounted || attempt != generation || e.code == 'cancelled') break;
-          setState(
-            () => outputError = e.code == 'language'
-                ? 'vaNoVoice'
-                : 'vaUnavailable',
-          );
-        } catch (_) {
-          if (!mounted || attempt != generation) break;
-          setState(() => outputError = 'vaUnavailable');
-        }
-        if (!screenReady || attempt != generation) break;
-        setState(() => speaking = false);
+        if (!await playReply(reply, attempt)) break;
         followUp = true;
       }
     } catch (_) {
@@ -330,6 +349,108 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           speaking = false;
         });
       }
+    }
+  }
+
+  VoiceAnswer _modelAnswer(String reply) =>
+      (title: context.tr('voiceModelReply'), excerpts: [reply]);
+
+  Future<bool> playReply(VoiceAnswer reply, int attempt) async {
+    setState(() {
+      answer = reply;
+      outputError = null;
+      speaking = true;
+    });
+    try {
+      await SpeechOutput.speak(reply.excerpts.join('\n\n'), language);
+    } on PlatformException catch (e) {
+      if (!mounted || attempt != generation || e.code == 'cancelled') {
+        return false;
+      }
+      setState(
+        () =>
+            outputError = e.code == 'language' ? 'vaNoVoice' : 'vaUnavailable',
+      );
+    } catch (_) {
+      if (!mounted || attempt != generation) return false;
+      setState(() => outputError = 'vaUnavailable');
+    } finally {
+      if (mounted && attempt == generation) setState(() => speaking = false);
+    }
+    return screenReady && attempt == generation;
+  }
+
+  Future<void> loadModelState() async {
+    try {
+      final supported = await model.supported();
+      final installed = supported && await model.installed();
+      if (mounted) {
+        setState(() {
+          modelAvailable = supported;
+          modelInstalled = installed;
+        });
+      }
+    } catch (_) {
+      // Direct commands remain available when local inference is unavailable.
+    }
+  }
+
+  Future<void> downloadModel() async {
+    if (modelDownload != null || controlsBusy || conversation) return;
+    final attempt = generation;
+    setState(() => modelDownload = 0);
+    try {
+      await model.download((progress) {
+        if (mounted && attempt == generation) {
+          setState(() => modelDownload = progress);
+        }
+      });
+      if (mounted && attempt == generation) await loadModelState();
+    } catch (_) {
+      if (mounted && attempt == generation) {
+        setState(() => error = 'voiceModelError');
+      }
+    } finally {
+      if (mounted && attempt == generation) {
+        setState(() => modelDownload = null);
+      }
+    }
+  }
+
+  Future<VoiceInterpretation?> interpret(String utterance, int attempt) async {
+    setState(() => interpreting = true);
+    try {
+      return await model.interpret(utterance, language);
+    } catch (_) {
+      if (mounted && attempt == generation) {
+        setState(() => error = 'voiceModelError');
+      }
+      return null;
+    } finally {
+      if (mounted && attempt == generation) {
+        setState(() => interpreting = false);
+      }
+    }
+  }
+
+  Future<void> reviewCommand() async {
+    final utterance = text.text;
+    final direct = VoiceCommand.parse(utterance);
+    if (direct.action != VoiceAction.unknown ||
+        !modelInstalled ||
+        utterance.trim().isEmpty) {
+      setState(() => command = direct);
+      return;
+    }
+    if (conversation) cancel();
+    final attempt = ++generation;
+    final suggestion = await interpret(utterance, attempt);
+    if (!screenReady || attempt != generation) return;
+    if (suggestion?.reply case final reply?) {
+      setState(() => command = null);
+      await playReply(_modelAnswer(reply), attempt);
+    } else {
+      setState(() => command = suggestion?.command ?? direct);
     }
   }
 
@@ -347,12 +468,54 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> setScreenControls(bool enabled) async {
+    final settings = AppSettings.instance;
+    final previous = settings.voiceScreenControls;
+    setState(() => settings.voiceScreenControls = enabled);
+    try {
+      await settings.save();
+    } catch (_) {
+      if (mounted) {
+        setState(() => settings.voiceScreenControls = previous);
+        failure(context);
+      }
+    }
+  }
+
+  Future<void> previewVoice() async {
+    if (controlsBusy || conversation || !screenReady) return;
+    final attempt = ++generation;
+    setState(() {
+      speaking = true;
+      error = '';
+    });
+    try {
+      final sample = switch (language) {
+        'en-US' => 'Hello. I am your Bilga assistant.',
+        'ru-RU' => 'Здравствуйте. Я ваш помощник Билга.',
+        _ => 'Assalomu alaykum. Men Bilga yordamchisiman.',
+      };
+      await SpeechOutput.speak(sample, language);
+    } on PlatformException catch (e) {
+      if (mounted && attempt == generation && e.code != 'cancelled') {
+        setState(() => error = 'vaUnavailable');
+      }
+    } catch (_) {
+      if (mounted && attempt == generation) {
+        setState(() => error = 'vaUnavailable');
+      }
+    } finally {
+      if (mounted && attempt == generation) setState(() => speaking = false);
+    }
+  }
+
   @override
   void dispose() {
     generation++;
     WidgetsBinding.instance.removeObserver(this);
-    SpeechBridge.channel.setMethodCallHandler(null);
+    unawaited(speechEvents?.cancel());
     unawaited(speech.cancel());
+    model.cancel();
     if (speaking) unawaited(SpeechOutput.stop());
     actions.access.removeListener(accessChanged);
     text.dispose();
@@ -384,7 +547,39 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             ],
             onChanged: controlsBusy || conversation
                 ? null
-                : (v) => setState(() => language = v!),
+                : (v) async {
+                    if (v == null) return;
+                    final previous = language;
+                    setState(
+                      () => language = AppSettings.instance.voiceLanguage = v,
+                    );
+                    try {
+                      await AppSettings.instance.save();
+                    } catch (_) {
+                      if (mounted) {
+                        setState(
+                          () => language = AppSettings.instance.voiceLanguage =
+                              previous,
+                        );
+                        failure(context);
+                      }
+                    }
+                  },
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const Key('voice-test-output'),
+              onPressed: conversation
+                  ? null
+                  : speaking
+                  ? cancel
+                  : controlsBusy
+                  ? null
+                  : previewVoice,
+              icon: Icon(speaking ? Icons.stop : Icons.volume_up_outlined),
+              label: Text(c.tr(speaking ? 'voiceStop' : 'voiceTestOutput')),
+            ),
           ),
           if (state?['onDevice'] == true)
             SwitchListTile(
@@ -525,13 +720,20 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           ),
           FilledButton(
             key: const Key('voice-review'),
-            onPressed: controlsBusy
-                ? null
-                : () {
-                    setState(() => command = VoiceCommand.parse(text.text));
-                  },
+            onPressed: controlsBusy ? null : reviewCommand,
             child: Text(c.tr('voiceReview')),
           ),
+          if (interpreting)
+            Semantics(
+              liveRegion: true,
+              child: Row(
+                children: [
+                  Expanded(child: Text(c.tr('voiceModelThinking'))),
+                  if (!conversation)
+                    TextButton(onPressed: cancel, child: Text(c.tr('cancel'))),
+                ],
+              ),
+            ),
           if (command != null)
             Card(
               child: Padding(
@@ -543,7 +745,16 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                       c.tr('voiceAction${command!.action.name}'),
                       style: Theme.of(c).textTheme.titleMedium,
                     ),
-                    if (command!.argument.isNotEmpty) Text(command!.argument),
+                    if (command!.argument.isNotEmpty)
+                      Text(
+                        command!.action == VoiceAction.openSection
+                            ? c.tr(
+                                VoiceSection.values
+                                    .byName(command!.argument)
+                                    .label,
+                              )
+                            : command!.argument,
+                      ),
                     Text(
                       c.tr(
                         command!.action == VoiceAction.unknown
@@ -578,6 +789,39 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
               ),
             ],
           ),
+          SwitchListTile(
+            key: const Key('voice-screen-enable'),
+            value: AppSettings.instance.voiceScreenControls,
+            title: Text(c.tr('voiceScreenTitle')),
+            onChanged: controlsBusy || conversation ? null : setScreenControls,
+          ),
+          if (modelAvailable)
+            ListTile(
+              title: Text(c.tr('voiceModelTitle')),
+              subtitle: Text(
+                c.tr(
+                  modelInstalled ? 'voiceModelInstalled' : 'voiceModelDetails',
+                ),
+              ),
+              trailing: modelInstalled
+                  ? const Icon(Icons.check_circle_outline)
+                  : TextButton(
+                      onPressed: modelDownload != null
+                          ? cancel
+                          : controlsBusy || conversation
+                          ? null
+                          : downloadModel,
+                      child: Text(
+                        c.tr(
+                          modelDownload != null
+                              ? 'cancel'
+                              : 'voiceModelDownload',
+                        ),
+                      ),
+                    ),
+            ),
+          if (modelDownload case final progress?)
+            LinearProgressIndicator(value: progress),
         ],
       ),
     ),

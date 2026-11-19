@@ -10,10 +10,11 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.util.Locale
 
-/** Reads a bounded excerpt using only an installed voice in the requested language. */
-internal class SpeechOutput(activity: Activity, messenger: BinaryMessenger) {
+/** Reads a bounded excerpt using an installed voice in the requested language. */
+internal class SpeechOutput(private val activity: Activity, messenger: BinaryMessenger) {
     private val channel = MethodChannel(messenger, "bilga/speech_output")
     private val handler = Handler(Looper.getMainLooper())
+    private val embedded = EmbeddedSpeech(activity.applicationContext, handler)
     private var ready: Boolean? = null
     private var pending: MethodChannel.Result? = null
     private var generation = 0
@@ -38,6 +39,10 @@ internal class SpeechOutput(activity: Activity, messenger: BinaryMessenger) {
                     stop("cancelled")
                     pending = result
                     val attempt = generation
+                    if (embedded.available) {
+                        speakEmbedded(text, locale, rate, attempt)
+                        return@setMethodCallHandler
+                    }
                     val begin = { speak(text, locale, rate, attempt) }
                     if (ready != null) begin() else {
                         initialize = begin
@@ -65,16 +70,20 @@ internal class SpeechOutput(activity: Activity, messenger: BinaryMessenger) {
         handler.removeCallbacks(expiry)
         if (!foreground || generation != attempt || pending == null) return
         val tts = engine
-        if (ready != true || tts == null) { finish(attempt, "unavailable"); return }
+        if (ready != true || tts == null) {
+            speakEmbedded(text, locale, rate, attempt)
+            return
+        }
         try {
             val voice = tts.voices.orEmpty()
-                .filter { it.locale.language == locale.language &&
+                .filter { (it.locale.language == locale.language ||
+                    (locale.language == "uz" && it.locale.language == "uzb")) &&
                     !it.isNetworkConnectionRequired &&
                     TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features.orEmpty() }
                 .sortedWith(compareByDescending<android.speech.tts.Voice> { it.locale.country == locale.country }
                     .thenByDescending { it.quality }).firstOrNull()
             if (voice == null || tts.setVoice(voice) != TextToSpeech.SUCCESS) {
-                finish(attempt, "language")
+                speakEmbedded(text, locale, rate, attempt)
                 return
             }
             tts.setSpeechRate(rate)
@@ -86,11 +95,21 @@ internal class SpeechOutput(activity: Activity, messenger: BinaryMessenger) {
                 override fun onError(id: String?) { if (id == token) handler.post { finish(attempt, "unavailable") } }
             })
             if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), token) != TextToSpeech.SUCCESS) {
-                finish(attempt, "unavailable")
+                speakEmbedded(text, locale, rate, attempt)
             } else {
                 handler.postDelayed(expiry, 120000)
             }
-        } catch (_: Exception) { finish(attempt, "unavailable") }
+        } catch (_: Exception) { speakEmbedded(text, locale, rate, attempt) }
+    }
+
+    private fun speakEmbedded(text: String, locale: Locale, rate: Float, attempt: Int) {
+        if (!embedded.available) {
+            finish(attempt, "language")
+            return
+        }
+        val language = if (locale.language == "en") "en-us" else locale.language
+        handler.postDelayed(expiry, 120000)
+        embedded.speak(text, language, rate) { error -> finish(attempt, error) }
     }
 
     private fun finish(attempt: Int, error: String?) {
@@ -106,6 +125,7 @@ internal class SpeechOutput(activity: Activity, messenger: BinaryMessenger) {
         finish(generation, reason)
         generation++
         engine?.stop()
+        embedded.stop()
     }
 
     fun foreground(value: Boolean) {
@@ -117,6 +137,7 @@ internal class SpeechOutput(activity: Activity, messenger: BinaryMessenger) {
         stop("cancelled")
         engine?.shutdown()
         engine = null
+        embedded.close()
         channel.setMethodCallHandler(null)
     }
 }

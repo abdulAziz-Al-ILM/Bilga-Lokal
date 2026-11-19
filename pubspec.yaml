@@ -38,6 +38,8 @@ dependencies:
 
   flutter_quill:
     path: vendor/flutter_quill
+  llama_flutter_android:
+    path: vendor/llama_flutter_android
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.5
   sqflite: ^2.4.3

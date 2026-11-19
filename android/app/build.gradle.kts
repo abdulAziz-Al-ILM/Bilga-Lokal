@@ -25,6 +25,8 @@ android {
     namespace = "com.ilmmizan.bilga"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+    // The independent speech executable is launched from the signed native directory.
+    packaging.jniLibs.useLegacyPackaging = true
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

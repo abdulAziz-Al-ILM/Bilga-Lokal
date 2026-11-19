@@ -1,4 +1,5 @@
 import '../voice/voice_page.dart';
+import '../voice/voice_screen_host.dart';
 
 import 'package:flutter/material.dart';
 
@@ -178,6 +179,9 @@ class _HelpHubState extends State<HelpHubPage> {
                             onTap: () => Navigator.push<void>(
                               c,
                               MaterialPageRoute(
+                                settings: const RouteSettings(
+                                  name: VoiceScreenNavigator.assistantRoute,
+                                ),
                                 builder: (_) => const VoicePage(),
                               ),
                             ),

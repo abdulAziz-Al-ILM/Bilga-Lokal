@@ -1,8 +1,36 @@
 import 'package:bilga/features/voice/voice_command.dart';
+import 'package:bilga/features/voice/voice_model.dart';
 import 'package:bilga/features/finance/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'Voice opens actual sections and only accepts allowlisted model actions',
+    () {
+      final section = VoiceCommand.parse('Moliya bo‘limini ochib ber');
+      expect(section.action, VoiceAction.openSection);
+      expect(section.argument, VoiceSection.finance.name);
+      expect(VoiceCommand.parse('Открой заметки').argument, 'notes');
+      expect(
+        VoiceModel.decode('ACTION: today')?.command?.action,
+        VoiceAction.today,
+      );
+      expect(
+        VoiceModel.decode('ACTION: finance')?.command?.argument,
+        'finance',
+      );
+      expect(VoiceModel.decode('ACTION: expense'), isNull);
+      expect(VoiceModel.decode('ACTION: finance\nACTION: expense'), isNull);
+      final reply = VoiceModel.decode('SAY: Assalomu alaykum.');
+      expect(reply?.command, isNull);
+      expect(reply?.reply, 'Assalomu alaykum.');
+      expect(
+        VoiceModel.decode('Oy Yerning tabiiy yo‘ldoshi.')?.reply,
+        'Oy Yerning tabiiy yo‘ldoshi.',
+      );
+    },
+  );
+
   test(
     'Common questions and spoken requests match the same read-only intent',
     () {

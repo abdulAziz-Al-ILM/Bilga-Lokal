@@ -1,7 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 class SpeechBridge {
   static const channel = MethodChannel('bilga/speech');
+  static final _events = StreamController<MethodCall>.broadcast();
+  static bool _receiving = false;
+
+  static Stream<MethodCall> get events {
+    if (!_receiving) {
+      _receiving = true;
+      channel.setMethodCallHandler((call) async => _events.add(call));
+    }
+    return _events.stream;
+  }
+
   Future<Map<String, dynamic>> state() async {
     try {
       return {...?await channel.invokeMapMethod<String, dynamic>('state')};

@@ -1,5 +1,6 @@
 import '../features/reminders/notification_center.dart';
 import '../features/voice/voice_page.dart';
+import '../features/voice/voice_screen_host.dart';
 import '../features/guidance/help_hub.dart';
 
 import 'dart:async';
@@ -94,10 +95,13 @@ class _HomePageState extends State<HomePage> {
     agentOpen = false;
   }
 
-  Future<void> open(Widget page) async {
+  Future<void> open(Widget page, {String? routeName}) async {
     await Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (_) => page),
+      MaterialPageRoute(
+        settings: RouteSettings(name: routeName),
+        builder: (_) => page,
+      ),
     );
     if (mounted) setState(() {});
   }
@@ -217,7 +221,10 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             key: const Key('home-voice-open'),
             tooltip: context.tr('voiceTitle'),
-            onPressed: () => open(const VoicePage()),
+            onPressed: () => open(
+              const VoicePage(),
+              routeName: VoiceScreenNavigator.assistantRoute,
+            ),
             icon: const Icon(Icons.mic_none),
           ),
           IconButton(

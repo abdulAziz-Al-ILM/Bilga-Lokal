@@ -30,6 +30,14 @@ import '../experiences/experience_model.dart';
 import '../experiences/experience_store.dart';
 import '../experiences/experience_page.dart';
 import '../books/book_library_store.dart';
+import '../books/book_library_page.dart';
+import '../experiences/experiences_page.dart';
+import '../guidance/help_hub.dart';
+import '../habits/habits_page.dart';
+import '../notes/notes_page.dart';
+import '../reminders/notification_center.dart';
+import '../settings/profile_page.dart';
+import '../todo/todo_page.dart';
 import '../books/reading/book_reading_page.dart';
 import '../books/reading/reading_store.dart';
 import '../books/reading/reading_hub.dart';
@@ -119,6 +127,27 @@ class VoiceActions {
       case VoiceAction.weeklySpending:
       case VoiceAction.readFolder:
         await answer(c, command, language);
+      case VoiceAction.openSection:
+        await page(c, switch (VoiceSection.values.byName(argument)) {
+          VoiceSection.notes => const NotesPage(),
+          VoiceSection.tasks => const TodoPage(),
+          VoiceSection.habits => HabitsPage(
+            store: HabitStore(provided: notesDb),
+            access: access,
+          ),
+          VoiceSection.finance => FinancePage(store: records, access: access),
+          VoiceSection.experiences => ExperiencesPage(
+            records: records,
+            access: access,
+          ),
+          VoiceSection.books => BookLibraryPage(
+            records: records,
+            access: access,
+          ),
+          VoiceSection.help => const HelpHubPage(),
+          VoiceSection.alerts => const NotificationCenter(),
+          VoiceSection.profile => const ProfilePage(),
+        });
       case VoiceAction.unknown:
         throw StateError('voice_unknown');
     }

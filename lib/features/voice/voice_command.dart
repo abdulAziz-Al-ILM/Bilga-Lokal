@@ -21,7 +21,23 @@ enum VoiceAction {
   lastFriday,
   weeklySpending,
   readFolder,
+  openSection,
   unknown,
+}
+
+enum VoiceSection {
+  notes('notes'),
+  tasks('todos'),
+  habits('xHabits'),
+  finance('xFinance'),
+  experiences('xExperience'),
+  books('xBooks'),
+  help('helpHub'),
+  alerts('ncTitle'),
+  profile('profile');
+
+  const VoiceSection(this.label);
+  final String label;
 }
 
 class VoiceCommand {
@@ -117,6 +133,10 @@ class VoiceCommand {
     };
     for (final rule in questions.entries) {
       if (rule.value.contains(lower)) return VoiceCommand(rule.key, '');
+    }
+    final section = _openSection(lower);
+    if (section != null) {
+      return VoiceCommand(VoiceAction.openSection, section.name);
     }
     final folder = RegExp(
       r"^(?:read (?:my )?(.+?) folder|(.+?) papkasini o'qib ber|прочитай папку (.+))$",
@@ -290,6 +310,51 @@ class VoiceCommand {
       }
     }
     return VoiceCommand(VoiceAction.unknown, value);
+  }
+
+  static VoiceSection? _openSection(String phrase) {
+    final name = phrase
+        .replaceFirst(RegExp(r'^(?:open|show|открой|покажи) '), '')
+        .replaceFirst(RegExp(r" (?:och(?:ib ber)?|ko'rsat|o't)$"), '')
+        .replaceFirst(RegExp(r" (?:bo'limini|bo'limiga|oynasini)$"), '');
+    if (name == phrase) return null;
+    return switch (name) {
+      'qaydlar' ||
+      'qaydlarni' ||
+      'yozuvlar' ||
+      'notes' ||
+      'заметки' => VoiceSection.notes,
+      'vazifa' ||
+      'vazifalar' ||
+      'vazifalarni' ||
+      'tasks' ||
+      'задачи' => VoiceSection.tasks,
+      'odat' ||
+      'odatlar' ||
+      'odatlarni' ||
+      'habits' ||
+      'привычки' => VoiceSection.habits,
+      'moliya' || 'moliyani' || 'finance' || 'финансы' => VoiceSection.finance,
+      'tajribalar' ||
+      'tajribalarni' ||
+      'experiences' ||
+      'опыт' => VoiceSection.experiences,
+      'kitoblar' ||
+      'kitoblarni' ||
+      'kutubxona' ||
+      'books' ||
+      'книги' => VoiceSection.books,
+      'yordam' || 'help' || 'справку' => VoiceSection.help,
+      'bildirishnomalar' ||
+      'bildirishnomalarni' ||
+      'notifications' ||
+      'уведомления' => VoiceSection.alerts,
+      'sozlamalar' ||
+      'sozlamalarni' ||
+      'settings' ||
+      'настройки' => VoiceSection.profile,
+      _ => null,
+    };
   }
 }
 
