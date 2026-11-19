@@ -41,8 +41,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     return mounted &&
         (lifecycle == null || lifecycle == AppLifecycleState.resumed) &&
         !AppLockScope.isLocked(context) &&
-        ModalRoute.isCurrentOf(context) != false &&
-        (!actions.access.initialized || actions.access.coreAllowed);
+        ModalRoute.isCurrentOf(context) != false;
   }
 
   bool get controlsBusy => listening || acting || conversation || authorizing;

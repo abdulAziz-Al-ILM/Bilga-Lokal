@@ -219,6 +219,9 @@ void registerVoiceUiCases({
       });
       final r = await setup(t);
       try {
+        r.$4.owned.clear();
+        r.$4.initialized = true;
+        expect(r.$4.coreAllowed, isFalse);
         await key(t, 'voice-conversation');
         expect(r.$5.followUps, [false]);
         r.$5.pending!.complete('Bugun nima qilishim kerak?');
