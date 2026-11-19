@@ -22,6 +22,7 @@ android {
     if (bilgaReview && providers.gradleProperty("bilgaReviewProfileTest").orNull == "true") {
         testBuildType = "profile"
     }
+    if (bilgaReview) sourceSets.getByName("main").assets.srcDir("src/review/assets")
     namespace = "com.ilmmizan.bilga"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

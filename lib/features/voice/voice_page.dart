@@ -34,6 +34,8 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   bool deviceOnly = true, listening = false, acting = false;
   bool conversation = false, speaking = false, authorizing = false;
   bool conversationPaused = false;
+  bool navoiySampleAvailable = false, previewingNavoiy = false;
+  bool get showNavoiyComparison => navoiySampleAvailable && language == 'uz-UZ';
   int generation = 0;
   bool get canListen =>
       !acting &&
@@ -70,6 +72,12 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     });
     actions.access.addListener(accessChanged);
     load();
+    unawaited(loadNavoiySample());
+  }
+
+  Future<void> loadNavoiySample() async {
+    final available = await SpeechOutput.hasNavoiySample();
+    if (mounted && available) setState(() => navoiySampleAvailable = true);
   }
 
   void accessChanged() {
@@ -129,6 +137,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         conversation = false;
         conversationPaused = false;
         speaking = false;
+        previewingNavoiy = false;
         listening = false;
         partial = '';
         status = '';
@@ -378,20 +387,28 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> previewVoice() async {
+  Future<void> previewVoice({bool navoiy = false}) async {
     if (controlsBusy || conversation || !screenReady) return;
+    if (navoiy && !showNavoiyComparison) return;
     final attempt = ++generation;
     setState(() {
       speaking = true;
+      previewingNavoiy = navoiy;
       error = '';
     });
     try {
-      final sample = switch (language) {
-        'en-US' => 'Hello. I am your Bilga assistant.',
-        'ru-RU' => 'Здравствуйте. Я ваш помощник Билга.',
-        _ => 'Assalomu alaykum. Men Bilga yordamchisiman.',
-      };
-      await SpeechOutput.speak(sample, language);
+      if (navoiy) {
+        await SpeechOutput.playNavoiySample();
+      } else {
+        final sample = switch (language) {
+          'en-US' => 'Hello. I am your Bilga assistant.',
+          'ru-RU' => 'Здравствуйте. Я ваш помощник Билга.',
+          _ when showNavoiyComparison =>
+            'Assalomu alaykum! Sizga qanday yordam bera olaman?',
+          _ => 'Assalomu alaykum. Men Bilga yordamchisiman.',
+        };
+        await SpeechOutput.speak(sample, language);
+      }
     } on PlatformException catch (e) {
       if (mounted && attempt == generation && e.code != 'cancelled') {
         setState(() => error = 'vaUnavailable');
@@ -401,7 +418,12 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         setState(() => error = 'vaUnavailable');
       }
     } finally {
-      if (mounted && attempt == generation) setState(() => speaking = false);
+      if (mounted && attempt == generation) {
+        setState(() {
+          speaking = false;
+          previewingNavoiy = false;
+        });
+      }
     }
   }
 
@@ -465,17 +487,52 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
               key: const Key('voice-test-output'),
-              onPressed: conversation
+              onPressed: conversation || previewingNavoiy
                   ? null
                   : speaking
                   ? cancel
                   : controlsBusy
                   ? null
                   : previewVoice,
-              icon: Icon(speaking ? Icons.stop : Icons.volume_up_outlined),
-              label: Text(c.tr(speaking ? 'voiceStop' : 'voiceTestOutput')),
+              icon: Icon(
+                speaking && !previewingNavoiy
+                    ? Icons.stop
+                    : Icons.volume_up_outlined,
+              ),
+              label: Text(
+                c.tr(
+                  speaking && !previewingNavoiy
+                      ? 'voiceStop'
+                      : showNavoiyComparison
+                      ? 'voiceCurrentSample'
+                      : 'voiceTestOutput',
+                ),
+              ),
             ),
           ),
+          if (showNavoiyComparison) ...[
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const Key('voice-navoiy-sample'),
+                onPressed: previewingNavoiy
+                    ? cancel
+                    : controlsBusy || conversation
+                    ? null
+                    : () => previewVoice(navoiy: true),
+                icon: Icon(
+                  previewingNavoiy ? Icons.stop : Icons.volume_up_outlined,
+                ),
+                label: Text(
+                  c.tr(previewingNavoiy ? 'voiceStop' : 'voiceNavoiySample'),
+                ),
+              ),
+            ),
+            Text(
+              c.tr('voiceNavoiySampleHint'),
+              style: Theme.of(c).textTheme.bodySmall,
+            ),
+          ],
           if (state?['onDevice'] == true)
             SwitchListTile(
               key: const Key('voice-device-only'),

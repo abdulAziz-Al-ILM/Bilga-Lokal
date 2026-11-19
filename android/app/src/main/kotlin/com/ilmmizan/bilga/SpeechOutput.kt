@@ -16,6 +16,7 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
     private val channel = MethodChannel(messenger, "bilga/speech_output")
     private val handler = Handler(Looper.getMainLooper())
     private val embedded = EmbeddedSpeech(activity.applicationContext, handler)
+    private val hasNavoiySample = activity.packageName == "com.ilmmizan.bilga.review"
     private var ready: Boolean? = null
     private var pending: MethodChannel.Result? = null
     private var generation = 0
@@ -33,6 +34,18 @@ internal class SpeechOutput(private val activity: Activity, messenger: BinaryMes
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "stop" -> { stop("cancelled"); result.success(null) }
+                "hasNavoiySample" -> result.success(hasNavoiySample)
+                "playNavoiySample" -> {
+                    if (!foreground || !hasNavoiySample) {
+                        result.error("unavailable", null, null)
+                        return@setMethodCallHandler
+                    }
+                    stop("cancelled")
+                    pending = result
+                    val attempt = generation
+                    handler.postDelayed(expiry, 15000)
+                    embedded.playNavoiySample { error -> finish(attempt, error) }
+                }
                 "speak" -> {
                     val text = call.argument<String>("text").orEmpty()
                     val locale = Locale.forLanguageTag(call.argument<String>("language").orEmpty())

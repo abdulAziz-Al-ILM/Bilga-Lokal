@@ -204,6 +204,38 @@ void registerVoiceUiCases({
     addTearDown(() => messenger.setMockMethodCallHandler(output, null));
   }
 
+  testWidgets('Review labels the current voice and Navoiy sample separately', (
+    t,
+  ) async {
+    final played = <MethodCall>[];
+    mockOutput((call) async {
+      if (call.method == 'hasNavoiySample') return true;
+      played.add(call);
+      return null;
+    });
+    final r = await setup(t);
+    try {
+      expect(find.byKey(const Key('voice-navoiy-sample')), findsOneWidget);
+      expect(
+        find.text(Strings.get('en', 'voiceCurrentSample')),
+        findsOneWidget,
+      );
+      expect(find.text(Strings.get('en', 'voiceNavoiySample')), findsOneWidget);
+      await key(t, 'voice-test-output');
+      expect(played.single.method, 'speak');
+      expect(
+        played.single.arguments['text'],
+        'Assalomu alaykum! Sizga qanday yordam bera olaman?',
+      );
+      await key(t, 'voice-navoiy-sample');
+      expect(played.last.method, 'playNavoiySample');
+      expect(played.last.arguments, isNull);
+      expect(r.$5.followUps, isEmpty);
+    } finally {
+      await cleanup(t, r);
+    }
+  });
+
   test(
     'Uzbek speech reads dates and amounts in words with their full precision',
     () async {

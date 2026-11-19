@@ -24,11 +24,18 @@ internal class EmbeddedSpeech(private val context: Context, private val main: Ha
 
     val available get() = binary.canExecute()
 
-    fun speak(text: String, language: String, rate: Float, done: (String?) -> Unit) {
+    fun speak(text: String, language: String, rate: Float, done: (String?) -> Unit) =
+        renderAndPlay(done) { attempt -> render(text, language, rate, attempt) }
+
+    fun playNavoiySample(done: (String?) -> Unit) = renderAndPlay(done) {
+        context.assets.open("navoiy-sample/warm-agent.wav").use { it.readBytes() }
+    }
+
+    private fun renderAndPlay(done: (String?) -> Unit, load: (Int) -> ByteArray?) {
         stop()
         val attempt = generation.get()
         worker.execute {
-            val wav = try { render(text, language, rate, attempt) } catch (_: Exception) { null }
+            val wav = try { load(attempt) } catch (_: Exception) { null }
             main.post {
                 if (attempt != generation.get()) return@post
                 if (wav == null) done("unavailable") else play(wav, attempt, done)

@@ -49,6 +49,19 @@ class SpeechBridge {
 class SpeechOutput {
   static const _channel = MethodChannel('bilga/speech_output');
 
+  static Future<bool> hasNavoiySample() async {
+    try {
+      return await _channel.invokeMethod<bool>('hasNavoiySample') ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  static Future<void> playNavoiySample() =>
+      _channel.invokeMethod<void>('playNavoiySample');
+
   static Future<void> speak(String text, String language, {double rate = 1}) {
     final excerpt = String.fromCharCodes(text.runes.take(1100));
     final prepared = language.split('-').first == 'uz'
