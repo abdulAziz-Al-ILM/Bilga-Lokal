@@ -177,25 +177,41 @@ class _HomePageState extends State<HomePage> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            ClipRRect(
+        title: LayoutBuilder(
+          builder: (context, width) {
+            final logo = ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 'assets/brand/bilga.png',
                 width: 40,
                 height: 40,
+                semanticLabel: 'Bilga',
               ),
-            ),
-            const SizedBox(width: 12),
-            const Flexible(
-              child: Text(
-                'Bilga',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+            );
+            if (width.maxWidth < 64) {
+              return Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SizedBox(
+                  width: width.maxWidth.clamp(0.0, 36.0),
+                  height: 36,
+                  child: logo,
+                ),
+              );
+            }
+            return Row(
+              children: [
+                logo,
+                const SizedBox(width: 12),
+                const Flexible(
+                  child: Text(
+                    'Bilga',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         actions: [
           IconButton(

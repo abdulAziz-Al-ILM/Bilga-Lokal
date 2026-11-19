@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -70,6 +72,7 @@ void main() {
     expect(jsonEncode(rows), isNot(contains('PRIVATE')));
   });
   test('Locked sources never publish and a later refresh replaces reminders after archive', () async {
+    SharedPreferences.setMockInitialValues({});
     final store = HabitStore(provided: db);
     await store.create(
       'Private title',

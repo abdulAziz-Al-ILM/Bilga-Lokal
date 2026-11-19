@@ -203,7 +203,13 @@ void registerBookLibraryUiTests({
         expect(meta['favorite'], true);
         expect(meta['tags'], ['Study', 'personal']);
         expect(meta['shelves'], isEmpty);
-        await tester.pageBack();
+        await settle(tester);
+        final recordBack = find.descendant(
+          of: find.byType(RecordPage),
+          matching: find.byType(BackButton),
+        );
+        expect(recordBack, findsOneWidget);
+        await tester.tap(recordBack);
         await settle(tester);
         final folders = OrganizationStore('book', provided: db);
         await tester.runAsync(

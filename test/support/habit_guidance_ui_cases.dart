@@ -34,7 +34,16 @@ void registerHabitGuidanceUiCases({
   Future<void> settle(WidgetTester t) => settleIo(t);
 
   Future<void> tap(WidgetTester t, String key) async {
-    final finder = find.byKey(Key(key));
+    final finder = find.byElementPredicate(
+      (element) =>
+          element.widget.key == Key(key) &&
+          ModalRoute.of(element)?.isCurrent != false,
+    );
+    final deadline = Stopwatch()..start();
+    while (finder.evaluate().length != 1 &&
+        deadline.elapsed < const Duration(seconds: 10)) {
+      await settle(t);
+    }
     await t.ensureVisible(finder);
     await t.tap(finder);
     await settle(t);
