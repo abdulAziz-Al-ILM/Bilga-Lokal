@@ -5,7 +5,34 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/voice_ui_cases.dart' show ControlledSpeech;
 
-void main() => registerVoiceScreenCases();
+void main() {
+  registerVoiceScreenCases();
+
+  testWidgets('Voice controls fit above the keyboard on a short screen', (
+    tester,
+  ) async {
+    await tester.runAsync(Strings.load);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 440);
+    addTearDown(tester.view.reset);
+    final routes = VoiceScreenNavigator();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorObservers: [routes],
+        builder: (context, child) =>
+            VoiceScreenHost(enabled: true, routes: routes, child: child!),
+        home: const Scaffold(body: TextField()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('voice-screen-open')));
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 380);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byType(VoiceScreenHost), findsOneWidget);
+  });
+}
 
 void registerVoiceScreenCases() {
   testWidgets(
@@ -22,7 +49,7 @@ void registerVoiceScreenCases() {
           builder: (context, child) =>
               VoiceScreenHost(enabled: true, routes: routes, child: child!),
           home: Scaffold(
-            body: Column(
+            body: ListView(
               children: [
                 ValueListenableBuilder<bool>(
                   valueListenable: enabled,

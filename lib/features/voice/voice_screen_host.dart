@@ -446,50 +446,56 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
         widget.routes.current.value?.settings.name ==
         VoiceScreenNavigator.assistantRoute;
     _panelEntry?.markNeedsBuild();
-    return Column(
-      children: [
-        Expanded(
-          child: Semantics(
-            identifier: _scope,
-            container: true,
-            child: widget.child,
-          ),
-        ),
-        if (enabled && !insideAssistant)
-          Material(
-            color: Theme.of(context).colorScheme.surfaceContainer,
-            child: SafeArea(
-              top: false,
-              child: _open
-                  ? Padding(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.viewInsetsOf(context).bottom,
-                      ),
-                      child: SizedBox(
-                        height:
-                            ((MediaQuery.sizeOf(context).height -
-                                        MediaQuery.viewInsetsOf(context)
-                                            .bottom) *
-                                    .40)
-                                .clamp(80.0, 300.0),
-                        child: Overlay(
-                          initialEntries: [
-                            _panelEntry ??= OverlayEntry(builder: _panel),
-                          ],
-                        ),
-                      ),
-                    )
-                  : Center(
-                      child: TextButton.icon(
-                        key: const Key('voice-screen-open'),
-                        icon: const Icon(Icons.mic_none),
-                        label: Text(context.tr('voiceScreenTitle')),
-                        onPressed: _show,
-                      ),
-                    ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final safeBottom = MediaQuery.paddingOf(context).bottom
+            .clamp(0.0, constraints.maxHeight);
+        final keyboard = MediaQuery.viewInsetsOf(context).bottom
+            .clamp(0.0, constraints.maxHeight - safeBottom);
+        final available = constraints.maxHeight - safeBottom - keyboard;
+        final panelHeight = (available * .40).clamp(
+          available.clamp(0.0, 80.0),
+          300.0,
+        );
+        return Column(
+          children: [
+            Expanded(
+              child: Semantics(
+                identifier: _scope,
+                container: true,
+                child: widget.child,
+              ),
             ),
-          ),
-      ],
+            if (enabled && !insideAssistant)
+              Material(
+                color: Theme.of(context).colorScheme.surfaceContainer,
+                child: SafeArea(
+                  top: false,
+                  child: _open
+                      ? Padding(
+                          padding: EdgeInsets.only(bottom: keyboard),
+                          child: SizedBox(
+                            height: panelHeight,
+                            child: Overlay(
+                              initialEntries: [
+                                _panelEntry ??= OverlayEntry(builder: _panel),
+                              ],
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: TextButton.icon(
+                            key: const Key('voice-screen-open'),
+                            icon: const Icon(Icons.mic_none),
+                            label: Text(context.tr('voiceScreenTitle')),
+                            onPressed: _show,
+                          ),
+                        ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
