@@ -18,15 +18,29 @@ class VoiceScreenCommand {
   static VoiceScreenCommand? parse(String input) {
     final text = input.trim();
     if (text.isEmpty) return null;
-    final dictation = RegExp(
+    final uzbekDictation = RegExp(
       r'^(.+?)(?: maydoniga|ga)\s+(.+?)(?:\s+deb)?\s+yoz[.!?]*$',
       caseSensitive: false,
     ).firstMatch(text);
-    if (dictation != null && dictation[2]!.length <= 4000) {
+    final englishDictation = RegExp(
+      r'^(?:type|dictate) (.+?) into (?:the )?(.+?)(?: field)?[.!?]*$',
+      caseSensitive: false,
+    ).firstMatch(text);
+    final russianDictation = RegExp(
+      r'^(?:введи|напиши) в поле (\S+) (.+)$',
+      caseSensitive: false,
+    ).firstMatch(text);
+    final targetField =
+        uzbekDictation?[1] ?? englishDictation?[2] ?? russianDictation?[1];
+    final dictatedText =
+        uzbekDictation?[2] ?? englishDictation?[1] ?? russianDictation?[2];
+    if (targetField != null &&
+        dictatedText != null &&
+        dictatedText.length <= 4000) {
       return VoiceScreenCommand(
         SemanticsAction.setText,
-        words(dictation[1]!),
-        dictation[2],
+        words(targetField),
+        dictatedText,
       );
     }
     final colon = text.indexOf(':');
@@ -50,11 +64,15 @@ class VoiceScreenCommand {
     name = name.trim().replaceAll(RegExp(r'\s+'), ' ');
     const directions = {
       'pastga': SemanticsAction.scrollUp,
+      'pastga tush': SemanticsAction.scrollUp,
       'scroll down': SemanticsAction.scrollUp,
       'вниз': SemanticsAction.scrollUp,
+      'прокрути вниз': SemanticsAction.scrollUp,
       'yuqoriga': SemanticsAction.scrollDown,
+      'yuqoriga chiq': SemanticsAction.scrollDown,
       'scroll up': SemanticsAction.scrollDown,
       'вверх': SemanticsAction.scrollDown,
+      'прокрути вверх': SemanticsAction.scrollDown,
       'chapga': SemanticsAction.scrollRight,
       'scroll left': SemanticsAction.scrollRight,
       'влево': SemanticsAction.scrollRight,
@@ -71,6 +89,10 @@ class VoiceScreenCommand {
     }.entries) {
       final match = RegExp(entry.value).firstMatch(name);
       if (match != null) return VoiceScreenCommand(entry.key, match[1]!);
+    }
+    const back = {'go back', 'orqaga qayt', 'ortga qayt', 'вернись назад'};
+    if (back.contains(name)) {
+      return const VoiceScreenCommand(SemanticsAction.tap, 'back');
     }
     name = name
         .replaceFirst(

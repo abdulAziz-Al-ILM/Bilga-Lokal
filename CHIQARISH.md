@@ -73,7 +73,7 @@ Debug va release imzolari turlicha. Release APK debug ilovaning ustiga o‘rnash
 
 ## 5. Play faylini yig‘ish
 
-Avval GOOGLE_SETUP.md bo‘yicha Google Drive’ni sozlang va ikki qurilmada zaxira/tiklashni tekshiring.
+Avval GOOGLE_SETUP.md bo‘yicha Google Drive’ni sozlang va ikki qurilmada zaxira/tiklashni tekshiring. Umrbod xarid uchun Play mahsuloti va HTTPS tasdiqlash xizmatini sozlang. [Bir martalik xarid](PLAY_PRODUCTS_1_3.md).
 
 ```bash
 bash tool/build_play_bundle.sh
@@ -85,7 +85,7 @@ Skript Play’ga yubormaydi va Android integratsiya testlari bajarilganini o‘z
 
 ## 6. Play Console’da yakunlanadigan ishlar
 
-- Ilova bepul. Hozir xaridlar, reklama va AI yo‘q.
+- 40 kunlik sinovdan keyingi `bilga_lifetime_unlock` mahsulotini Console’da tekshirish. Litsenziya testeri bilan xarid, tasdiqlash, bekor qilish, tiklash va oflayn kirishni sinash.
 - Developer akkaunt/verifikatsiya va kerakli test trekini tayyorlash.
 - Bilga uchun sodda yozuv + belgi ikonkasi qo‘shildi: release/bilga-icon-512.png. Telefonning o‘zidan yangi screenshots olish va feature graphic tayyorlash qolgan.
 - Ilova tavsifi, qo‘llab-quvvatlash manzili, ommaviy privacy policy URL’i.
@@ -101,7 +101,7 @@ Rasmiy manbalar (2026-09-06 tekshirildi):
 
 ## 7. Keyingi yangilanishlar
 
-- Bitta ilova va package ID saqlanadi. Hozir bepul bo‘lgan Notes/To Do keyin pullik qilib qulflanmaydi.
+- Bitta ilova va package ID saqlanadi. Eski haqiqiy Play xaridlari tiklanadi, mavjud yozuvlar sinov tugagach ham o‘qish va eksport uchun ochiq qoladi.
 - `pubspec.yaml` dagi +4 — build raqami. Keyingi yuklashda +5 yoki Play’dagi eng katta raqamdan yuqorisini ishlating. Versiya nomi va DB schema versiyasi boshqa-boshqa narsalar.
 - Notes bazasi hozir v8, fayl nomi bilga.db. To Do v6, bilga_todo.db. Hozir ikkalasi alohida saqlanadi.
 - Har bir DB o‘zgarishi `onUpgrade` migratsiyasi bilan yoziladi; mavjud bazani o‘chirib yaratish yoki downgrade qilish ishlatilmaydi. Barcha avvalgi versiyalardan o‘tish sinovi saqlanadi.

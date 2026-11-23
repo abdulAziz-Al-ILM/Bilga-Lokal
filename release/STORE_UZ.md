@@ -1,22 +1,23 @@
-# Bilga — Notes va To Do
+# Bilga
 
 Qisqa tavsif:
-Yozuvlar va vazifalar: papkalar, qidiruv va shifrlangan zaxira.
+Qaydlar, vazifalar, odatlar, moliya, tajribalar va kitoblar bir joyda.
 
 To‘liq tavsif:
-Bilga yozuvlar va kundalik vazifalarni bitta joyda tartibga solishga yordam beradi. Asosiy funksiyalar internet va akkauntsiz ishlaydi.
+Bilga kundalik ishlaringiz va o‘rganganlaringizni bir joyda tartibga solishga yordam beradi. Asosiy funksiyalar internet va akkauntsiz ishlaydi.
 
-• Notes: ichma-ich papkalar, qidirish, avtomatik saqlash va versiyalar tarixi.
-• Sevimlilar, arxiv, teglar va o‘chirilgan yozuvlarni tiklash uchun savat.
-• To Do: tavsif, muhimlik darajasi, muddat, bajarilgan vazifalar va savat.
-• Kundalik, dars, uchrashuv, kitob, g‘oya va vazifalar uchun 10 ta tayyor shablon.
-• 43 til, 7 rang mavzusi, och va tungi ko‘rinish.
-• Qurilmadagi PIN yoki biometriya orqali ilovani qulflash.
-• Parolli shifrlangan faylga zaxiralash va undan tiklash.
-• Google hisobini ulab, Google Drive’da shifrlangan nusxa saqlash.
+- Qaydlar — papkalar, teglar, shablonlar, avtomatik saqlash va versiyalar tarixi.
+- Vazifalar — muddat, muhimlik darajasi, eslatma va kunlik reja.
+- Odatlar — o‘zingizga mos jadval, miqdoriy maqsad, kalendar va natijalar.
+- Moliya — hisoblar, kirim va chiqimlar, o‘tkazmalar, budjetlar va jamg‘arma maqsadlari.
+- Tajribalar — kuzatuvlar, sinov natijalari, ilovalar va keyingi vazifalar.
+- Kitoblar — mos mahalliy fayllarni o‘qish, xatcho‘p va o‘qish joyini saqlash.
+- Yordam — umumiy qidiruv, tayyor shablonlar va amaliy qo‘llanmalar.
 
-Notes va To Do bepul. Hozir reklama, obuna va ilova ichidagi xaridlar yo‘q.
+Mikrofonni ilovada o‘zingiz yoqib, o‘zbekcha, inglizcha yoki ruscha buyruq berishingiz mumkin. Masalan, bugungi rejani so‘rang yoki qaydlaringizdan qidiring. Tanilgan matnni tekshirishingiz va tahrirlashingiz mumkin. Nutqni tanish imkoniyati qurilma va tanlangan tilga bog‘liq.
 
-Zaxirani foydalanuvchi tugma orqali yaratadi. Yangi telefonda Drive nusxasini ochish uchun tegishli Google hisobi va nusxa yaratilgan parol kerak. Parolni yo‘qotsangiz, Bilga uni qayta tiklab bera olmaydi. To Do muddati hozir ilova ichida ko‘rsatiladi, bildirishnoma yubormaydi.
+Qaydlaringiz qurilmada saqlanadi. Ilovani qurilma kodi yoki biometriya bilan qulflashingiz, yozuvlarni parolli faylga zaxiralashingiz va qayta tiklashingiz mumkin. Google Drive zaxirasi ixtiyoriy. Bilga zaxira parolini tiklab bera olmaydi.
 
-Nashr eslatmasi: ushbu tavsifni Google Drive haqiqiy buildda sozlanib, tekshirilgandan keyin ishlating. Tarjimalar barcha tillarda mutaxassis tomonidan tekshirilmagan. Aloqa emaili, privacy policy URL va do‘kon rasmlari egasi tomonidan to‘ldiriladi.
+Bilga 40 kunlik sinov muddatini beradi. Undan so‘ng yozuv yaratish va tahrirlash uchun bir martalik umrbod xarid bor. Mavjud yozuvlaringizni o‘qish va eksport qilish mumkin.
+
+Nashr uchun ichki eslatma. Matnni yakuniy to‘plamda Drive, ovoz, bildirishnoma va Play xaridi tasdiqlangach ishlating. Do‘konda aloqa manzili, ommaviy maxfiylik siyosati va yakuniy skrinshotlarni tekshiring.

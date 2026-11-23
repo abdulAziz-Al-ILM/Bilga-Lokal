@@ -395,6 +395,7 @@ void registerVoiceUiCases({
       final playback = Completer<void>();
       final outputCalls = <String>[];
       mockOutput((call) async {
+        if (call.method == 'hasNavoiySample') return false;
         outputCalls.add(call.method);
         if (call.method == 'speak') await playback.future;
         return null;

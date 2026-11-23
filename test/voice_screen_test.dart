@@ -68,6 +68,11 @@ void main() {
       await confirm();
       expect(title.text, 'Bilga’s draft');
       await open();
+      await review('Type Bilga draft into the title field');
+      expect(title.text, 'Bilga’s draft');
+      await confirm();
+      expect(title.text, 'Bilga draft');
+      await open();
       await review('Save note');
       enabled.value = false;
       await tester.pumpAndSettle();
