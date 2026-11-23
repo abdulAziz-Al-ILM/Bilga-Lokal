@@ -209,7 +209,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
       final settings = AppSettings.instance;
       final local =
           available['onDevice'] == true &&
-          await settings.prefersDeviceRecognizer(settings.voiceLanguage);
+          await _speech.prefersDeviceRecognizer(settings.voiceLanguage);
       if (_screenCurrent && attempt == _generation) {
         setState(() {
           _availability = available;
@@ -226,7 +226,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
     final settings = AppSettings.instance;
     setState(() => _working = true);
     try {
-      await settings.setDeviceRecognizerPreference(
+      await _speech.setDeviceRecognizerPreference(
         settings.voiceLanguage,
         value,
       );

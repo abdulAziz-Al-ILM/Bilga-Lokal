@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SpeechBridge {
   static const channel = MethodChannel('bilga/speech');
@@ -20,6 +21,21 @@ class SpeechBridge {
       return {...?await channel.invokeMapMethod<String, dynamic>('state')};
     } on MissingPluginException {
       return {'available': false, 'onDevice': false};
+    }
+  }
+
+  Future<bool> prefersDeviceRecognizer(String language) async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool('bilga.voiceDeviceOnly.$language') ?? true;
+  }
+
+  Future<void> setDeviceRecognizerPreference(
+    String language,
+    bool value,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!await preferences.setBool('bilga.voiceDeviceOnly.$language', value)) {
+      throw StateError('settings_write');
     }
   }
 

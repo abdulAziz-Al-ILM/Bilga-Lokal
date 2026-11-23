@@ -20,18 +20,6 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
   String? lastBackup;
   bool _observing = false;
 
-  Future<bool> prefersDeviceRecognizer(String locale) async {
-    final preferences = await SharedPreferences.getInstance();
-    return preferences.getBool('bilga.voiceDeviceOnly.$locale') ?? true;
-  }
-
-  Future<void> setDeviceRecognizerPreference(String locale, bool value) async {
-    final preferences = await SharedPreferences.getInstance();
-    if (!await preferences.setBool('bilga.voiceDeviceOnly.$locale', value)) {
-      throw StateError('settings_write');
-    }
-  }
-
   Brightness get brightness => mode == ThemeMode.system
       ? WidgetsBinding.instance.platformDispatcher.platformBrightness
       : mode == ThemeMode.light

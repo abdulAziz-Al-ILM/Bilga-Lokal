@@ -108,9 +108,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
       final value = await speech.state();
       if (mounted) {
         final selected = language;
-        final preferDevice = await AppSettings.instance.prefersDeviceRecognizer(
-          selected,
-        );
+        final preferDevice = await speech.prefersDeviceRecognizer(selected);
         if (!mounted) return;
         setState(() {
           state = value;
@@ -133,7 +131,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     final previousMode = deviceOnly;
     setState(() => authorizing = true);
     try {
-      final preferDevice = await settings.prefersDeviceRecognizer(selected);
+      final preferDevice = await speech.prefersDeviceRecognizer(selected);
       if (!mounted) return;
       setState(() {
         language = settings.voiceLanguage = selected;
@@ -157,10 +155,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   Future<void> setDeviceOnly(bool selected) async {
     setState(() => authorizing = true);
     try {
-      await AppSettings.instance.setDeviceRecognizerPreference(
-        language,
-        selected,
-      );
+      await speech.setDeviceRecognizerPreference(language, selected);
       if (mounted) setState(() => deviceOnly = selected);
     } catch (_) {
       if (mounted) failure(context);

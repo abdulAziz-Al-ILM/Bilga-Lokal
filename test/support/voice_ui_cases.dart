@@ -28,12 +28,25 @@ import 'settle_io.dart';
 class ControlledSpeech extends SpeechBridge {
   final calls = <String>[];
   final followUps = <bool>[];
+  final _deviceRecognition = <String, bool>{};
   Completer<String?>? pending;
   bool available = true;
   @override
   Future<Map<String, dynamic>> state() async {
     calls.add('state');
     return {'available': available, 'onDevice': available};
+  }
+
+  @override
+  Future<bool> prefersDeviceRecognizer(String language) async =>
+      _deviceRecognition[language] ?? true;
+
+  @override
+  Future<void> setDeviceRecognizerPreference(
+    String language,
+    bool value,
+  ) async {
+    _deviceRecognition[language] = value;
   }
 
   @override
@@ -96,8 +109,7 @@ void registerVoiceUiCases({
   }) async {
     final r = (await t.runAsync(() async {
       await Strings.load();
-      // Exercise the setting in memory on both the host and the Review tablet.
-      SharedPreferences.setMockInitialValues({});
+      if (!secure) SharedPreferences.setMockInitialValues({});
       final dir =
           await (createDirectory?.call() ??
               Directory.systemTemp.createTemp('bilga-voice-ui-'));
