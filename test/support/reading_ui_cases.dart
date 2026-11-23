@@ -20,7 +20,7 @@ void registerReadingUiCases({
   Future<Directory> Function()? createDirectory,
   bool secure = false,
 }) {
-  Future<void> settle(WidgetTester t) async {
+  Future<void> settle(WidgetTester t, {bool Function()? until}) async {
     var quiet = 0;
     for (var i = 0; i < 150; i++) {
       await t.pump(const Duration(milliseconds: 40));
@@ -33,7 +33,8 @@ void registerReadingUiCases({
           ModalRoute.of(t.element(dialogs.first))?.animation?.status ==
               AnimationStatus.completed;
       if (secure && i < 10) continue;
-      if (find.byType(CircularProgressIndicator).evaluate().isEmpty &&
+      if ((until?.call() ?? true) &&
+          find.byType(CircularProgressIndicator).evaluate().isEmpty &&
           (modalReady || !t.binding.hasScheduledFrame)) {
         if (++quiet >= 3) return;
       } else {
@@ -244,10 +245,15 @@ void registerReadingUiCases({
           settings.revision,
         );
         await tap(t, find.byKey(const Key('reader-appearance')));
-        await t.drag(find.byType(Slider).first, const Offset(30, 0));
-        await settle(t);
+        await tap(t, find.text(Strings.get('en', 'rTheme_dark')));
         await tap(t, find.text(Strings.get('en', 'gFinish')));
+        await settle(t, until: () => appearanceGuide.index == 1);
         expect(appearanceGuide.index, 1);
+        final updated = (await t.runAsync(
+          () => store.one(book.id, 'settings'),
+        ))!;
+        expect(updated.revision, greaterThan(settings.revision));
+        expect(updated.data['theme'], 'dark');
         await tap(t, find.byKey(const Key('guide-next')));
         await tap(t, find.byIcon(Icons.chevron_right).last);
         expect(find.text('فصل دوم'), findsWidgets);
