@@ -3,7 +3,11 @@ import 'package:bilga/features/voice/voice_screen_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-void main() {
+import 'support/voice_ui_cases.dart' show ControlledSpeech;
+
+void main() => registerVoiceScreenCases();
+
+void registerVoiceScreenCases() {
   testWidgets(
     'Screen voice reviews real controls and rechecks their availability',
     (tester) async {
@@ -50,12 +54,15 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      Future<void> confirm() async {
-        final button = find.byKey(const Key('voice-screen-confirm'));
-        await tester.ensureVisible(button);
-        await tester.tap(button);
+      Future<void> tapVisible(Finder target) async {
+        await tester.ensureVisible(target);
+        await tester.pumpAndSettle();
+        await tester.tap(target);
         await tester.pumpAndSettle();
       }
+
+      Future<void> confirm() =>
+          tapVisible(find.byKey(const Key('voice-screen-confirm')));
 
       await open();
       await review('Iltimos, saqla');
@@ -87,4 +94,45 @@ void main() {
       title.dispose();
     },
   );
+
+  testWidgets('One microphone tap lets the user review and confirm a control', (
+    tester,
+  ) async {
+    await tester.runAsync(Strings.load);
+    final routes = VoiceScreenNavigator();
+    final speech = ControlledSpeech();
+    var saves = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorObservers: [routes],
+        builder: (context, child) => VoiceScreenHost(
+          enabled: true,
+          routes: routes,
+          speech: speech,
+          child: child!,
+        ),
+        home: Scaffold(
+          body: FilledButton(
+            onPressed: () => saves++,
+            child: const Text('Save note'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('voice-screen-open')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('voice-screen-speak')));
+    await tester.pump();
+    speech.pending!.complete('Save note');
+    await tester.pump();
+    expect(saves, 0);
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(speech.followUps, [false, true]);
+    speech.pending!.complete('Tasdiqlayman');
+    await tester.pumpAndSettle();
+    expect(saves, 1);
+    expect(speech.followUps, [false, true]);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

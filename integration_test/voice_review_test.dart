@@ -1,11 +1,14 @@
+import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../test/support/voice_ui_cases.dart';
+import '../test/voice_screen_test.dart' show registerVoiceScreenCases;
 import 'review_guard.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(requireReviewPackage);
   registerVoiceUiCases(
     createDirectory: () async {
       await requireReviewPackage();
@@ -14,4 +17,5 @@ void main() {
     secure: true,
     includeCompact: false,
   );
+  registerVoiceScreenCases();
 }

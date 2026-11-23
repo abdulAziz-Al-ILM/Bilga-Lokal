@@ -76,11 +76,14 @@ enum ConversationControl {
       'закончи разговор' ||
       'перестань слушать' => stop,
       'tasdiqlayman' ||
+      'amalni tasdiqlash' ||
       'davom et' ||
       'davom etish' ||
       'confirm' ||
+      'confirm control' ||
       'continue' ||
       'подтверждаю' ||
+      'подтвердить действие' ||
       'продолжить' => confirm,
       'bekor qil' ||
       'bekor qilish' ||

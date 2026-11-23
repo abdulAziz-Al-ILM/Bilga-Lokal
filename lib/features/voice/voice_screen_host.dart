@@ -346,7 +346,11 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
       final text = await _speech.listen(language: language, onDevice: _local);
       if (!_screenCurrent || attempt != _generation || text == null) return;
       _input.text = text;
+      final wasConfirming = _pending != null && _confirmation(text);
       _review(text);
+      if (_pending case final target? when !wasConfirming) {
+        await _listenForConfirmation(language, attempt, target);
+      }
     } catch (_) {
       if (_screenCurrent && attempt == _generation) {
         setState(() => _message = 'voiceNoSpeech');
@@ -359,6 +363,40 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
           setState(() => _working = _listening = false);
         }
       }
+    }
+  }
+
+  static bool _confirmation(String text) =>
+      switch (ConversationControl.parse(text)) {
+        ConversationControl.confirm ||
+        ConversationControl.cancel ||
+        ConversationControl.stop => true,
+        _ => false,
+      };
+
+  Future<void> _listenForConfirmation(
+    String language,
+    int attempt,
+    _Target target,
+  ) async {
+    setState(() => _status = '');
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!_screenCurrent || attempt != _generation || _pending != target) return;
+    try {
+      final reply = await _speech.listen(
+        language: language,
+        onDevice: _local,
+        followUp: true,
+      );
+      if (reply != null &&
+          _screenCurrent &&
+          attempt == _generation &&
+          _pending == target &&
+          _confirmation(reply)) {
+        _review(reply);
+      }
+    } on PlatformException {
+      // The preview stays available for manual confirmation.
     }
   }
 
@@ -484,6 +522,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
           spacing: 8,
           children: [
             FilledButton.tonalIcon(
+              key: const Key('voice-screen-speak'),
               onPressed:
                   _working ||
                       _availability?[_local ? 'onDevice' : 'available'] != true
@@ -520,7 +559,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
           if (_request?.text case final text?) Text(text),
           FilledButton(
             key: const Key('voice-screen-confirm'),
-            onPressed: _working ? null : _execute,
+            onPressed: _working && !_listening ? null : _execute,
             child: Text(context.tr('voiceScreenConfirm')),
           ),
         ] else

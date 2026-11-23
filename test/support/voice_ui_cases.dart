@@ -121,6 +121,7 @@ void registerVoiceUiCases({
             '${dir.path}/tasks.db',
             secure: secure,
           );
+      if (secure) debugPrint('Voice fixtures: encrypted databases ready');
       return (
         dir,
         notes,
@@ -149,6 +150,7 @@ void registerVoiceUiCases({
       ),
     );
     await settleIo(t);
+    if (secure) debugPrint('Voice fixtures: command screen ready');
     return r;
   }
 
