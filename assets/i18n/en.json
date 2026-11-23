@@ -1033,7 +1033,7 @@
   "voiceConversationStop": "End conversation",
   "voiceConversationResume": "Listen again",
   "voiceConversationPaused": "Conversation paused. Listen again or edit the question below.",
-  "voiceConversationHint": "Ask about your plan, habits, recent writing or weekly spending. Bilga listens again after each answer. Silence or unclear speech pauses the conversation. Leaving this screen ends it. Other commands need your review.",
+  "voiceConversationHint": "Ask about today's or tomorrow's plan, habits, recent writing or weekly spending. Bilga listens again after each answer. Say “Repeat”, “Pause” or “Stop listening”. After reviewing a command, say “Confirm” or “Cancel”. Silence or unclear speech pauses the conversation.",
   "voiceConversationSpeaking": "Reading the answer…",
   "voiceSpeak": "Tap to speak",
   "voiceStop": "Finish speaking",

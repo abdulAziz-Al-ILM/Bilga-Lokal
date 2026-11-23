@@ -329,4 +329,29 @@ void registerUxDataCases({
       contains('empty'),
     );
   });
+
+  test('Tomorrow’s spoken plan uses the next calendar day only', () async {
+    final now = DateTime(2026, 12, 31, 20);
+    for (final entry in {
+      'Yesterday’s overdue task': DateTime(2026, 12, 30, 11),
+      'Today’s task': DateTime(2026, 12, 31, 23),
+      'Tomorrow’s actual task': DateTime(2027, 1, 1, 9),
+      'Other planned task': DateTime(2027, 1, 2, 9),
+    }.entries) {
+      await tasks.insert('todos', {
+        'id': entry.key,
+        'title': entry.key,
+        'description': '',
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+        'due_at': entry.value.toIso8601String(),
+      });
+    }
+    final answer = await PersonalAnswers(
+      notes,
+      tasks,
+    ).plan(now, (s) => s, tomorrow: true);
+    expect(answer.first, 'tomorrow · 1\nTomorrow’s actual task');
+    expect(answer, hasLength(2));
+  });
 }

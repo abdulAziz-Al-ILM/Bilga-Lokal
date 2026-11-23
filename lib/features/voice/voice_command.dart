@@ -17,12 +17,15 @@ enum VoiceAction {
   card,
   search,
   today,
+  tomorrow,
   pendingHabits,
   lastFriday,
   weeklySpending,
   readFolder,
   openSection,
-  unknown,
+  unknown;
+
+  String get label => this == tomorrow ? 'tomorrow' : 'voiceAction$name';
 }
 
 enum VoiceSection {
@@ -40,6 +43,55 @@ enum VoiceSection {
   final String label;
 }
 
+enum ConversationControl {
+  repeat,
+  pause,
+  stop,
+  confirm,
+  cancel;
+
+  static ConversationControl? parse(String utterance) {
+    final phrase = VoiceCommand.normalize(utterance)
+        .toLowerCase()
+        .replaceFirst(RegExp(r'\s*[?.!]+$'), '');
+    return switch (phrase) {
+      'qaytar' ||
+      'yana ayt' ||
+      'qayta ayt' ||
+      'repeat' ||
+      'say that again' ||
+      'повтори' ||
+      'скажи ещё раз' => repeat,
+      'kut' ||
+      'pauza' ||
+      'kutib tur' ||
+      'pause' ||
+      'wait' ||
+      'пауза' ||
+      'подожди' => pause,
+      'suhbatni tugat' ||
+      "tinglashni to'xtat" ||
+      'stop listening' ||
+      'end conversation' ||
+      'закончи разговор' ||
+      'перестань слушать' => stop,
+      'tasdiqlayman' ||
+      'davom et' ||
+      'davom etish' ||
+      'confirm' ||
+      'continue' ||
+      'подтверждаю' ||
+      'продолжить' => confirm,
+      'bekor qil' ||
+      'bekor qilish' ||
+      'cancel' ||
+      'отмени' ||
+      'отмена' => cancel,
+      _ => null,
+    };
+  }
+}
+
 class VoiceCommand {
   final VoiceAction action;
   final String argument;
@@ -47,6 +99,7 @@ class VoiceCommand {
 
   bool get isConversationQuestion => switch (action) {
     VoiceAction.today ||
+    VoiceAction.tomorrow ||
     VoiceAction.pendingHabits ||
     VoiceAction.lastFriday ||
     VoiceAction.weeklySpending => true,
@@ -97,6 +150,19 @@ class VoiceCommand {
         'что мне делать сегодня',
         'какие у меня дела сегодня',
         'покажи план на сегодня',
+      ],
+      VoiceAction.tomorrow: [
+        'ertaga nima qilaman',
+        'ertaga nima qilishim kerak',
+        'ertaga nima qilish kerak',
+        'ertangi rejam nima',
+        "ertangi rejani ko'rsat",
+        'what should i do tomorrow',
+        "what's on my schedule tomorrow",
+        'show my plan for tomorrow',
+        'что мне делать завтра',
+        'какие у меня дела завтра',
+        'покажи план на завтра',
       ],
       VoiceAction.pendingHabits: [
         'bugun qaysi odatlar bajarilmagan',
@@ -325,10 +391,17 @@ class VoiceCommand {
         RegExp(r'qoldi|qolgan|bajarilmagan|bajarmadim').hasMatch(phrase)) {
       return VoiceAction.pendingHabits;
     }
-    if (today &&
-        RegExp(r'reja|ishlar|vazifa').hasMatch(phrase) &&
-        RegExp(r"qanday|nima|ro'yxat|bilmoq|ayt|ko'rsat").hasMatch(phrase)) {
-      return VoiceAction.today;
+    final tomorrow = RegExp(r'\berta(?:ga|ngi)\b').hasMatch(phrase);
+    if (today != tomorrow) {
+      final topic = RegExp(r'reja|ishlar|vazifa').hasMatch(phrase);
+      final question = RegExp(r"qanday|nima|ro'yxat|bilmoq|ayt|ko'rsat")
+          .hasMatch(phrase);
+      final askingWhatToDo = RegExp(
+        r'nima(?:lar)?\b.*\bqil(?:sam|aman|amiz|ay|ish)',
+      ).hasMatch(phrase);
+      if ((topic && question) || askingWhatToDo) {
+        return today ? VoiceAction.today : VoiceAction.tomorrow;
+      }
     }
     if (RegExp(r'\b(?:bu|shu) hafta(?:da|dagi|lik)?\b').hasMatch(phrase) &&
         RegExp(r'sarfl|xarajat').hasMatch(phrase) &&

@@ -96,7 +96,8 @@ void registerVoiceUiCases({
   }) async {
     final r = (await t.runAsync(() async {
       await Strings.load();
-      if (!secure) SharedPreferences.setMockInitialValues({});
+      // Exercise the setting in memory on both the host and the Review tablet.
+      SharedPreferences.setMockInitialValues({});
       final dir =
           await (createDirectory?.call() ??
               Directory.systemTemp.createTemp('bilga-voice-ui-'));
@@ -351,6 +352,19 @@ void registerVoiceUiCases({
           findsOneWidget,
         );
         expect(find.text(Strings.get('en', 'vaNoVoice')), findsOneWidget);
+        await key(t, 'voice-resume-conversation');
+        r.$5.pending!.complete('Yana ayt');
+        await settleIo(t);
+        expect(spoken, hasLength(3));
+        expect(spoken[2], spoken[1]);
+        expect(r.$5.followUps, hasLength(8));
+        r.$5.pending!.complete('Suhbatni tugat');
+        await settleIo(t);
+        expect(r.$5.followUps, hasLength(8));
+        expect(
+          find.text(Strings.get('en', 'voiceConversationStart')),
+          findsOneWidget,
+        );
       } finally {
         await cleanup(t, r);
       }
@@ -358,11 +372,30 @@ void registerVoiceUiCases({
   );
 
   testWidgets(
-    'Conversation asks for system provider consent and stops at a financial draft',
+    'A saved system provider still requires consent and a financial command stops at a draft',
     (t) async {
       final r = await setup(t);
       try {
         await key(t, 'voice-device-only');
+        await t.pumpWidget(const SizedBox.shrink());
+        await settleIo(t);
+        await t.pumpWidget(
+          MaterialApp(
+            home: VoicePage(
+              speech: r.$5,
+              actions: VoiceActions(notesDb: r.$2, tasksDb: r.$3, access: r.$4),
+            ),
+          ),
+        );
+        await settleIo(t);
+        expect(
+          t
+              .widget<SwitchListTile>(
+                find.byKey(const Key('voice-device-only')),
+              )
+              .value,
+          isFalse,
+        );
         await key(t, 'voice-conversation');
         expect(r.$5.followUps, isEmpty);
         await tap(
@@ -374,11 +407,15 @@ void registerVoiceUiCases({
         r.$5.pending!.complete('xarajat yoz 50000 UZS');
         await settleIo(t);
         expect(find.byKey(const Key('voice-execute')), findsOneWidget);
+        expect(r.$5.followUps, [false, true]);
+        r.$5.pending!.complete('yaxshi');
+        await settleIo(t);
         expect(
           find.text(Strings.get('en', 'voiceConversationStart')),
           findsOneWidget,
         );
-        expect(r.$5.followUps, [false]);
+        expect(r.$5.followUps, [false, true]);
+        expect(find.byKey(const Key('voice-execute')), findsOneWidget);
         expect(
           (await t.runAsync(() => r.$2.query('private_records')))!,
           isEmpty,
@@ -388,6 +425,27 @@ void registerVoiceUiCases({
       }
     },
   );
+
+  testWidgets('Spoken confirmation opens an editable draft before any write', (
+    t,
+  ) async {
+    final r = await setup(t);
+    try {
+      await key(t, 'voice-conversation');
+      r.$5.pending!.complete('Qayd yoz: Kitob tavsiyasi');
+      await settleIo(t);
+      expect(r.$5.followUps, [false, true]);
+      final title = find.byKey(const ValueKey('editor-field-title'));
+      expect(title, findsNothing);
+      r.$5.pending!.complete('Tasdiqlayman');
+      await settleIo(t);
+      expect(t.widget<TextField>(title).controller!.text, 'Kitob tavsiyasi');
+      expect((await t.runAsync(() => r.$2.query('notes')))!, isEmpty);
+      expect(r.$5.followUps, [false, true]);
+    } finally {
+      await cleanup(t, r);
+    }
+  });
 
   testWidgets(
     'Leaving the foreground stops an active answer and never reopens the mic',

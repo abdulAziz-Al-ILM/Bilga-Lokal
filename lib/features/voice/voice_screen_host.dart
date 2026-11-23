@@ -10,6 +10,7 @@ import '../../core/editor_form.dart';
 import '../../core/settings.dart';
 import '../../core/strings.dart';
 import 'speech_bridge.dart';
+import 'voice_command.dart';
 import 'voice_screen_command.dart';
 
 class VoiceScreenNavigator extends NavigatorObserver {
@@ -205,14 +206,45 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
     setState(() => _choices = _targets(SemanticsAction.tap));
     try {
       final available = await _speech.state();
+      final settings = AppSettings.instance;
+      final local =
+          available['onDevice'] == true &&
+          await settings.prefersDeviceRecognizer(settings.voiceLanguage);
       if (_screenCurrent && attempt == _generation) {
         setState(() {
           _availability = available;
-          _local = available['onDevice'] == true;
+          _local = local;
         });
       }
     } catch (_) {
       // The same controls can be operated with a typed command.
+    }
+  }
+
+  Future<void> _setDeviceOnly(bool value) async {
+    final attempt = _generation;
+    final settings = AppSettings.instance;
+    setState(() => _working = true);
+    try {
+      await settings.setDeviceRecognizerPreference(
+        settings.voiceLanguage,
+        value,
+      );
+      if (_screenCurrent && attempt == _generation) {
+        setState(() => _local = value);
+      }
+    } catch (_) {
+      if (_screenCurrent && attempt == _generation) {
+        setState(() => _message = 'saveError');
+      }
+    } finally {
+      if (mounted && attempt == _generation) {
+        if (_screenCurrent) {
+          setState(() => _working = false);
+        } else {
+          _close();
+        }
+      }
     }
   }
 
@@ -228,11 +260,18 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
 
   void _review(String utterance) {
     if (!_screenCurrent) return;
-    final normalized = VoiceScreenCommand.words(utterance);
-    if (_pending != null &&
-        const {'tasdiqlayman', 'confirm', 'подтверждаю'}.contains(normalized)) {
-      unawaited(_execute());
-      return;
+    if (_pending != null) {
+      switch (ConversationControl.parse(utterance)) {
+        case ConversationControl.confirm:
+          unawaited(_execute());
+          return;
+        case ConversationControl.cancel:
+        case ConversationControl.stop:
+          _close();
+          return;
+        default:
+          break;
+      }
     }
     final request = VoiceScreenCommand.parse(utterance);
     if (request == null) return;
@@ -339,7 +378,10 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
       setState(() => _working = true);
       owner.performAction(target.id, SemanticsAction.focus);
       await WidgetsBinding.instance.endOfFrame;
-      if (!_screenCurrent || _pending != target) return;
+      if (!_screenCurrent || _pending != target) {
+        if (mounted && _open) _close();
+        return;
+      }
       final field = owner.getSemanticsNode(target.id)?.getSemanticsData();
       if (field?.hasAction(SemanticsAction.setText) != true ||
           field?.flagsCollection.isObscured == true) {
@@ -468,9 +510,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
               FilterChip(
                 label: Text(context.tr('voiceDeviceOnly')),
                 selected: _local,
-                onSelected: _working
-                    ? null
-                    : (value) => setState(() => _local = value),
+                onSelected: _working ? null : _setDeviceOnly,
               ),
           ],
         ),

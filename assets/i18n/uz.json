@@ -1033,7 +1033,7 @@
   "voiceConversationStop": "Suhbatni tugatish",
   "voiceConversationResume": "Yana tinglash",
   "voiceConversationPaused": "Suhbat pauzada. Yana tinglashni bosing yoki quyidagi savol matnini tuzating.",
-  "voiceConversationHint": "Rejangiz, odatlaringiz, yozuvlaringiz yoki haftalik xarajatlaringiz haqida so‘rang. Bilga har javobdan keyin yana tinglaydi. Sukut yoki noaniq nutq suhbatni pauzaga qo‘yadi. Oynadan chiqsangiz, suhbat tugaydi. Boshqa buyruqlarni avval tekshirasiz.",
+  "voiceConversationHint": "Bugungi yoki ertangi rejangiz, odatlaringiz, yozuvlaringiz yoki haftalik xarajatlaringiz haqida so‘rang. Bilga har javobdan keyin yana tinglaydi. «Yana ayt», «Kut» yoki «Suhbatni tugat» deyishingiz mumkin. Buyruqni tekshirgach «Tasdiqlayman» yoki «Bekor qil» deng. Sukut yoki noaniq nutq suhbatni pauzaga qo‘yadi.",
   "voiceConversationSpeaking": "Javob o‘qilmoqda…",
   "voiceSpeak": "Gapirish uchun bosing",
   "voiceStop": "Gapirishni tugatish",

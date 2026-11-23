@@ -30,6 +30,7 @@ void main() {
       'Bugungi rejani ko‘rsat!',
       'Menga bugungi rejamni ayt',
       'Tongda ish boshlashdan avval bugungi ishlarim ro‘yxatini bilmoqchiman.',
+      'Bugun nimalar qilsam bo‘ladi?',
       'Какие у меня дела сегодня?',
       'Show my plan for today.',
     ]) {
@@ -52,6 +53,14 @@ void main() {
       VoiceAction.lastFriday,
     );
     expect(VoiceCommand.parse('bugun ...').action, VoiceAction.unknown);
+    for (final phrase in [
+      'Ertaga nima qilaman?',
+      'Ertangi vazifalarim ro‘yxatini aytib ber',
+      'Show my plan for tomorrow.',
+      'Какие у меня дела завтра?',
+    ]) {
+      expect(VoiceCommand.parse(phrase).action, VoiceAction.tomorrow);
+    }
     expect(
       VoiceCommand.parse('Bugungi rejamni ayt deb vazifa yarat').action,
       VoiceAction.task,

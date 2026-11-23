@@ -33,7 +33,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   String? outputError;
   bool deviceOnly = true, listening = false, acting = false;
   bool conversation = false, speaking = false, authorizing = false;
-  bool conversationPaused = false;
+  bool conversationPaused = false, awaitingSpokenConfirmation = false;
   bool navoiySampleAvailable = false, previewingNavoiy = false;
   bool get showNavoiyComparison => navoiySampleAvailable && language == 'uz-UZ';
   int generation = 0;
@@ -107,15 +107,65 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     try {
       final value = await speech.state();
       if (mounted) {
+        final selected = language;
+        final preferDevice = await AppSettings.instance.prefersDeviceRecognizer(
+          selected,
+        );
+        if (!mounted) return;
         setState(() {
           state = value;
-          deviceOnly = value['onDevice'] == true;
+          if (language == selected) {
+            deviceOnly = value['onDevice'] == true && preferDevice;
+          }
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() => state = {'available': false, 'onDevice': false});
       }
+    }
+  }
+
+  Future<void> selectLanguage(String? selected) async {
+    if (selected == null || selected == language || controlsBusy) return;
+    final settings = AppSettings.instance;
+    final previous = language;
+    final previousMode = deviceOnly;
+    setState(() => authorizing = true);
+    try {
+      final preferDevice = await settings.prefersDeviceRecognizer(selected);
+      if (!mounted) return;
+      setState(() {
+        language = settings.voiceLanguage = selected;
+        deviceOnly = state?['onDevice'] == true && preferDevice;
+      });
+      await settings.save();
+    } catch (_) {
+      settings.voiceLanguage = previous;
+      if (mounted) {
+        setState(() {
+          language = previous;
+          deviceOnly = previousMode;
+        });
+        failure(context);
+      }
+    } finally {
+      if (mounted) setState(() => authorizing = false);
+    }
+  }
+
+  Future<void> setDeviceOnly(bool selected) async {
+    setState(() => authorizing = true);
+    try {
+      await AppSettings.instance.setDeviceRecognizerPreference(
+        language,
+        selected,
+      );
+      if (mounted) setState(() => deviceOnly = selected);
+    } catch (_) {
+      if (mounted) failure(context);
+    } finally {
+      if (mounted) setState(() => authorizing = false);
     }
   }
 
@@ -136,6 +186,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
       setState(() {
         conversation = false;
         conversationPaused = false;
+        awaitingSpokenConfirmation = false;
         speaking = false;
         previewingNavoiy = false;
         listening = false;
@@ -297,6 +348,17 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             attempt != generation) {
           break;
         }
+        final control = ConversationControl.parse(result);
+        if (control == ConversationControl.stop) break;
+        if (control == ConversationControl.pause) {
+          setState(() => conversationPaused = true);
+          break;
+        }
+        if (control == ConversationControl.repeat && answer != null) {
+          if (!await playReply(answer!, attempt)) break;
+          followUp = true;
+          continue;
+        }
         final question = VoiceCommand.parse(result);
         if (!question.isConversationQuestion) {
           setState(() {
@@ -307,6 +369,9 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
               outputError = null;
             }
           });
+          if (question.action != VoiceAction.unknown) {
+            await confirmSpokenCommand(attempt);
+          }
           break;
         }
         if (!mounted) break;
@@ -326,6 +391,40 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
           speaking = false;
         });
       }
+    }
+  }
+
+  Future<void> confirmSpokenCommand(int attempt) async {
+    setState(() {
+      awaitingSpokenConfirmation = true;
+      listening = true;
+      partial = '';
+      status = '';
+    });
+    String? reply;
+    try {
+      reply = await listenForFollowUp(attempt);
+    } on PlatformException {
+      // Keep the command preview usable after silence or a recognition error.
+    } finally {
+      if (mounted && attempt == generation) {
+        setState(() {
+          awaitingSpokenConfirmation = false;
+          listening = false;
+          partial = '';
+          status = '';
+        });
+      }
+    }
+    if (!screenReady || attempt != generation || reply == null) return;
+    switch (ConversationControl.parse(reply)) {
+      case ConversationControl.confirm:
+        await execute();
+      case ConversationControl.cancel:
+      case ConversationControl.stop:
+        setState(() => command = null);
+      default:
+        break;
     }
   }
 
@@ -462,26 +561,9 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
               }.entries)
                 DropdownMenuItem(value: item.key, child: Text(item.value)),
             ],
-            onChanged: controlsBusy || conversation
+            onChanged: controlsBusy || conversation || state == null
                 ? null
-                : (v) async {
-                    if (v == null) return;
-                    final previous = language;
-                    setState(
-                      () => language = AppSettings.instance.voiceLanguage = v,
-                    );
-                    try {
-                      await AppSettings.instance.save();
-                    } catch (_) {
-                      if (mounted) {
-                        setState(
-                          () => language = AppSettings.instance.voiceLanguage =
-                              previous,
-                        );
-                        failure(context);
-                      }
-                    }
-                  },
+                : selectLanguage,
           ),
           Align(
             alignment: AlignmentDirectional.centerStart,
@@ -539,9 +621,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
               title: Text(c.tr('voiceDeviceOnly')),
               subtitle: Text(c.tr('voiceDeviceLimit')),
               value: deviceOnly,
-              onChanged: controlsBusy || conversation
-                  ? null
-                  : (v) => setState(() => deviceOnly = v),
+              onChanged: controlsBusy || conversation ? null : setDeviceOnly,
             ),
           if (state != null &&
               state?['available'] != true &&
@@ -648,6 +728,13 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                     Text(reply.title, style: Theme.of(c).textTheme.titleMedium),
                     const SizedBox(height: 8),
                     SelectableText(reply.excerpts.join('\n\n')),
+                    TextButton.icon(
+                      onPressed: controlsBusy
+                          ? null
+                          : () async => playReply(reply, ++generation),
+                      icon: const Icon(Icons.volume_up_outlined),
+                      label: Text(c.tr('vaRepeat')),
+                    ),
                     if (outputError case final message?) ...[
                       const SizedBox(height: 8),
                       Text(c.tr(message)),
@@ -683,7 +770,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      c.tr('voiceAction${command!.action.name}'),
+                      c.tr(command!.action.label),
                       style: Theme.of(c).textTheme.titleMedium,
                     ),
                     if (command!.argument.isNotEmpty)
@@ -703,6 +790,8 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                             : 'voiceConfirmFlow',
                       ),
                     ),
+                    if (awaitingSpokenConfirmation)
+                      Text(c.tr('voiceScreenConfirm')),
                     if (command!.action != VoiceAction.unknown)
                       FilledButton(
                         key: const Key('voice-execute'),

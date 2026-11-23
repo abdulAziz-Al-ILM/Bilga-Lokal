@@ -27,37 +27,39 @@ class PersonalAnswers {
     DateTime now,
     String Function(String) tr, {
     bool onlyHabits = false,
+    bool tomorrow = false,
   }) async {
-    final plan = await PlannerRepository(
-      notesDb: notesDb,
-      todoDb: tasksDb,
-    ).load(now);
-    final habits = plan.habits.where((h) => !h.plan.done(now, h.days)).toList();
+    final local = now.toLocal();
+    final date = tomorrow
+        ? DateTime(local.year, local.month, local.day + 1)
+        : local;
+    final planner = PlannerRepository(notesDb: notesDb, todoDb: tasksDb);
+    final plan = await planner.load(date);
+    final habits = plan.habits
+        .where((h) => !h.plan.done(date, h.days))
+        .toList();
     final result = <String>[];
     if (!onlyHabits) {
-      final reminders = await PlannerRepository(
-        notesDb: notesDb,
-        todoDb: tasksDb,
-      ).scheduledReminders(now);
-      final todaysReminders = reminders
-          .where((r) => day(r.at) == day(now))
+      final reminders = await planner.scheduledReminders(date);
+      final dayReminders = reminders
+          .where((r) => day(r.at) == day(date))
           .toList();
       result.add(
-        "${tr('todayPlan')} · ${plan.today.length}\n${plan.today.take(5).map((t) => t['title']).join('\n')}",
+        "${tr(tomorrow ? 'tomorrow' : 'todayPlan')} · ${plan.today.length}\n${plan.today.take(5).map((t) => t['title']).join('\n')}",
       );
-      if (plan.overdue.isNotEmpty) {
+      if (!tomorrow && plan.overdue.isNotEmpty) {
         result.add(
           "${tr('todoOverdue')} · ${plan.overdue.length}\n${plan.overdue.take(5).map((t) => t['title']).join('\n')}",
         );
       }
-      if (todaysReminders.isNotEmpty) {
+      if (dayReminders.isNotEmpty) {
         result.add(
-          "${tr('vaReminders')} · ${todaysReminders.length}\n${todaysReminders.take(5).map((r) => r.row['title']).join('\n')}",
+          "${tr('vaReminders')} · ${dayReminders.length}\n${dayReminders.take(5).map((r) => r.row['title']).join('\n')}",
         );
       }
     }
     result.add(
-      "${tr('vaHabits')} · ${habits.length}\n${habits.take(8).map((h) => '${h.title}, ${h.plan.amount(now, h.days)} / ${h.plan.targetAt(now)} ${h.plan.unit}'.trimRight()).join('\n')}",
+      "${tr('vaHabits')} · ${habits.length}\n${habits.take(8).map((h) => '${h.title}, ${h.plan.amount(date, h.days)} / ${h.plan.targetAt(date)} ${h.plan.unit}'.trimRight()).join('\n')}",
     );
     return result;
   }

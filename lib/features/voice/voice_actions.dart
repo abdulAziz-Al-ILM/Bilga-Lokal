@@ -122,6 +122,7 @@ class VoiceActions {
       case VoiceAction.card:
         await book(c, argument, command.action);
       case VoiceAction.today:
+      case VoiceAction.tomorrow:
       case VoiceAction.pendingHabits:
       case VoiceAction.lastFriday:
       case VoiceAction.weeklySpending:
@@ -185,6 +186,11 @@ class VoiceActions {
         ? await readFolder(c, command.argument)
         : switch (command.action) {
             VoiceAction.today => await repository.plan(now, label),
+            VoiceAction.tomorrow => await repository.plan(
+              now,
+              label,
+              tomorrow: true,
+            ),
             VoiceAction.pendingHabits => await repository.plan(
               now,
               label,
@@ -201,10 +207,7 @@ class VoiceActions {
             _ => <String>[],
           };
     if (!c.mounted || result.isEmpty) return null;
-    return (
-      title: label('voiceAction${command.action.name}'),
-      excerpts: result,
-    );
+    return (title: label(command.action.label), excerpts: result);
   }
 
   Future<List<String>> readFolder(BuildContext c, String name) async {
