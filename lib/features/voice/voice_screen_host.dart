@@ -504,6 +504,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
       maxHeight: MediaQuery.sizeOf(context).height * .40,
     ),
     child: ListView(
+      key: const Key('voice-screen-actions'),
       shrinkWrap: true,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       children: [

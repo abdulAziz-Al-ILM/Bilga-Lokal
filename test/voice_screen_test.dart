@@ -82,6 +82,19 @@ void registerVoiceScreenCases() {
       }
 
       Future<void> tapVisible(Finder target) async {
+        if (target.evaluate().isEmpty) {
+          await tester.scrollUntilVisible(
+            target,
+            70,
+            scrollable: find
+                .descendant(
+                  of: find.byKey(const Key('voice-screen-actions')),
+                  matching: find.byType(Scrollable),
+                )
+                .first,
+            maxScrolls: 8,
+          );
+        }
         await tester.ensureVisible(target);
         await tester.pumpAndSettle();
         await tester.tap(target);
