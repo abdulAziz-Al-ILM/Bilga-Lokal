@@ -9,13 +9,15 @@ import 'review_guard.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(requireReviewPackage);
-  registerVoiceUiCases(
-    createDirectory: () async {
-      await requireReviewPackage();
-      return (await getTemporaryDirectory()).createTemp('review-voice-');
-    },
-    secure: true,
-    includeCompact: false,
-  );
+  if (!const bool.fromEnvironment('BILGA_REVIEW_SCREEN_ONLY')) {
+    registerVoiceUiCases(
+      createDirectory: () async {
+        await requireReviewPackage();
+        return (await getTemporaryDirectory()).createTemp('review-voice-');
+      },
+      secure: true,
+      includeCompact: false,
+    );
+  }
   registerVoiceScreenCases();
 }

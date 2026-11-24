@@ -48,6 +48,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
   static const _scope = 'bilga.current-screen';
   late final _speech = widget.speech ?? SpeechBridge();
   final _input = TextEditingController();
+  final _commandFocus = FocusNode();
   SemanticsHandle? _handle;
   OverlayEntry? _panelEntry;
   Route<dynamic>? _openedOn;
@@ -55,6 +56,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
   VoiceScreenCommand? _request;
   _Target? _pending;
   String? _message;
+  String? _submittedText;
   String _status = '';
   StreamSubscription<MethodCall>? _speechEvents;
   bool _working = false, _listening = false, _local = true, _consented = false;
@@ -123,6 +125,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
     _choices = [];
     _availability = null;
     _message = null;
+    _submittedText = null;
     unawaited(_speechEvents?.cancel());
     _speechEvents = null;
     _status = '';
@@ -137,6 +140,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
     widget.routes.current.removeListener(_routeChanged);
     _reset();
     _input.dispose();
+    _commandFocus.dispose();
     super.dispose();
   }
 
@@ -258,6 +262,24 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
     );
   }
 
+  void _submit(String text) {
+    setState(() => _submittedText = text);
+    _commandFocus.unfocus();
+  }
+
+  void _reviewAfterKeyboard() {
+    final attempt = _generation;
+    // Wait for the route's visible semantics to reflect the new viewport.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_screenCurrent || attempt != _generation) return;
+      if (View.of(context).viewInsets.bottom > 0) return;
+      final text = _submittedText;
+      if (text == null) return;
+      setState(() => _submittedText = null);
+      if (text == _input.text) _review(text);
+    });
+  }
+
   void _review(String utterance) {
     if (!_screenCurrent) return;
     if (_pending != null) {
@@ -317,7 +339,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
   }
 
   Future<void> _listen() async {
-    if (!_screenCurrent || _working) return;
+    if (!_screenCurrent || _working || _submittedText != null) return;
     final attempt = _generation;
     final language = AppSettings.instance.voiceLanguage;
     setState(() => _working = true);
@@ -457,13 +479,18 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
           available.clamp(0.0, 80.0),
           300.0,
         );
+        if (_submittedText != null && keyboard == 0) _reviewAfterKeyboard();
         return Column(
           children: [
             Expanded(
               child: Semantics(
                 identifier: _scope,
                 container: true,
-                child: widget.child,
+                child: MediaQuery.removeViewInsets(
+                  context: context,
+                  removeBottom: _open,
+                  child: widget.child,
+                ),
               ),
             ),
             if (enabled && !insideAssistant)
@@ -504,6 +531,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
       maxHeight: MediaQuery.sizeOf(context).height * .40,
     ),
     child: ListView(
+      key: const Key('voice-screen-actions'),
       shrinkWrap: true,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       children: [
@@ -515,13 +543,14 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
         ),
         TextField(
           controller: _input,
+          focusNode: _commandFocus,
           key: const Key('voice-screen-input'),
           readOnly: _working,
           maxLines: 1,
           enableInteractiveSelection: false,
           enableIMEPersonalizedLearning: false,
           decoration: InputDecoration(hintText: context.tr('voiceScreenHint')),
-          onSubmitted: _review,
+          onSubmitted: _submit,
         ),
         Wrap(
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -531,6 +560,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
               key: const Key('voice-screen-speak'),
               onPressed:
                   _working ||
+                      _submittedText != null ||
                       _availability?[_local ? 'onDevice' : 'available'] != true
                   ? null
                   : _listen,
@@ -548,7 +578,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
               ),
             ),
             TextButton(
-              onPressed: _working ? null : () => _review(_input.text),
+              onPressed: _working ? null : () => _submit(_input.text),
               child: Text(context.tr('voiceReview')),
             ),
             if (_availability?['onDevice'] == true)
@@ -565,7 +595,9 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
           if (_request?.text case final text?) Text(text),
           FilledButton(
             key: const Key('voice-screen-confirm'),
-            onPressed: _working && !_listening ? null : _execute,
+            onPressed: (_working && !_listening) || _submittedText != null
+                ? null
+                : _execute,
             child: Text(context.tr('voiceScreenConfirm')),
           ),
         ] else
@@ -573,7 +605,7 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
             ListTile(
               dense: true,
               title: Text('${i + 1}. ${_name(_choices[i])}'),
-              onTap: _working
+              onTap: _working || _submittedText != null
                   ? null
                   : () => setState(() {
                       _pending = _choices[i];
