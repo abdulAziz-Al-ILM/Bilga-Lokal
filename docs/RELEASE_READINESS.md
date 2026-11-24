@@ -1,3 +1,15 @@
+## Voice controls and keyboard — 2026-11-24
+
+On the Tab 16, entering an Uzbek dictation and then an English dictation could leave the second command without a confirmation button. The keyboard timing correction passed both focused landscape scenarios. The full tablet run then exposed the problem in portrait during the first dictation. Bilga now accounts for the keyboard inset once and resolves the submitted command after the keyboard closes and the route's visible controls update. The target and its current value are still checked before applying a confirmed edit. The tablet scenarios use synthetic text and simulated speech.
+
+The signed ARM64 Review APK is `build/review/bilga-review-voice-dictation-v16-2026-11-24.apk` (1.4.0+16), SHA-256 `a8e46c7e82d11375b1266aafd7d516c31c705485dcad14550fbd253f4a351bba`. The manifest passed the Review package and foreground microphone checks. The APK contains the compiled app and publisher's Navoiy sample. Google Play publication remains paused. The preceding `5055055` GitHub validation finished successfully. [GitHub Actions](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/45242113923).
+
+The updated source passed all 362 Flutter cases, analysis of the voice code and fixtures, all 43 localization catalogs and 13 manifest tests. The compact keyboard regression verifies that the command waits for the visible screen to return before offering confirmation. All 12 voice integration scenarios passed on the Tab 16 in portrait, including consecutive Uzbek and English dictation, spoken confirmation, and cancellation when a confirmed control becomes unavailable. After the suite, the signed Review APK was installed in place and launched cold in 2.527 seconds. The installed APK digest matched and production package metadata was identical before and after.
+
+The same Navoiy sentence produced 3.20 seconds of audio on the Tab 16 in 31.335 seconds with two flow steps and 47.924 seconds with four. At two steps, the speech-token model took 7.941 seconds, the flow stage 15.931 seconds, and the vocoder 7.459 seconds. Both model copies passed their digests and the temporary directory was removed. The samples are `build/review/navoiy-flow2-tablet-24nov.wav` and `build/review/navoiy-flow4-tablet-24nov.wav`. The result leaves a delay of over 30 seconds before speech, so live replies still use Bilga's existing synthesizer. The owner approved the publisher's demo previously. The lower-step output has yet to receive a listening evaluation. [Navoiy publisher source](https://huggingface.co/aisha-org/navoiy-tts/tree/9445f41).
+
+---
+
 ## Voice review takes priority — 2026-11-23
 
 The owner put Google Play publication on hold pending the voice review. No bundle was uploaded. The local release packaging attempt remains incomplete. The last attempt stopped at an uncached AndroidX Collection dependency. Future publication still requires purchase verification, Console checks and final listing declarations.

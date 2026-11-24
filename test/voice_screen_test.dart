@@ -32,6 +32,45 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(VoiceScreenHost), findsOneWidget);
   });
+
+  testWidgets('Typed commands wait for the keyboard to uncover the screen', (
+    tester,
+  ) async {
+    await tester.runAsync(Strings.load);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 650);
+    addTearDown(tester.view.reset);
+    final routes = VoiceScreenNavigator();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorObservers: [routes],
+        builder: (context, child) =>
+            VoiceScreenHost(enabled: true, routes: routes, child: child!),
+        home: const Scaffold(
+          body: Padding(
+            padding: EdgeInsets.only(top: 60),
+            child: TextField(decoration: InputDecoration(labelText: 'Title')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('voice-screen-open')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('voice-screen-input')),
+      'Type Bilga draft into the title field',
+    );
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    await tester.pumpAndSettle();
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(find.text(Strings.get('en', 'voiceScreenNoMatch')), findsNothing);
+    tester.view.resetViewInsets();
+    await tester.pumpAndSettle();
+    expect(find.text('Bilga draft'), findsOneWidget);
+    expect(find.byKey(const Key('voice-screen-confirm')), findsOneWidget);
+  });
 }
 
 void registerVoiceScreenCases() {
@@ -79,6 +118,12 @@ void registerVoiceScreenCases() {
         await tester.enterText(field, words);
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pumpAndSettle();
+        expect(
+          find.text(Strings.get('en', 'voiceScreenNoMatch')),
+          findsNothing,
+          reason:
+              'The current screen should resolve "$words" after submission.',
+        );
       }
 
       Future<void> tapVisible(Finder target) async {
