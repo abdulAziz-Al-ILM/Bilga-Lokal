@@ -2,7 +2,9 @@
 
 Non-task reminders now follow the in-app reminder sound setting. The new Android channel uses the default notification tone. The existing silent channel preserves quiet delivery and any explicit Android block on upgrade. Turning off a task's widget permission removes its row, deadline, controls and contribution to progress. Cached widget actions check the current permission before changing a task.
 
-The signed ARM64 Review APK is `build/review/bilga-review-reminder-widget-v18-2026-11-25.apk` (1.4.0+18), SHA-256 `14688f87d78dc15d9d86a2714b15089f431ad7d4bc6a4dae519833704bc3c39d`. All 45 focused Flutter checks and 13 manifest checks passed. The APK installed in place on the Tab 16, and the installed digest matched. Production package metadata matched before and after the upgrade. The signed native test companion compiled, but the first device run stopped at the encrypted Notes widget check while the tablet was locked. The audible reminder and widget permission regression checks await an unlocked tablet.
+The signed ARM64 Review APK is `build/review/bilga-review-reminder-widget-v18-2026-11-25.apk` (1.4.0+18), SHA-256 `14688f87d78dc15d9d86a2714b15089f431ad7d4bc6a4dae519833704bc3c39d`. All 45 focused Flutter checks, 13 manifest checks and the JVM calendar reminder check passed. The APK installed in place on the Tab 16, and the installed digest matched. Production package metadata matched before and after the upgrade.
+
+On the locked Tab 16, all 51 targeted Android checks passed, including the widget exclusion and both notification channel configurations. A scheduled synthetic habit reminder posted to `bilga.modules.sound.v1`. The fixture restored the original reminder cache and schedule. Android's ringer mode was SILENT and its notification stream was muted, so the delivery confirms the channel while audible playback still needs a listening check with the tablet in sound mode. The broad native sweep stopped at the encrypted Notes widget check because the tablet was locked. Launcher layout inspection also requires an unlocked screen.
 
 ---
 
