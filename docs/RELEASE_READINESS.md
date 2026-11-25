@@ -1,3 +1,15 @@
+## Play release preparation resumed — 2026-11-25
+
+The owner authorized proceeding with Google Play release preparation. The local upload-key configuration and Google OAuth client configuration are present. The build-time billing configuration is absent, and the purchase verifier has no confirmed production deployment. All 17 verifier tests and 13 manifest tests passed. These results cover synthetic purchases and declaration checks. A real Play purchase and restore still require the configured backend and a Play test track. Without that configuration the app cannot grant a new purchase after the 40-day trial.
+
+The signed build-only AAB is `build/play-preflight/2026-11-25/bilga-1.4.0-18-build-only.aab`, SHA-256 `f271596a1fb9c7c95ac3f7ba1e886d082ad1a7cf6da2b649e9216e5043022788`. Bundletool validated the archive, and `jarsigner` verified its signature. The base manifest declares `com.ilmmizan.bilga`, target API 36, Billing 9.1.0 and foreground-only voice. ARM64 and x86-64 are the only bundled architectures, and all 16 native libraries for those architectures passed the 16 KB ELF check. Bundletool requests 16 KB alignment. The AAB excludes the Review voice sample and the debug Dart kernel. Version code 18 is provisional until compared with Play Console. [Google Play target SDK](https://support.google.com/googleplay/android-developer/answer/11926878) · [Android 16 KB compatibility](https://developer.android.com/guide/practices/page-sizes).
+
+The offline local build temporarily removed the stale dev-only `integration_test` entry from the generated Android registrant and restored the generated file afterward. The supported Flutter CLI regenerates that file in release mode when Pub preparation is enabled. The missing AndroidX Collection and DataStore artifacts were retrieved with checksum verification. `:app:lintVitalRelease` passed separately with the same source, build flags and ABI selection. The build-only package contains no production billing settings.
+
+The existing Firefox profile did not accept a second automated session. Desktop accessibility could not read the Play Console page. The owner was asked to check whether the Bilga Production page offers **Create new release** or **Apply for production**. Upload certificate matching, the highest uploaded version code, listing declarations, and track eligibility remain pending. No release was submitted.
+
+---
+
 ## Transcript alternatives and Navoiy performance — 2026-11-25
 
 Voice control now shows up to two alternatives returned by the Android recognizer. Selecting one replaces the editable transcript and clears its previous command preview. The normal review and confirmation flow still applies. The focused tests cover duplicate and malformed results, selection of “Bilga” when the initial transcript contains “belgi”, and typing a separate correction.

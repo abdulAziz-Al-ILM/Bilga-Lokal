@@ -14,7 +14,7 @@ Bilga kundalik ishlaringiz va o‘rganganlaringizni bir joyda tartibga solishga 
 - Kitoblar — mos mahalliy fayllarni o‘qish, xatcho‘p va o‘qish joyini saqlash.
 - Yordam — umumiy qidiruv, tayyor shablonlar va amaliy qo‘llanmalar.
 
-Mikrofonni ilovada o‘zingiz yoqib, o‘zbekcha, inglizcha yoki ruscha buyruq berishingiz mumkin. Masalan, bugungi rejani so‘rang yoki qaydlaringizdan qidiring. Tanilgan matnni tekshirishingiz va tahrirlashingiz mumkin. Nutqni tanish imkoniyati qurilma va tanlangan tilga bog‘liq.
+Mikrofonni ilovada o‘zingiz yoqib, o‘zbekcha, inglizcha yoki ruscha buyruq berishingiz mumkin. Masalan, bugungi rejani so‘rang yoki qaydlaringizdan qidiring. Tanilgan matnni tahrirlang yoki tanigich boshqa variant berganida keraklisini tanlang. Nutqni tanish imkoniyati qurilma va tanlangan tilga bog‘liq.
 
 Qaydlaringiz qurilmada saqlanadi. Ilovani qurilma kodi yoki biometriya bilan qulflashingiz, yozuvlarni parolli faylga zaxiralashingiz va qayta tiklashingiz mumkin. Google Drive zaxirasi ixtiyoriy. Bilga zaxira parolini tiklab bera olmaydi.
 
