@@ -94,6 +94,7 @@ internal object TodoNativeActions {
         if(widget!=-1 && !TodoWidget.ids(c).contains(widget)) return null
         if(root.optString("blockedTask")==id) return null
         val task=TodoReminders.tasks(root).firstOrNull { it.optString("id")==id && !it.optBoolean("done") } ?: return null
+        if(widget!=-1 && !task.optBoolean("widgetAllowed")) return null
         val token=intent.getStringExtra("token") ?: return null
         if(token.isEmpty() || token!=task.optString("actionToken")) return null
         if(widget==-1 && (task.optJSONObject("reminder")?.optBoolean("fired")!=true || !TodoTime.dueNow(JSONObject(task.toString()).apply { getJSONObject("reminder").put("fired",false) },System.currentTimeMillis()))) return null

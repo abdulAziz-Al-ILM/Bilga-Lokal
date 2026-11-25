@@ -39,6 +39,26 @@ internal object TodoChecks {
             checkCase(!root.getJSONObject("events").toString().contains("title") && reminder.getBoolean("fired"))
             val selected=TodoWidget.selected(listOf(task("a","2026-10-12T22:00:00"),task("b","2026-10-13T10:00:00"),task("c","2026-10-11T10:00:00",true)),"upcoming",now,zone)
             checkCase(selected.map { it.getString("id") }==listOf("a","b") && TodoWidget.selected(selected,"overdue",now,zone).size==1)
+            val approved=task("approved","2026-10-13T10:00:00").put("widgetAllowed",true)
+            val widgetRoot=JSONObject().put("blockedTask","blocked").put("tasks",JSONArray()
+                .put(approved)
+                .put(task("denied","2026-10-12T22:00:00").put("widgetAllowed",false))
+                .put(task("missing-grant","2026-10-12T22:00:00"))
+                .put(task("blocked","2026-10-12T22:00:00").put("widgetAllowed",true)))
+            checkCase(TodoWidget.visibleTasks(widgetRoot,"upcoming",now,zone)==listOf(approved))
+            approved.put("widgetAllowed",false)
+            checkCase(TodoWidget.visibleTasks(widgetRoot,"upcoming",now,zone).isEmpty())
+
+            val manager=c.getSystemService(NotificationManager::class.java)
+            TodoStore.write(c,JSONObject().put("settings",JSONObject().put("sound",false)))
+            val quiet=manager.getNotificationChannel(ModuleReminders.channel(c))
+            checkCase(quiet.id=="bilga.modules.quiet.v1" && quiet.sound==null && !quiet.shouldVibrate())
+            TodoStore.write(c,JSONObject().put("settings",JSONObject().put("sound",true)))
+            val audible=manager.getNotificationChannel(ModuleReminders.channel(c))
+            checkCase(audible.id=="bilga.modules.sound.v1" && audible.sound==
+                android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION) &&
+                audible.audioAttributes.usage==android.media.AudioAttributes.USAGE_NOTIFICATION)
+            checkCase(TodoReminders.audible(JSONObject()))
             val blocked=JSONObject().put("tasks",JSONArray().put(JSONObject(a.toString()).apply { getJSONObject("reminder").put("fired",false) }))
             checkCase(TodoReminders.pendingTimes(blocked).size==1 && TodoReminders.pendingTimes(blocked.put("blockedTask","synthetic-a")).isEmpty())
             val secret="synthetic-encryption-sentinel-9381"

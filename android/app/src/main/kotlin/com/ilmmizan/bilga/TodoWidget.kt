@@ -42,6 +42,10 @@ class TodoWidget: AppWidgetProvider() {
                 }
             }.sortedWith(compareBy<JSONObject> { it.optBoolean("done") }.thenBy { TodoTime.instant(it.optString("due"),zone) })
         }
+        internal fun visibleTasks(root: JSONObject,source: String,now: Long,zone: ZoneId=ZoneId.systemDefault()): List<JSONObject> =
+            selected(TodoReminders.tasks(root).filter {
+                it.optBoolean("widgetAllowed") && it.optString("id")!=root.optString("blockedTask")
+            },source,now,zone)
         internal fun color(state: String,dark: Boolean): Int = when(state) {
             "green"->Color.rgb(50,166,106); "yellow"->Color.rgb(229,184,47); "red"->Color.rgb(228,84,88)
             "overdue"->if(dark) Color.rgb(107,114,126) else Color.rgb(23,25,28)
@@ -64,7 +68,7 @@ class TodoWidget: AppWidgetProvider() {
             val root=TodoStore.read(c) ?: JSONObject()
             val config=root.optJSONObject("widgets")?.optJSONObject(id.toString()) ?: JSONObject()
             val now=System.currentTimeMillis()
-            val tasks=selected(TodoReminders.tasks(root).filter { it.optString("id")!=root.optString("blockedTask") },config.optString("source","upcoming"),now)
+            val tasks=visibleTasks(root,config.optString("source","upcoming"),now)
             val hidden=TodoReminders.private(c,root) || !config.optBoolean("showTitles")
             val dark=root.optBoolean("dark",true)
             val foreground=WidgetTheme.foreground(c)
@@ -108,7 +112,7 @@ class TodoWidget: AppWidgetProvider() {
                     val row=RemoteViews(c.packageName,R.layout.todo_widget_row)
                     val taskId=task.getString("id")
                     row.setImageViewBitmap(R.id.todo_widget_row_background,background(color(TodoTime.state(task,now),dark)))
-                    row.setTextViewText(R.id.todo_widget_row_title,if(hidden || !task.optBoolean("widgetAllowed")) "${label("task",R.string.tw_task)} ${index+1}" else task.optString("title").ifBlank { label("task",R.string.tw_task) }.take(160))
+                    row.setTextViewText(R.id.todo_widget_row_title,if(hidden) "${label("task",R.string.tw_task)} ${index+1}" else task.optString("title").ifBlank { label("task",R.string.tw_task) }.take(160))
                     row.setTextColor(R.id.todo_widget_row_title,foreground)
                     val due=TodoTime.instant(task.optString("due"))
                     val state=TodoTime.state(task,now)
