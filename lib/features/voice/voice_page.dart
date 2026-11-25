@@ -28,6 +28,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
   Map<String, dynamic>? state;
   VoiceCommand? command;
   VoiceAnswer? answer;
+  List<String> recognitionChoices = const [];
   String language = AppSettings.instance.voiceLanguage;
   String partial = '', status = '', error = '';
   String? outputError;
@@ -218,7 +219,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     await capture(++generation);
   }
 
-  Future<String?> listenForFollowUp(int attempt) async {
+  Future<SpeechRecognition?> listenForFollowUp(int attempt) async {
     var expired = false;
     final deadline = Timer(const Duration(seconds: 15), () {
       expired = true;
@@ -232,7 +233,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         if (expired) break;
         final opening = Stopwatch()..start();
         try {
-          final result = await speech.listen(
+          final result = await speech.recognize(
             language: language,
             onDevice: deviceOnly,
             followUp: true,
@@ -266,15 +267,21 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
       status = '';
       error = '';
       command = null;
+      recognitionChoices = const [];
     });
     try {
       final result = followUp
           ? await listenForFollowUp(attempt)
-          : await speech.listen(language: language, onDevice: deviceOnly);
+          : await speech.recognize(language: language, onDevice: deviceOnly);
       if (!mounted || attempt != generation) return null;
-      if (result != null && result.trim().isNotEmpty) {
-        setState(() => text.text = result);
-        return result;
+      if (result != null) {
+        setState(() {
+          text.text = result.text;
+          recognitionChoices = result.alternatives.isEmpty
+              ? const []
+              : [result.text, ...result.alternatives];
+        });
+        return result.text;
       }
       if (conversation) setState(() => conversationPaused = true);
     } on PlatformException catch (e) {
@@ -398,7 +405,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     });
     String? reply;
     try {
-      reply = await listenForFollowUp(attempt);
+      reply = (await listenForFollowUp(attempt))?.text;
     } on PlatformException {
       // Keep the command preview usable after silence or a recognition error.
     } finally {
@@ -750,8 +757,30 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             enableSuggestions: false,
             enableIMEPersonalizedLearning: false,
             decoration: InputDecoration(labelText: c.tr('voicePreview')),
-            onChanged: (_) => setState(() => command = null),
+            onChanged: (_) => setState(() {
+              command = null;
+              recognitionChoices = const [];
+            }),
           ),
+          if (!controlsBusy && recognitionChoices.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              children: [
+                for (final choice in recognitionChoices)
+                  if (choice != text.text)
+                    OutlinedButton(
+                      onPressed: () => setState(() {
+                        text.text = choice;
+                        command = null;
+                      }),
+                      child: Text(
+                        choice,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+              ],
+            ),
           FilledButton(
             key: const Key('voice-review'),
             onPressed: controlsBusy ? null : reviewCommand,

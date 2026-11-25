@@ -3,6 +3,13 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+class SpeechRecognition {
+  final String text;
+  final List<String> alternatives;
+
+  const SpeechRecognition(this.text, {this.alternatives = const []});
+}
+
 class SpeechBridge {
   static const channel = MethodChannel('bilga/speech');
   static final _events = StreamController<MethodCall>.broadcast();
@@ -43,13 +50,39 @@ class SpeechBridge {
     required String language,
     required bool onDevice,
     bool followUp = false,
+  }) async => (await recognize(
+    language: language,
+    onDevice: onDevice,
+    followUp: followUp,
+  ))?.text;
+
+  Future<SpeechRecognition?> recognize({
+    required String language,
+    required bool onDevice,
+    bool followUp = false,
   }) async {
     final result = await channel.invokeMapMethod<String, dynamic>('listen', {
       'language': language,
       'onDevice': onDevice,
       if (followUp) 'followUp': true,
     });
-    return result?['text'] as String?;
+    final primary = result?['text'];
+    if (primary is! String || primary.trim().isEmpty) return null;
+    final text = primary.trim();
+    final alternatives = result?['alternatives'];
+    return SpeechRecognition(
+      text,
+      alternatives: alternatives is List
+          ? List.unmodifiable(
+              alternatives
+                  .whereType<String>()
+                  .map((choice) => choice.trim())
+                  .where((choice) => choice.isNotEmpty && choice != text)
+                  .toSet()
+                  .take(2),
+            )
+          : const [],
+    );
   }
 
   Future<void> stop() => channel.invokeMethod<void>('stop');
