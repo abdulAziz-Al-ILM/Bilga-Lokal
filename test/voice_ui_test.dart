@@ -16,5 +16,36 @@ void main() {
     expect(await SpeechBridge().prefersDeviceRecognizer('en-US'), isTrue);
     expect(await SpeechBridge().prefersDeviceRecognizer('ru-RU'), isTrue);
   });
+  test(
+    'Recognition retains at most two distinct alternative transcripts',
+    () async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(SpeechBridge.channel, null),
+      );
+      messenger.setMockMethodCallHandler(SpeechBridge.channel, (call) async {
+        expect(call.method, 'listen');
+        return {
+          'text': ' primary ',
+          'alternatives': [
+            'primary',
+            null,
+            ' ',
+            'next ',
+            'next',
+            'other',
+            'extra',
+          ],
+        };
+      });
+      final result = await SpeechBridge().recognize(
+        language: 'uz-UZ',
+        onDevice: true,
+      );
+      expect(result?.text, 'primary');
+      expect(result?.alternatives, ['next', 'other']);
+    },
+  );
   registerVoiceUiCases();
 }

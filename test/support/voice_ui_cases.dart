@@ -30,6 +30,7 @@ class ControlledSpeech extends SpeechBridge {
   final followUps = <bool>[];
   final _deviceRecognition = <String, bool>{};
   Completer<String?>? pending;
+  List<String> alternatives = const [];
   bool available = true;
   @override
   Future<Map<String, dynamic>> state() async {
@@ -50,15 +51,18 @@ class ControlledSpeech extends SpeechBridge {
   }
 
   @override
-  Future<String?> listen({
+  Future<SpeechRecognition?> recognize({
     required String language,
     required bool onDevice,
     bool followUp = false,
-  }) {
+  }) async {
     calls.add('listen:$language:$onDevice');
     followUps.add(followUp);
     pending = Completer<String?>();
-    return pending!.future;
+    final result = await pending!.future;
+    return result == null
+        ? null
+        : SpeechRecognition(result, alternatives: alternatives);
   }
 
   @override
@@ -210,6 +214,37 @@ void registerVoiceUiCases({
       }
     },
   );
+
+  testWidgets('The user can pick a different transcript before reviewing', (
+    t,
+  ) async {
+    final r = await setup(t);
+    try {
+      const primary = 'Qaydlardan qidir belgi ovoz sinovi';
+      const correction = 'Qaydlardan qidir Bilga ovoz sinovi';
+      r.$5.alternatives = [correction];
+      await key(t, 'voice-listen');
+      r.$5.pending!.complete(primary);
+      await settleIo(t);
+      final transcript = find.byKey(const Key('voice-transcript'));
+      expect(t.widget<TextField>(transcript).controller!.text, primary);
+
+      await tap(t, find.widgetWithText(OutlinedButton, correction));
+      expect(t.widget<TextField>(transcript).controller!.text, correction);
+      expect(find.byKey(const Key('voice-execute')), findsNothing);
+      await key(t, 'voice-review');
+      expect(find.text('Bilga ovoz sinovi'), findsOneWidget);
+      expect(find.byKey(const Key('voice-execute')), findsOneWidget);
+
+      await field(t, Strings.get('en', 'voicePreview'), 'Typed correction');
+      expect(find.widgetWithText(OutlinedButton, primary), findsNothing);
+      expect(find.byKey(const Key('voice-execute')), findsNothing);
+      expect((await t.runAsync(() => r.$2.query('notes')))!, isEmpty);
+      expect(t.takeException(), isNull);
+    } finally {
+      await cleanup(t, r);
+    }
+  });
 
   const output = MethodChannel('bilga/speech_output');
   void mockOutput(Future<Object?> Function(MethodCall) handler) {
