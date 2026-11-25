@@ -1,3 +1,11 @@
+## Reminder sound and task widget privacy — 2026-11-25
+
+Non-task reminders now follow the in-app reminder sound setting. The new Android channel uses the default notification tone. The existing silent channel preserves quiet delivery and any explicit Android block on upgrade. Turning off a task's widget permission removes its row, deadline, controls and contribution to progress. Cached widget actions check the current permission before changing a task.
+
+The signed ARM64 Review APK is `build/review/bilga-review-reminder-widget-v18-2026-11-25.apk` (1.4.0+18), SHA-256 `14688f87d78dc15d9d86a2714b15089f431ad7d4bc6a4dae519833704bc3c39d`. All 45 focused Flutter checks and 13 manifest checks passed. The APK installed in place on the Tab 16, and the installed digest matched. Production package metadata matched before and after the upgrade. The signed native test companion compiled, but the first device run stopped at the encrypted Notes widget check while the tablet was locked. The audible reminder and widget permission regression checks await an unlocked tablet.
+
+---
+
 ## Play release preparation resumed — 2026-11-25
 
 The owner authorized proceeding with Google Play release preparation. The local upload-key configuration and Google OAuth client configuration are present. The build-time billing configuration is absent, and the purchase verifier has no confirmed production deployment. All 17 verifier tests and 13 manifest tests passed. These results cover synthetic purchases and declaration checks. A real Play purchase and restore still require the configured backend and a Play test track. Without that configuration the app cannot grant a new purchase after the 40-day trial.

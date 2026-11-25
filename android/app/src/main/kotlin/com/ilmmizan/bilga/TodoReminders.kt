@@ -4,6 +4,8 @@ import android.app.*
 import android.content.*
 import android.os.Build
 import android.net.Uri
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.provider.Settings
 import org.json.JSONObject
 import org.json.JSONArray
@@ -25,11 +27,10 @@ internal object TodoReminders {
     fun exact(c: Context) = Build.VERSION.SDK_INT<31 || c.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
     fun enabled(c: Context): Boolean = c.getSystemService(NotificationManager::class.java).areNotificationsEnabled() &&
         (Build.VERSION.SDK_INT<33 || c.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)==android.content.pm.PackageManager.PERMISSION_GRANTED)
-    // Legacy stored voice settings are ignored in the non-voice release.
-    fun audible(c: Context,root: JSONObject): Boolean = settings(root).optBoolean("sound",true)
+    fun audible(root: JSONObject): Boolean = settings(root).optBoolean("sound",true)
     fun permitted(c: Context,root: JSONObject): Boolean {
         if(!enabled(c)) return false
-        val sound=audible(c,root)
+        val sound=audible(root)
         return c.getSystemService(NotificationManager::class.java).getNotificationChannel(if(sound) "bilga.todo.sound.v1" else "bilga.todo.quiet.v1")?.importance!=NotificationManager.IMPORTANCE_NONE
     }
     fun alarm(c: Context) = PendingIntent.getBroadcast(c,810,Intent(c,TodoReceiver::class.java).setAction(WAKE),PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -89,19 +90,29 @@ internal object TodoReminders {
     }
     fun channel(c: Context,sound: Boolean): String {
         val id=if(sound) "bilga.todo.sound.v1" else "bilga.todo.quiet.v1"
-        val ch=NotificationChannel(id,c.getString(R.string.tw_reminders),NotificationManager.IMPORTANCE_HIGH)
+        val ch=reminderChannel(id,c.getString(R.string.tw_reminders),sound)
         ch.description=c.getString(R.string.tw_limits)
-        if(!sound) { ch.setSound(null,null); ch.enableVibration(false) }
-        ch.lockscreenVisibility=Notification.VISIBILITY_PRIVATE
         c.getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
         return id
     }
+    internal fun reminderChannel(id: String,name: String,sound: Boolean,
+        importance: Int=NotificationManager.IMPORTANCE_HIGH): NotificationChannel =
+        NotificationChannel(id,name,importance).apply {
+            if (sound) {
+                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
+                    AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build())
+            } else {
+                setSound(null,null)
+                enableVibration(false)
+            }
+            lockscreenVisibility=Notification.VISIBILITY_PRIVATE
+        }
     fun notification(c: Context,root: JSONObject,task: JSONObject, ongoing: Boolean=false,snoozeMenu: Boolean=false): Notification {
         val id=task.getString("id"); val r=task.getJSONObject("reminder")
         val generic=label(root,"reminderMessage")
         val text=if(!private(c,root) && settings(root).optBoolean("showTitles")) task.optString("title").ifBlank { generic } else generic
         val public=Notification.Builder(c,channel(c,false)).setSmallIcon(R.drawable.todo_notification).setContentTitle("Bilga").setContentText(generic).build()
-        return Notification.Builder(c,channel(c,audible(c,root)))
+        return Notification.Builder(c,channel(c,audible(root)))
             .setSmallIcon(R.drawable.todo_notification).setContentTitle("Bilga · ${label(root,"todos")}").setContentText(text)
             .setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(public).setCategory(Notification.CATEGORY_REMINDER)
             .setOnlyAlertOnce(true).setAutoCancel(false).setOngoing(ongoing)
