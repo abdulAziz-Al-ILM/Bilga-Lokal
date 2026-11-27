@@ -4,7 +4,9 @@ The verified release bundle is staged locally at `build/play-closed-test/bilga-1
 
 The purchase verifier booted locally under Gunicorn using synthetic credentials through a private Unix socket. `/healthz` returned 200, the private SQLite ledger opened, and an invalid purchase request returned 400 before a Google lookup. This validates local startup. Play Console still needs the real product and publisher service identity for a live purchase test.
 
-Ubuntu granted access to view an existing browser window. The temporary session was closed after Ubuntu rejected keyboard and pointer control. No Play Console changes or uploads were made. Version code 20 and the local upload certificate still need comparison against the app's Console records before upload.
+The owner shared the App signing record and the upload certificate. Play App Signing is in use. The upload SHA-256 exactly matches the signed bundle. The highest Console version code still needs verification. Ubuntu granted temporary browser viewing access, and keyboard and pointer input did not reach the Play Console. This pass made no Console changes or uploads.
+
+The [launch checklist](../release/PLAY_LAUNCH_CHECKLIST.md) records the artifact and Console evidence. Closed-test listing copy is ready in Uzbek, English and Russian. The local listing archive includes the existing icon, a new feature graphic, three current Flutter screen captures with synthetic records, and the tester invitation messages. The tablet was absent from ADB for this pass. The updated bundle audit and all 14 manifest and 17 verifier tests passed.
 
 ---
 

@@ -46,11 +46,27 @@ Bilga shaxsiy yozuvlarni qurilmada shifrlab saqlaydi. Yozuvlarni eksport qilish 
 
 Bilga’ni karta ma’lumotlarini kiritmasdan 40 kun sinab ko‘ring. Keyin yangi yozuv qo‘shish va tahrirlashni bir martalik umrbod xarid orqali davom ettirish mumkin. Mavjud yozuvlarni o‘qish, eksport qilish va zaxiralash ochiq qoladi. Sinov tugaganda avtomatik to‘lov olinmaydi. Narxni Google Play mahalliy valyutada ko‘rsatadi.
 
+## Полное описание на русском
+
+Bilga помогает навести порядок в повседневных делах и личных записях. Ведите заметки и дневник, планируйте задачи, отслеживайте привычки, учитывайте личные расходы и читайте книги в форматах EPUB, PDF и TXT.
+
+Поиск по сохранённым записям работает офлайн. Посмотрите план на сегодня, ближайшие задачи и прогресс привычек. Для задач разной важности предусмотрены разные сигналы напоминаний.
+
+Нажмите «Читать вслух» или произнесите команду. Bilga читает текст открытого экрана, заметку, раздел EPUB или TXT либо текст на текущей странице PDF на узбекском, английском или русском. Распознавание речи и произношение зависят от доступных языковых служб.
+
+Личные записи и вложения хранятся на устройстве в зашифрованном виде. Их можно экспортировать или сохранить в резервной копии с паролем. Для дополнительного резервного копирования в Google Диск нужны аккаунт Google и интернет. Для вложений используйте локальную копию.
+
+Bilga можно использовать бесплатно 40 дней без ввода платёжных данных. Затем создавать и редактировать записи позволяет разовая покупка бессрочного доступа. Чтение, экспорт и резервное копирование сохранённых записей остаются доступны. Автоматического списания нет. Цену в местной валюте показывает Google Play.
+
+## Purchase disclosure for the current closed test
+
+The production descriptions above describe the lifetime purchase model. For the signed 1.4.0+20 closed test, use the copy in `build/play-closed-test/listing`, which says that purchases are disabled for the test. Use the production purchase wording after the Play product and verifier have passed license testing.
+
 ## Before publishing
 
 - Verify translations of descriptions and purchase disclosures in supported store languages.
-- Capture screenshots on the finished build using synthetic, non-sensitive records; do not reuse historical APK screenshots as evidence of this source.
-- Prepare a feature graphic using the established Bilga identity and palettes. No final screenshots or feature graphic were generated in this checkpoint.
+- Review the new phone screenshots in `build/play-closed-test/listing/screenshots`. They show the actual current Flutter routes in a phone-sized test viewport with synthetic content. The Android device release test remains a separate check.
+- Use the current icon and [feature graphic](../release/bilga-feature-graphic-1024x500.png) in the listing assets.
 - Provide a public owner-approved privacy-policy URL, complete Data Safety/content rating and confirm contact details.
 - Confirm Play account, merchant, country, pricing, testing-track and signing requirements in PLAY_POLICY_REVIEW.md.
 
@@ -63,3 +79,7 @@ Bilga’ni karta ma’lumotlarini kiritmasdan 40 kun sinab ko‘ring. Keyin yang
 **English**
 
 > Read on-screen text, notes and book pages aloud. Widgets have rounded corners, and task reminders use different tones for each priority. Tasks disappear from widgets when their display permission is turned off.
+
+**Русский**
+
+> Читайте вслух текст экрана, заметки и страницы книг. У виджетов появились закруглённые углы, а у напоминаний о задачах разной важности — разные сигналы. Если отключить разрешение на показ задачи, она сразу исчезает из виджета.
