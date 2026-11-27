@@ -85,7 +85,7 @@ class _MoveNotePageState extends State<MoveNotePage> {
                         ),
                         title: Text(
                           context.tr('home'),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
@@ -104,7 +104,7 @@ class _MoveNotePageState extends State<MoveNotePage> {
                     padding: const EdgeInsets.only(left: 4, bottom: 10),
                     child: Text(
                       context.tr('folderView'),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

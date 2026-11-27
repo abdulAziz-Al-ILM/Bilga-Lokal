@@ -66,7 +66,7 @@ class _CreateFolderPageState extends State<CreateFolderPage> {
           style: const TextStyle(color: Colors.white, fontSize: 20),
           decoration: InputDecoration(
             hintText: context.tr('folderName'),
-            hintStyle: TextStyle(color: Colors.white38),
+            hintStyle: const TextStyle(color: Colors.white38),
             border: InputBorder.none,
           ),
           onSubmitted: (_) {

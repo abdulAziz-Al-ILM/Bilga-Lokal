@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bilga/core/strings.dart';
@@ -32,15 +33,17 @@ void registerTaskTemplateUiTests({
     T? value;
     Object? error;
     var done = false;
-    work().then<void>(
-      (result) {
-        value = result;
-        done = true;
-      },
-      onError: (Object failure) {
-        error = failure;
-        done = true;
-      },
+    unawaited(
+      work().then<void>(
+        (result) {
+          value = result;
+          done = true;
+        },
+        onError: (Object failure) {
+          error = failure;
+          done = true;
+        },
+      ),
     );
     for (var i = 0; i < 500 && !done; i++) {
       await tester.pump(const Duration(milliseconds: 20));
@@ -239,7 +242,7 @@ void registerTaskTemplateUiTests({
             MaterialApp(
               builder: (c, child) => MediaQuery(
                 data: MediaQuery.of(c)
-                    .copyWith(textScaler: TextScaler.linear(2)),
+                    .copyWith(textScaler: const TextScaler.linear(2)),
                 child: Directionality(
                   textDirection: TextDirection.rtl,
                   child: child!,

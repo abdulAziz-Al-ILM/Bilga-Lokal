@@ -119,7 +119,7 @@ class _MoveTodoFolderPageState extends State<MoveTodoFolderPage> {
                           Expanded(
                             child: Text(
                               context.tr('home'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

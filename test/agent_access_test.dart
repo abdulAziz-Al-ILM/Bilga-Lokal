@@ -47,6 +47,7 @@ class FakeTrials implements TrialStore {
 
 class FakeBilling implements BillingGateway {
   final events = StreamController<List<PurchaseDetails>>.broadcast();
+  Future<void> close() => events.close();
   bool online = false, pastFails = false, completeFails = false;
   int completes = 0, buys = 0;
   List<GooglePlayPurchaseDetails> restored = [];
@@ -172,7 +173,7 @@ void main() {
       a.dispose();
     }
     controllers.clear();
-    await billing.events.close();
+    await billing.close();
   });
 
   test(

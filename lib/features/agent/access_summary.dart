@@ -30,7 +30,8 @@ class AccessSummary extends StatelessWidget {
                 ),
               ],
               Text(c.tr('lifetimeInfo')),
-              if (!a.corePurchased) PurchasePanel(product: AgentAccess.core),
+              if (!a.corePurchased)
+                const PurchasePanel(product: AgentAccess.core),
             ],
           ),
         ),

@@ -119,7 +119,7 @@ class _TrashFolderPageState extends State<TrashFolderPage> {
           ? Center(
               child: Text(
                 context.tr('empty'),
-                style: TextStyle(color: Colors.white54, fontSize: 18),
+                style: const TextStyle(color: Colors.white54, fontSize: 18),
               ),
             )
           : ListView(
@@ -128,7 +128,7 @@ class _TrashFolderPageState extends State<TrashFolderPage> {
                 if (subFolders.isNotEmpty) ...[
                   Text(
                     context.tr('folderView'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -185,7 +185,7 @@ class _TrashFolderPageState extends State<TrashFolderPage> {
                 if (notes.isNotEmpty) ...[
                   Text(
                     context.tr('notes'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

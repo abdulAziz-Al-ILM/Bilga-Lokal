@@ -115,7 +115,7 @@ class _FolderPageState extends State<FolderPage> {
           backgroundColor: const Color(0xFF0D2B22),
           title: Text(
             context.tr('rename'),
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           content: TextField(
             controller: controller,
@@ -124,7 +124,7 @@ class _FolderPageState extends State<FolderPage> {
             cursorColor: Colors.white,
             decoration: InputDecoration(
               hintText: context.tr('folderName'),
-              hintStyle: TextStyle(color: Colors.white38),
+              hintStyle: const TextStyle(color: Colors.white38),
             ),
             onSubmitted: (value) {
               final name = value.trim();
@@ -215,7 +215,7 @@ class _FolderPageState extends State<FolderPage> {
           backgroundColor: const Color(0xFF0D2B22),
           title: Text(
             context.tr('trash'),
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           content: Text(
             '${currentFolder.name}\n\n${context.tr('orgDeleteInfo')}',
@@ -234,7 +234,7 @@ class _FolderPageState extends State<FolderPage> {
               },
               child: Text(
                 context.tr('trash'),
-                style: TextStyle(color: Colors.redAccent),
+                style: const TextStyle(color: Colors.redAccent),
               ),
             ),
           ],
@@ -291,11 +291,15 @@ class _FolderPageState extends State<FolderPage> {
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
               child: Row(
                 children: [
-                  Icon(Icons.home_outlined, size: 16, color: Colors.white54),
-                  SizedBox(width: 4),
+                  const Icon(
+                    Icons.home_outlined,
+                    size: 16,
+                    color: Colors.white54,
+                  ),
+                  const SizedBox(width: 4),
                   Text(
                     context.tr('home'),
-                    style: TextStyle(color: Colors.white54, fontSize: 13),
+                    style: const TextStyle(color: Colors.white54, fontSize: 13),
                   ),
                 ],
               ),
@@ -353,7 +357,7 @@ class _FolderPageState extends State<FolderPage> {
                   ),
                   title: Text(
                     context.tr('newNote'),
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -367,7 +371,7 @@ class _FolderPageState extends State<FolderPage> {
                   ),
                   title: Text(
                     context.tr('newFolder'),
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -426,7 +430,7 @@ class _FolderPageState extends State<FolderPage> {
                       ? Center(
                           child: Text(
                             context.tr('empty'),
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 18,
                             ),
@@ -438,7 +442,7 @@ class _FolderPageState extends State<FolderPage> {
                             if (subFolders.isNotEmpty) ...[
                               Text(
                                 context.tr('folderView'),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -494,7 +498,7 @@ class _FolderPageState extends State<FolderPage> {
                             if (notes.isNotEmpty) ...[
                               Text(
                                 context.tr('notes'),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,

@@ -66,7 +66,7 @@ class _TrashPageState extends State<TrashPage> {
           backgroundColor: const Color(0xFF0D2B22),
           title: Text(
             context.tr('deleteForever'),
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           content: Text(
             '${note.title.isEmpty ? context.tr('untitled') : note.title}\n\n${context.tr('permanentConfirm')}',
@@ -85,7 +85,7 @@ class _TrashPageState extends State<TrashPage> {
               },
               child: Text(
                 context.tr('deleteForever'),
-                style: TextStyle(color: Colors.redAccent),
+                style: const TextStyle(color: Colors.redAccent),
               ),
             ),
           ],
@@ -112,7 +112,7 @@ class _TrashPageState extends State<TrashPage> {
           backgroundColor: const Color(0xFF0D2B22),
           title: Text(
             context.tr('deleteForever'),
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           content: Text(
             '${folder.name}\n\n${context.tr('permanentConfirm')}',
@@ -131,7 +131,7 @@ class _TrashPageState extends State<TrashPage> {
               },
               child: Text(
                 context.tr('deleteForever'),
-                style: TextStyle(color: Colors.redAccent),
+                style: const TextStyle(color: Colors.redAccent),
               ),
             ),
           ],
@@ -164,7 +164,7 @@ class _TrashPageState extends State<TrashPage> {
           ? Center(
               child: Text(
                 context.tr('empty'),
-                style: TextStyle(color: Colors.white54, fontSize: 18),
+                style: const TextStyle(color: Colors.white54, fontSize: 18),
               ),
             )
           : ListView(
@@ -173,7 +173,7 @@ class _TrashPageState extends State<TrashPage> {
                 if (deletedFolders.isNotEmpty) ...[
                   Text(
                     context.tr('folderView'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -215,7 +215,7 @@ class _TrashPageState extends State<TrashPage> {
                               ),
                               subtitle: Text(
                                 context.tr('openFolderHint'),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white38,
                                   fontSize: 12,
                                 ),
@@ -258,7 +258,7 @@ class _TrashPageState extends State<TrashPage> {
                 if (deletedNotes.isNotEmpty) ...[
                   Text(
                     context.tr('notes'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

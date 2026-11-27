@@ -232,7 +232,7 @@ class _LibraryPageState extends State<LibraryPage> {
                             ),
                           ),
                         );
-                        if (mounted) load();
+                        if (mounted) unawaited(load());
                       },
                     );
                   },
@@ -485,7 +485,7 @@ class _DocumentPageState extends State<DocumentPage> {
       context,
       MaterialPageRoute(builder: (_) => page),
     );
-    if (mounted) load();
+    if (mounted) unawaited(load());
   }
 
   @override
@@ -521,7 +521,7 @@ class _DocumentPageState extends State<DocumentPage> {
                         ),
                       ),
                     );
-                    if (mounted) load();
+                    if (mounted) unawaited(load());
                   },
           ),
         if (widget.hit.kind == 'finance')

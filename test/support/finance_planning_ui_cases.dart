@@ -107,7 +107,7 @@ void registerFinancePlanningUiCases({
         builder: (c, child) => compact
             ? MediaQuery(
                 data: MediaQuery.of(c)
-                    .copyWith(textScaler: TextScaler.linear(2)),
+                    .copyWith(textScaler: const TextScaler.linear(2)),
                 child: Directionality(
                   textDirection: TextDirection.rtl,
                   child: child!,

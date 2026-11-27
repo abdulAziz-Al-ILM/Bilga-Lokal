@@ -59,11 +59,11 @@ class _CreateTodoFolderPageState extends State<CreateTodoFolderPage> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: context.tr('folderName'),
-                labelStyle: TextStyle(color: Colors.white70),
-                enabledBorder: OutlineInputBorder(
+                labelStyle: const TextStyle(color: Colors.white70),
+                enabledBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.white24),
                 ),
-                focusedBorder: OutlineInputBorder(
+                focusedBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Color(0xFF1E5A46)),
                 ),
               ),

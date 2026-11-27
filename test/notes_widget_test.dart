@@ -107,7 +107,7 @@ void main() {
     });
     expect(a.privacy, WidgetPrivacy.hidden);
     expect(a.source, WidgetSource.recent);
-    final b = NotesWidgetConfig(
+    final b = const NotesWidgetConfig(
       id: 8,
       source: WidgetSource.pinned,
       pinnedIds: ['one'],

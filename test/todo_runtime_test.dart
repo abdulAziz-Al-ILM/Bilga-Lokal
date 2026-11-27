@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bilga/features/todo/widget/todo_widget_permissions.dart';
 
 import 'dart:io';
@@ -144,16 +146,18 @@ void main() {
     // Keep pumping fake-time callbacks while real FFI I/O completes. Awaiting
     // a second query inside runAsync can otherwise block behind a transaction
     // whose continuation still needs the next widget-test pump.
-    db
-        .query('todos')
-        .then<void>(
-          (value) {
-            result = value;
-          },
-          onError: (Object failure) {
-            error = failure;
-          },
-        );
+    unawaited(
+      db
+          .query('todos')
+          .then<void>(
+            (value) {
+              result = value;
+            },
+            onError: (Object failure) {
+              error = failure;
+            },
+          ),
+    );
     for (var i = 0; i < 500 && result == null && error == null; i++) {
       await tester.pump(const Duration(milliseconds: 20));
       await tester.runAsync(

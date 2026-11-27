@@ -163,7 +163,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                 ),
                 title: Text(
                   context.tr('newTask'),
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 onTap: () {
                   Navigator.pop(context, 'todo');
@@ -176,7 +176,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                 ),
                 title: Text(
                   context.tr('newFolder'),
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 onTap: () {
                   Navigator.pop(context, 'folder');
@@ -393,7 +393,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                     const SizedBox(height: 20),
                     Text(
                       context.tr('priority'),
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
@@ -435,7 +435,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                     const SizedBox(height: 20),
                     Text(
                       context.tr('due'),
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
@@ -989,7 +989,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
           ? Center(
               child: Text(
                 context.tr('empty'),
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
             )
           : ListView(

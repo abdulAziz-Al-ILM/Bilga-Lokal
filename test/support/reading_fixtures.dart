@@ -53,12 +53,18 @@ class FixtureBookVault implements BookVault {
 }
 
 class AccuHash {
-  final result = DigestResult();
-  late final sink = sha256.startChunkedConversion(result);
-  void add(List<int> b) => sink.add(b);
+  AccuHash() : this._(DigestResult());
+
+  // The conversion closes its result sink when the digest is final.
+  AccuHash._(this._result) : _sink = sha256.startChunkedConversion(_result);
+
+  final DigestResult _result;
+  final ByteConversionSink _sink;
+
+  void add(List<int> b) => _sink.add(b);
   String close() {
-    sink.close();
-    return result.digest.toString();
+    _sink.close();
+    return _result.digest.toString();
   }
 }
 
