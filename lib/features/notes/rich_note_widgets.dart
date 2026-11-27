@@ -234,7 +234,7 @@ class _RichNoteReaderState extends State<RichNoteReader> {
         readOnly: true,
       );
     } on FormatException {
-      /* Preserve readable original text for unsupported formatting. */
+      // Fall back to the original plain text if rich formatting is invalid.
     }
   }
 

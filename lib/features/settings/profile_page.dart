@@ -1,3 +1,4 @@
+import '../../core/diagnostics.dart';
 import '../agent/agent_access.dart';
 import '../agent/access_summary.dart';
 
@@ -481,7 +482,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         )) {
                           return;
                         }
-                      } catch (_) {}
+                      } catch (error) {
+                        // The dialog below still lets the user copy the address.
+                        logFailure(
+                          'Could not open a feedback email app',
+                          error,
+                        );
+                      }
                       if (!context.mounted) return;
                       await showDialog(
                         context: context,

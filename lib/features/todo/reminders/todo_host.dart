@@ -95,7 +95,7 @@ class _TodoHostState extends State<TodoHost> with WidgetsBindingObserver {
       if (launch != null) pending.add(launch);
       await drain();
     } on MissingPluginException {
-      /* Android only. */
+      // Task widget launch intents are available only on Android.
     }
   }
 

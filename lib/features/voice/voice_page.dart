@@ -1,3 +1,4 @@
+import '../../core/diagnostics.dart';
 import '../../core/app_lock.dart';
 
 import 'dart:async';
@@ -410,8 +411,11 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
     String? reply;
     try {
       reply = (await listenForFollowUp(attempt))?.text;
-    } on PlatformException {
-      // Keep the command preview usable after silence or a recognition error.
+    } on PlatformException catch (error) {
+      // Keep manual confirmation available if follow-up speech fails.
+      if (error.code != 'cancelled') {
+        logFailure('Spoken command confirmation failed', error);
+      }
     } finally {
       if (mounted && attempt == generation) {
         setState(() {

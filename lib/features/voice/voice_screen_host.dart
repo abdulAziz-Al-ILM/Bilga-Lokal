@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/diagnostics.dart';
 import '../../core/app_lock.dart';
 import '../../core/editor_form.dart';
 import '../../core/settings.dart';
@@ -461,8 +462,9 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
           _local = local;
         });
       }
-    } catch (_) {
-      // The same controls can be operated with a typed command.
+    } catch (error) {
+      // Users can continue with a typed command.
+      logFailure('Could not check voice input availability', error);
     }
   }
 
@@ -683,8 +685,11 @@ class _VoiceScreenHostState extends State<VoiceScreenHost>
           _confirmation(reply)) {
         _review(reply);
       }
-    } on PlatformException {
-      // The preview stays available for manual confirmation.
+    } on PlatformException catch (error) {
+      // Keep the preview available for manual confirmation.
+      if (error.code != 'cancelled') {
+        logFailure('Screen command voice confirmation failed', error);
+      }
     }
   }
 

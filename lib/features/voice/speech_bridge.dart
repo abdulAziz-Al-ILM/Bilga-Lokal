@@ -1,3 +1,5 @@
+import '../../core/diagnostics.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -91,7 +93,7 @@ class SpeechBridge {
     try {
       await channel.invokeMethod<void>('cancel');
     } on MissingPluginException {
-      /* Text remains available on other platforms. */
+      // Hosts without an Android recognizer have no request to cancel.
     }
   }
 }
@@ -166,8 +168,10 @@ class SpeechOutput {
   static Future<void> stop() async {
     try {
       await _channel.invokeMethod<void>('stop');
-    } catch (_) {
-      // Keep the written answer available if there is no speech engine.
+    } on MissingPluginException {
+      // Hosts without Android speech output have no playback to stop.
+    } catch (error) {
+      logFailure('Could not stop speech output', error);
     }
   }
 }

@@ -1,3 +1,4 @@
+import '../../../core/diagnostics.dart';
 import '../../agent/agent_access.dart';
 import '../widget/todo_widget_permissions.dart';
 
@@ -137,10 +138,18 @@ class TodoSync {
         });
       } on MissingPluginException {
         // Android-only. No alternate storage, network or auth bypass.
-      } catch (_) {
+      } catch (error) {
+        logFailure('Could not publish task reminders and widgets', error);
         try {
           await TodoBridge.channel.invokeMethod<void>('redact');
-        } catch (_) {}
+        } on MissingPluginException {
+          // The Android activity detached before the redact request.
+        } catch (error) {
+          logFailure(
+            'Could not redact task notification and widget data',
+            error,
+          );
+        }
       }
     }
   }

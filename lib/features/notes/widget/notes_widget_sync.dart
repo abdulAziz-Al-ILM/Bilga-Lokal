@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../core/diagnostics.dart';
 import '../../../core/settings.dart';
 import '../../../core/strings.dart';
 import '../note_database.dart';
@@ -108,12 +109,15 @@ class NotesWidgetSync {
         });
       } on MissingPluginException {
         // Android-only integration. No alternate plaintext persistence.
-      } catch (_) {
+      } catch (error) {
         if (_disposed) return;
+        logFailure('Could not publish notes widgets', error);
         try {
           await NotesWidgetBridge.channel.invokeMethod<void>('redact');
-        } catch (_) {
-          /* Fail closed on native side too. */
+        } on MissingPluginException {
+          // The Android activity detached before the redact request.
+        } catch (error) {
+          logFailure('Could not redact notes widgets', error);
         }
       }
     }

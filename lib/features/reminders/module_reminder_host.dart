@@ -1,3 +1,4 @@
+import '../../core/diagnostics.dart';
 import '../books/reading/reading_hub.dart';
 import '../books/reading/reading_store.dart';
 import '../finance/finance_planning_page.dart';
@@ -88,9 +89,9 @@ class _ModuleReminderHostState extends State<ModuleReminderHost>
       if (value != null && pending.length < 20) pending.add(value);
       await drain();
     } on MissingPluginException {
-      /* Android only. */
-    } catch (_) {
-      /* Source stays protected; user can open its module normally. */
+      // Reminder launch intents are available only on Android.
+    } catch (error) {
+      logFailure('Could not consume a reminder launch', error);
     }
   }
 
@@ -173,8 +174,9 @@ class _ModuleReminderHostState extends State<ModuleReminderHost>
           ),
         );
       }
-    } catch (_) {
-      /* A deleted source is never recreated. */
+    } catch (error) {
+      // A stale reminder may refer to a deleted record.
+      logFailure('Could not open a reminder source', error);
     } finally {
       opening = false;
       if (mounted) unawaited(drain());

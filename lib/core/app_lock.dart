@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 
+import 'diagnostics.dart';
 import 'settings.dart';
 import 'strings.dart';
 
@@ -55,8 +56,9 @@ class _AppLockState extends State<AppLock> with WidgetsBindingObserver {
         options: const AuthenticationOptions(stickyAuth: true),
       );
       if (mounted && ok) setState(() => locked = false);
-    } catch (_) {
-      /* Stay locked on cancellation, unavailable authentication, or error. */
+    } catch (error) {
+      // Authentication errors must leave the app locked.
+      logFailure('Could not unlock the app', error);
     } finally {
       if (mounted) setState(() => checking = false);
     }

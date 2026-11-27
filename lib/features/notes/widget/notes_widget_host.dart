@@ -84,7 +84,7 @@ class _NotesWidgetHostState extends State<NotesWidgetHost>
       if (launch != null) pending.add(launch);
       await drain();
     } on MissingPluginException {
-      /* Android only. */
+      // Widget launch intents are available only on Android.
     }
   }
 

@@ -1,3 +1,4 @@
+import '../core/diagnostics.dart';
 import '../features/reminders/notification_center.dart';
 import '../features/voice/voice_page.dart';
 import '../features/voice/voice_screen_host.dart';
@@ -52,8 +53,9 @@ class _HomePageState extends State<HomePage> {
       if (mounted) await consumeShare();
     } on MissingPluginException {
       // Share intents are available only on the Android host.
-    } catch (_) {
+    } catch (error) {
       shareOpen = false;
+      logFailure('Could not open incoming share', error);
     }
   }
 
@@ -74,7 +76,9 @@ class _HomePageState extends State<HomePage> {
           await openAgent();
         }
       } on MissingPluginException {
-        /* Desktop and widget tests. */
+        // The assistant launch channel is only installed by Android.
+      } on PlatformException catch (error) {
+        logFailure('Could not consume assistant launch', error);
       }
     });
   }

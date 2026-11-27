@@ -468,8 +468,8 @@ class VoiceActions {
       try {
         parseMoney(money.number!, currency);
         amount = money.number!;
-      } catch (_) {
-        /* Ambiguous/invalid amounts require correction. */
+      } on FormatException {
+        // An invalid amount stays blank for the user to correct.
       }
     }
     await editFields(

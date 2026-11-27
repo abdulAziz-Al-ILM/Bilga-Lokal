@@ -45,7 +45,7 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
             'outline': s.outline.toARGB32(),
           });
     } on MissingPluginException {
-      /* No Android widget. */
+      // Hosts without the Android widget bridge have no palette to publish.
     }
   }
 
@@ -87,7 +87,7 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
       await const MethodChannel('bilga/security')
           .invokeMethod<void>('secure', appLock || screenPrivacy);
     } on MissingPluginException {
-      /* Non-Android tests do not provide a window. */
+      // Hosts without the Android window bridge do not set FLAG_SECURE.
     }
   }
 

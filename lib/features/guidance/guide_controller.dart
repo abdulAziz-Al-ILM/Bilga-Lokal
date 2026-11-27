@@ -1,3 +1,5 @@
+import '../../core/diagnostics.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -90,8 +92,9 @@ class GuideController extends ChangeNotifier {
         final found = steps.indexWhere((s) => s.id == data['step']);
         if (found >= 0 && !steps[found].backBoundary) index = found;
       }
-    } catch (_) {
-      /* Local help remains usable if preferences are unavailable. */
+    } catch (error) {
+      // Start the guide at its first step if progress cannot be read.
+      logFailure('Could not read guide progress', error);
     }
     if (!_disposed) start(index: index);
   }
@@ -147,9 +150,11 @@ class GuideController extends ChangeNotifier {
     });
     _writes = _writes.then((_) async {
       try {
-        await (await preferences()).setString(_key, snapshot);
-      } catch (_) {
-        /* Help persistence is optional; saving user data is separate. */
+        final saved = await (await preferences()).setString(_key, snapshot);
+        if (!saved) throw StateError('guide_progress_write');
+      } catch (error) {
+        // The current guide stays usable if its progress cannot be saved.
+        logFailure('Could not save guide progress', error);
       }
     });
     notifyListeners();

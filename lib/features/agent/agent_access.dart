@@ -1,3 +1,5 @@
+import '../../core/diagnostics.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -176,8 +178,9 @@ class AgentAccess extends ChangeNotifier {
           continue;
         }
         owned.add(id);
-      } catch (_) {
-        /* Keep evidence intact; unavailable verification is not revocation. */
+      } catch (error) {
+        // A failed recheck leaves stored purchase evidence intact.
+        logFailure('Could not recheck stored purchase evidence', error);
       }
     }
     initialized = true;
