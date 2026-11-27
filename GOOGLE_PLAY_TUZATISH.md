@@ -27,7 +27,7 @@ python3 tool/check_google_config.py
 bash tool/build_play_bundle.sh
 ```
 
-Bu skript konfiguratsiyasiz AAB yaratishga yo‘l qo‘ymaydi. Paket versiyasi `1.1.0+6`; version code 6 ishlatilgan bo‘lsa, pubspec.yaml dagi +6 ni undan kattaroq raqamga oshiring.
+Skript uchun Google ulanishi, upload kaliti va xarid tekshiruvi sozlangan bo‘lishi kerak. Paket versiyasi `pubspec.yaml` faylidan olinadi. Fayldagi `+` belgisidan keyingi raqam Play Console’da avval yuklangan eng katta version code’dan yuqori bo‘lishi kerak.
 
 Play Console → Internal testing → Create new release → yangi `build/app/outputs/bundle/release/app-release.aab` → e’lon qiling.
 Telefoningizdagi Play Market orqali **Update** qiling. Ilovani o‘chirish shart emas; lokal yozuvlar saqlanadi. Oldindan shifrlangan zaxira nusxa olish tavsiya etiladi.

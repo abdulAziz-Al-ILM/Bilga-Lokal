@@ -1,3 +1,17 @@
+## Release preflight 1.4.0+20 — 2026-11-27
+
+The loading and retry screen now suppresses Flutter's DEBUG banner. The signed ARM64 tablet APK is `build/review/bilga-review-no-banner-v20-2026-11-27.apk`, SHA-256 `ed50465067ff5e2c1ae2e60925597b0c1ca1013a3e9a1fb9323ba887e12936ca`. Its manifest passed the isolated Review checks. The tablet was absent from ADB when the update was ready.
+
+The signed technical preflight AAB is `build/play-preflight/2026-11-27/all-abis/bilga-1.4.0-20-build-only.aab`, SHA-256 `8635031a68a1c1e38319dd1c1cf9817582f6ee922830deb0ba0f54ca85b4c613`. It includes the three supported ABIs `armeabi-v7a`, `arm64-v8a` and `x86_64`. Bundletool validated the package and reported `PAGE_ALIGNMENT_16K`. All 16 64-bit native libraries passed ELF alignment checks. The manifest declares target API 36 and Billing 9.1.0. It passed the non-debuggable release check without test-only or instrumentation flags. `jarsigner` verified the bundle with the same certificate as the earlier local preflight. Compare the upload certificate and highest version code against Play Console before producing the upload build. [Google Play target SDK](https://support.google.com/googleplay/android-developer/answer/11926878) · [Android 16 KB compatibility](https://developer.android.com/guide/practices/page-sizes).
+
+The store copy and privacy draft now describe read-aloud, books, finance and the latest reminder behavior. The upload build command still stops because `billing_config.json` is missing. Real purchase and restore verification require the configured HTTPS verifier and a Play test track. No bundle was uploaded.
+
+All 369 Flutter tests passed in 18 minutes 11 seconds. The 14 manifest tests, 17 purchase verifier tests, catalog validation, startup file analysis and Android `lintVitalRelease` also passed. The release DEX excludes the integration-test plug-in, and the bundle includes the three task reminder tones and the embedded offline speech license and source archive.
+
+The owner's Play Console screenshot confirms that `com.ilmmizan.bilga` is a draft and Production is inactive. The dashboard says that closed testing is required before applying for production access. It also shows a trader status declaration banner. The dashboard does not show the tester count, the current closed-track progress, the highest version code or the upload certificate. Google's requirement for affected personal accounts is at least 12 testers continuously opted in for 14 days before applying for production access. [Play Console testing requirements](https://support.google.com/googleplay/android-developer/answer/14151465).
+
+---
+
 ## Read aloud, rounded widgets and reminder tones — 2026-11-27
 
 The Read aloud button is available on unlocked Bilga screens. In Uzbek, English and Russian, voice commands can read the current screen or open a named module and read its displayed text. Notes, task editors, experiences and search result documents supply their full text. The book reader supplies the current EPUB or TXT section or the text layer of the current PDF page. Image-only PDF pages require OCR. Speech preserves long text in consecutive chunks with pause, resume and stop. Playback clears on navigation, app lock or backgrounding. Screen reading excludes hidden and obscured controls. The screen voice panel presents alternative transcripts for correction.

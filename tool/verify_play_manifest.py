@@ -3,7 +3,7 @@
 
 This is not a substitute for Play Console or real-device acceptance.
 """
-import sys
+import argparse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from verify_voice_scope import verify_voice
@@ -11,10 +11,17 @@ from verify_voice_scope import verify_voice
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 
 
-def verify_manifest(xml):
+def verify_manifest(xml, *, require_release=False):
     root = ET.fromstring(xml)
     if root.get('package') != 'com.ilmmizan.bilga':
         raise ValueError('Application ID changed')
+    if require_release:
+        application = root.find('application')
+        if application is None or any(
+            application.get(ANDROID + flag, 'false') != 'false'
+            for flag in ('debuggable', 'testOnly')
+        ) or root.find('instrumentation') is not None:
+            raise ValueError('Play bundle must be a non-debuggable release without test components')
     sdk = root.find('uses-sdk')
     if sdk is None or int(sdk.get(ANDROID + 'targetSdkVersion', '0')) < 36:
         raise ValueError('Target SDK must be at least 36 for the current mobile submission policy')
@@ -25,13 +32,16 @@ def verify_manifest(xml):
     if int(version.split('.')[0]) < 8:
         raise ValueError('Play Billing 7 and earlier are no longer supported for submissions')
     voice=verify_voice(root)
-    return f"PASS package identity; target API {sdk.get(ANDROID + 'targetSdkVersion')}; Billing {version}; {voice}"
+    mode = 'non-debuggable release; ' if require_release else ''
+    return f"PASS {mode}package identity; target API {sdk.get(ANDROID + 'targetSdkVersion')}; Billing {version}; {voice}"
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        raise SystemExit('Usage: verify_play_manifest.py <apkanalyzer-manifest.xml>')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('manifest', type=Path)
+    parser.add_argument('--release', action='store_true')
+    args = parser.parse_args()
     try:
-        print(verify_manifest(Path(sys.argv[1]).read_text()))
+        print(verify_manifest(args.manifest.read_text(), require_release=args.release))
     except (ValueError, ET.ParseError) as error:
         raise SystemExit(f'Manifest validation failed: {error}') from error

@@ -51,6 +51,7 @@ class _StartupState extends State<_Startup> {
         return const BilgaApp();
       }
       return MaterialApp(
+        debugShowCheckedModeBanner: false,
         home: Scaffold(
           body: Center(
             child: snapshot.hasError
