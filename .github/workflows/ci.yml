@@ -1,0 +1,50 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Format, analyze and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CI: 'true'
+      DART_SUPPRESS_ANALYTICS: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Set up pinned Flutter SDK
+        run: |
+          flutter_sdk="$RUNNER_TEMP/flutter"
+          git clone --depth 1 --branch 3.47.8 https://github.com/flutter/flutter.git "$flutter_sdk"
+          test "$(git -C "$flutter_sdk" rev-parse HEAD)" = '737ba8f885dc774b53b442759999a312c9461e4e'
+          echo "$flutter_sdk/bin" >> "$GITHUB_PATH"
+          "$flutter_sdk/bin/flutter" --version
+      - name: Prepare native host test dependencies
+        run: |
+          packages=()
+          command -v clang >/dev/null || packages+=(clang)
+          dpkg-query -W -f='${db:Status-Status}' libsqlite3-0 2>/dev/null | grep -qx installed || packages+=(libsqlite3-0)
+          if (( ${#packages[@]} > 0 )); then
+            sudo apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any update -qq
+            sudo apt-get -o Acquire::Retries=3 install --yes --no-install-recommends "${packages[@]}"
+          fi
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test
+      - run: flutter analyze --no-pub
+      - run: python3 tool/check_catalogs.py
+      - run: flutter test --no-pub --coverage --concurrency=2
