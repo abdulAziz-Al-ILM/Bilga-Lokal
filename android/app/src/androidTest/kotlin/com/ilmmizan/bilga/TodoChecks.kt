@@ -3,7 +3,13 @@ package com.ilmmizan.bilga
 import android.app.*
 import android.appwidget.*
 import android.content.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.os.*
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.RemoteViews
 import org.json.*
 import java.time.*
 import java.io.File
@@ -59,6 +65,24 @@ internal object TodoChecks {
                 android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION) &&
                 audible.audioAttributes.usage==android.media.AudioAttributes.USAGE_NOTIFICATION)
             checkCase(TodoReminders.audible(JSONObject()))
+            for (priority in 1..3) {
+                val id=TodoReminders.priorityChannel(c,priority)
+                val tone=manager.getNotificationChannel(id)
+                checkCase(id=="bilga.todo.priority.$priority.v1" && tone.sound!=null &&
+                    c.contentResolver.openAssetFileDescriptor(tone.sound,"r")?.use { it.length>44 }==true)
+            }
+            checkCase(TodoReminders.channel(c,false,3)=="bilga.todo.quiet.v1")
+            for (layout in listOf(R.layout.agent_widget,R.layout.notes_widget,R.layout.todo_widget)) {
+                val views=RemoteViews(c.packageName,layout)
+                WidgetTheme.card(c,views)
+                val image=views.apply(c,FrameLayout(c)).findViewById<View>(R.id.bilga_widget_background)
+                val size=View.MeasureSpec.makeMeasureSpec(168,View.MeasureSpec.EXACTLY)
+                image.measure(size,size);image.layout(0,0,168,168)
+                val bitmap=Bitmap.createBitmap(168,168,Bitmap.Config.ARGB_8888)
+                image.draw(Canvas(bitmap))
+                checkCase(Color.alpha(bitmap.getPixel(0,0))==0 && bitmap.getPixel(84,84)==WidgetTheme.background(c))
+                bitmap.recycle()
+            }
             val blocked=JSONObject().put("tasks",JSONArray().put(JSONObject(a.toString()).apply { getJSONObject("reminder").put("fired",false) }))
             checkCase(TodoReminders.pendingTimes(blocked).size==1 && TodoReminders.pendingTimes(blocked.put("blockedTask","synthetic-a")).isEmpty())
             val secret="synthetic-encryption-sentinel-9381"

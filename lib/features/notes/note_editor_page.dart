@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import '../../core/strings.dart';
 import '../../core/dialogs.dart';
 import '../collections/collection_repository.dart';
+import '../voice/voice_screen_host.dart';
 import 'note_history_page.dart';
 import 'note_model.dart';
 import 'note_service.dart';
@@ -453,7 +454,12 @@ class _NoteEditorPageState extends State<NoteEditorPage>
       '${MaterialLocalizations.of(context).formatMediumDate(value)} ${TimeOfDay.fromDateTime(value).format(context)}';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => VoiceReadRegion(
+    read: () => [_title.text, _bodyText.replaceAll('\uFFFC', ' ')].join('\n\n'),
+    child: _editor(context),
+  );
+
+  Widget _editor(BuildContext context) {
     _document.readOnly = _busy || _formatFailure;
     final compact =
         MediaQuery.viewInsetsOf(context).bottom > 0 ||

@@ -9,7 +9,7 @@ import java.time.*
 /** Debug instrumentation touches only its scoped synthetic alarm cache. */
 internal object ModuleReminderChecks {
     fun run(c:Context,operation:String,id:String,kind:String="habit"):Pair<Boolean,String> {
-        require(c.packageName=="com.ilmmizan.bilga.review" && id.startsWith("bilga-review-module-") && id.length<200 && kind in listOf("habit","finance","recurring"))
+        require(c.packageName=="com.ilmmizan.bilga.review" && id.startsWith("bilga-review-module-") && id.length<200 && kind in listOf("habit","finance","recurring","priorityTask"))
         return try {
             val tag="$kind:$id"
             when(operation) {
@@ -24,6 +24,9 @@ internal object ModuleReminderChecks {
                     val schedule=JSONObject().put("type","weekdays").put("weekdays",JSONArray(listOf(1,2,3,4,5,6,7))).put("interval",1).put("quota",1).put("target",1).put("start",LocalDate.now().toString()).put("pauses",JSONArray())
                     val windows=JSONArray().put(JSONObject().put("from","0001-01-01").put("schedule",schedule))
                     val row=JSONObject().put("id",tag).put("target",id).put("kind",if (kind=="recurring") "finance" else kind).put("date",at.toLocalDate().toString()).put("minute",at.hour*60+at.minute).put("created",LocalDate.now().toString()).put("windows",windows).put("completed",JSONArray()).put("config",id).put("notBefore",now)
+                    if (kind=="priorityTask") {
+                        row.put("kind","task").put("event","taskDue").put("priority",3)
+                    }
                     if (kind=="recurring") {
                         row.put("event","financeRecurring").put("cadence",0)
                         val originalZone = java.util.TimeZone.getDefault()
@@ -47,8 +50,9 @@ internal object ModuleReminderChecks {
                     true to "MODULE_PREPARED:${at.toInstant().toEpochMilli()}\n"
                 }
                 "exists" -> {
-                    val exists=c.getSystemService(NotificationManager::class.java).activeNotifications.any { it.tag==tag&&it.id==903 }
-                    true to "MODULE_NOTIFICATION:$exists\n"
+                    val active=c.getSystemService(NotificationManager::class.java).activeNotifications.firstOrNull { it.tag==tag&&it.id==903 }
+                    val channel=active?.notification?.channelId.orEmpty()
+                    true to "MODULE_NOTIFICATION:${active!=null}\nMODULE_CHANNEL:$channel\n"
                 }
                 "restore" -> {
                     val source=TodoStore.file(c,"modules-review-original")

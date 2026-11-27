@@ -1,3 +1,13 @@
+## Read aloud, rounded widgets and reminder tones — 2026-11-27
+
+The Read aloud button is available on unlocked Bilga screens. In Uzbek, English and Russian, voice commands can read the current screen or open a named module and read its displayed text. Notes, task editors, experiences and search result documents supply their full text. The book reader supplies the current EPUB or TXT section or the text layer of the current PDF page. Image-only PDF pages require OCR. Speech preserves long text in consecutive chunks with pause, resume and stop. Playback clears on navigation, app lock or backgrounding. Screen reading excludes hidden and obscured controls. The screen voice panel presents alternative transcripts for correction.
+
+The Notes, Tasks and Core widgets use a shared rounded card with the active theme. Normal task reminders use Android's standard notification sound. Important, very important and critical tasks use two notes, three notes and two spaced pairs respectively. Task due and upcoming alerts use the same priority. The channels follow Android ringer settings and Bilga's sound preference.
+
+The signed ARM64 Review APK is `build/review/bilga-review-read-aloud-v19-2026-11-27.apk` (1.4.0+19), SHA-256 `d6b47c748dfe364721052b258334e3dbedd1a7f97bcf1b0d5b1bd811d5fe59a3`. The final APK was restored and launched on Tab 16, and its installed digest matched. All 46 final focused Flutter tests, 13 manifest checks and 43 string catalogs passed. The device passed 58 native Tasks and shared widget checks, 13 native Notes widget checks and six read-aloud integration scenarios. The Android audio subsystem played the synthetic Uzbek excerpt to completion. The synthetic scheduled task posted to `bilga.todo.priority.3.v1`, and its test cache was restored. Uzbek recognition and speech quality still depend on the installed language services and pronunciation quality of the bundled fallback.
+
+---
+
 ## Reminder sound and task widget privacy — 2026-11-25
 
 Non-task reminders now follow the in-app reminder sound setting. The new Android channel uses the default notification tone. The existing silent channel preserves quiet delivery and any explicit Android block on upgrade. Turning off a task's widget permission removes its row, deadline, controls and contribution to progress. Cached widget actions check the current permission before changing a task.

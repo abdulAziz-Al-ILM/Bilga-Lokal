@@ -19,6 +19,7 @@ typedef AttentionRow = ({
   bool completed,
   bool notify,
   bool immediate,
+  int priority,
 });
 
 class AttentionRepository {
@@ -43,6 +44,7 @@ class AttentionRepository {
       bool completed = false,
       bool notify = false,
       bool immediate = false,
+      int priority = 0,
       String? dedup,
     }) {
       if (scheduledOnly && !notify) return;
@@ -56,6 +58,7 @@ class AttentionRepository {
         completed: completed,
         notify: notify,
         immediate: immediate,
+        priority: priority,
       ));
     }
 
@@ -93,6 +96,7 @@ class AttentionRepository {
           row['title'] as String,
           at,
           notify: prefs.has('taskDue') && !explicit.contains(id),
+          priority: row['priority'] as int? ?? 0,
         );
         final soon = at.subtract(const Duration(hours: 1));
         if (prefs.has('taskSoon') &&
@@ -106,6 +110,7 @@ class AttentionRepository {
             row['title'] as String,
             soon,
             notify: true,
+            priority: row['priority'] as int? ?? 0,
           );
         }
       }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.widget.Button
+import android.widget.RemoteViews
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
@@ -12,6 +13,9 @@ internal object WidgetTheme {
     fun background(c:Context)=color(c,"background",Color.rgb(20,32,25))
     fun foreground(c:Context)=color(c,"foreground",Color.rgb(238,238,238))
     fun accent(c:Context)=color(c,"accent",Color.rgb(164,215,185))
+    fun card(c:Context,views:RemoteViews) {
+        views.setInt(R.id.bilga_widget_background,"setColorFilter",background(c))
+    }
     fun shape(c:Context,filled:Boolean=false)=GradientDrawable().apply {
         setColor(if(filled) accent(c) else color(c,"container",Color.rgb(30,34,42)))
         cornerRadius=18*c.resources.displayMetrics.density

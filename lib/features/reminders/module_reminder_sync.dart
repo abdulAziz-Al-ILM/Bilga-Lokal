@@ -207,6 +207,7 @@ class ModuleReminderSync extends ChangeNotifier {
               : 0,
           'at': row.kind == 'task' ? row.at.millisecondsSinceEpoch : 0,
           'immediate': row.immediate,
+          'priority': row.priority,
           'config': jsonEncode([
             row.event,
             row.key,

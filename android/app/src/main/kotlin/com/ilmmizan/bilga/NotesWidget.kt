@@ -86,7 +86,7 @@ class NotesWidget : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.notes_widget)
             val color = WidgetTheme.foreground(context)
             val accent = WidgetTheme.accent(context)
-            views.setInt(R.id.notes_widget_root, "setBackgroundColor", WidgetTheme.background(context))
+            WidgetTheme.card(context,views)
             views.setTextViewText(R.id.notes_widget_title, label("notes", R.string.nw_notes))
             views.setTextColor(R.id.notes_widget_title, color)
             val controls = listOf(Triple(R.id.notes_widget_add, "create", R.string.nw_new_note), Triple(R.id.notes_widget_search, "search", R.string.nw_search), Triple(R.id.notes_widget_settings, "configure", R.string.nw_settings))

@@ -58,7 +58,7 @@ class PlannerRepository {
         SELECT id FROM todo_folders WHERE is_deleted=1 UNION
         SELECT f.id FROM todo_folders f JOIN hidden h ON f.parent_id=h.id
       )
-      SELECT id,title,due_at,completed_at,is_done
+      SELECT id,title,due_at,completed_at,is_done,priority
       FROM todos WHERE is_deleted=0 AND
         (folder_id IS NULL OR folder_id NOT IN (SELECT id FROM hidden)) AND
         ((is_done=0 AND due_at IS NOT NULL) OR (is_done=1 AND substr(completed_at,1,10) BETWEEN ? AND ?))

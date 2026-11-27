@@ -75,7 +75,7 @@ class TodoWidget: AppWidgetProvider() {
             fun label(key: String,fallback: Int)=root.optJSONObject("labels")?.optString(key)?.takeIf { it.isNotBlank() } ?: c.getString(fallback)
             fun layout(width: Int,height: Int): RemoteViews {
                 val views=RemoteViews(c.packageName,R.layout.todo_widget)
-                views.setInt(R.id.todo_widget_root,"setBackgroundColor",WidgetTheme.background(c))
+                WidgetTheme.card(c,views)
                 views.setTextViewText(R.id.todo_widget_title,label("todos",R.string.tw_todos)); views.setTextColor(R.id.todo_widget_title,foreground)
                 views.setOnClickPendingIntent(R.id.todo_widget_title,TodoHandoff.pending(c,"list",widget=id))
                 views.setTextViewText(R.id.todo_widget_progress,"${tasks.count { it.optBoolean("done") }}/${tasks.size} · ${label("reminderDone",R.string.tw_done)}")

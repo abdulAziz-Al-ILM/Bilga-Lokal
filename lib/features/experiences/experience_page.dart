@@ -15,6 +15,7 @@ import '../private_space/record_store.dart';
 import '../search/library_page.dart';
 import '../search/search_repository.dart';
 import 'experience_model.dart';
+import '../voice/voice_screen_host.dart';
 import 'experience_store.dart';
 import 'experience_editor.dart';
 import 'experience_links.dart';
@@ -507,13 +508,16 @@ class _ExperiencePageState extends State<ExperiencePage> {
         ],
       ),
     );
-    return widget.guide == null
-        ? body
-        : GuideHost(
-            controller: widget.guide!,
-            targets: widget.anchors,
-            child: body,
-          );
+    return VoiceReadRegion(
+      read: () => readable(entry.data),
+      child: widget.guide == null
+          ? body
+          : GuideHost(
+              controller: widget.guide!,
+              targets: widget.anchors,
+              child: body,
+            ),
+    );
   }
 }
 

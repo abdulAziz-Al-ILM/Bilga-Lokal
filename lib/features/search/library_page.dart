@@ -25,6 +25,7 @@ import '../todo/todo_editor_page.dart';
 import '../todo/todo_checklist_store.dart';
 import '../todo/todo_project_store.dart';
 import '../todo/todo_project_editor.dart' show taskProjectStatusKey;
+import '../voice/voice_screen_host.dart';
 import 'search_repository.dart';
 
 String kindKey(String kind) => switch (kind) {
@@ -488,7 +489,12 @@ class _DocumentPageState extends State<DocumentPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => VoiceReadRegion(
+    read: () => row == null ? '' : '${widget.hit.title}\n\n$text',
+    child: _document(context),
+  );
+
+  Widget _document(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: Text(widget.hit.title),
       actions: [

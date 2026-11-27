@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminder_tone_important">Важные задачи</string>
+    <string name="reminder_tone_very_important">Очень важные задачи</string>
+    <string name="reminder_tone_critical">Критические задачи</string>
+</resources>
