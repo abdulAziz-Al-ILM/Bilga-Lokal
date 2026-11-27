@@ -8,15 +8,19 @@ Bilga is an offline-first Flutter app for Android. It puts notes, tasks, habits,
 
 ## Showcase
 
-Capture the English UI with synthetic records on a phone or emulator at **1080 × 1920 px**. The paths below are reserved for those captures.
+Captured on an Android tablet with the English interface and sample records. The demo opens a note from the workspace, locates it with offline search, and opens the book reader.
 
-| Asset | Capture |
+<p align="center">
+  <img src="docs/showcase/demo.gif" width="320" alt="Bilga on Android, moving from the workspace through a sample note and offline search to the book reader">
+</p>
+
+| Workspace | Rich-text note |
 | --- | --- |
-| `docs/showcase/demo.gif` | **720 × 1280 px, 12 fps, 15 seconds.** From Home, create a note, find it with library search, then open a saved book. |
-| `docs/showcase/home.png` | **1080 × 1920 px.** Home with Today and the module carousel visible. |
-| `docs/showcase/notes.png` | **1080 × 1920 px.** A sample rich-text note with a tag and a readable title. |
-| `docs/showcase/tasks.png` | **1080 × 1920 px.** A task with subtasks, a due time, and the reminder control. |
-| `docs/showcase/reader.png` | **1080 × 1920 px.** The bundled EPUB sample with the reader toolbar and chapter controls visible. |
+| <img src="docs/showcase/home.png" width="300" alt="Bilga workspace with Today and the module carousel"> | <img src="docs/showcase/notes.png" width="300" alt="A tagged weekly review note with formatted headings"> |
+
+| Task editor | Book reader |
+| --- | --- |
+| <img src="docs/showcase/tasks.png" width="300" alt="Reading plan task with subtasks, a due date, and reminder controls"> | <img src="docs/showcase/reader.png" width="300" alt="Sample book with search, appearance, bookmark, and progress controls"> |
 
 ## Features
 
