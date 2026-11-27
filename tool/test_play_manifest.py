@@ -15,6 +15,16 @@ class ManifestChecks(unittest.TestCase):
     def test_valid(self):
         self.assertIn('PASS', verify_manifest(MANIFEST))
 
+    def test_play_release_has_no_debug_or_test_flags(self):
+        self.assertIn('non-debuggable release', verify_manifest(MANIFEST, require_release=True))
+        for flag in ('debuggable', 'testOnly'):
+            source = MANIFEST.replace('<application>', f'<application android:{flag}="true">')
+            with self.subTest(flag=flag), self.assertRaises(ValueError):
+                verify_manifest(source, require_release=True)
+        source = MANIFEST.replace('<application>', '<instrumentation android:name="fixture"/><application>')
+        with self.assertRaises(ValueError):
+            verify_manifest(source, require_release=True)
+
     def test_rejects_incompatible_identity_target_and_billing(self):
         for old, new in [('com.ilmmizan.bilga', 'com.example.app'), ('targetSdkVersion="36"', 'targetSdkVersion="35"'), ('9.1.0', '7.1.1')]:
             with self.subTest(change=old), self.assertRaises(ValueError):
