@@ -52,16 +52,15 @@ class _LoopCarouselState extends State<LoopCarousel> {
           final distance = (current - page).abs().clamp(0.0, 1.0).toDouble();
           return Transform.scale(
             scale: 1 - distance * .17,
-            child: Opacity(
-              opacity: 1 - distance * .52,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
-                child: Semantics(selected: distance < .5, child: child),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
+              child: Semantics(selected: distance < .5, child: child),
             ),
           );
         },
-        child: widget.itemBuilder(context, page % widget.count),
+        child: RepaintBoundary(
+          child: widget.itemBuilder(context, page % widget.count),
+        ),
       ),
     ),
   );

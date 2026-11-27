@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "cc8516b5a3d33ec18bd04a7acc8433d250872ae7",
+  "apk": "build/review/bilga-templates-review-app.apk",
+  "sha256": "891ef9db1837ebc80f2b3d69fbf8157e6ee5378ed7522f394236cfed451f82f6",
+  "bytes": 217901916,
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "signerSha256": [
+    "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0"
+  ],
+  "installedInPlace": true,
+  "launchStatus": "ok",
+  "debugColdActivityMillis": 5254,
+  "type": "debug development; six-module completion and owner acceptance pending"
+}

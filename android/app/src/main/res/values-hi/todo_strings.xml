@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">कार्य विजेट</string>
+    <string name="tw_todos">करना है</string>
+    <string name="tw_task">कार्य</string>
+    <string name="tw_new">नया कार्य</string>
+    <string name="tw_done">पूरे हुए</string>
+    <string name="tw_snooze">बाद में याद दिलाएँ</string>
+    <string name="tw_empty">अभी तक यहां कुछ भी नहीं है</string>
+    <string name="tw_reminders">रिमाइंडर</string>
+    <string name="tw_limits">Android रिमाइंडर में देरी कर सकता है या पैनल छिपा सकता है। सूचना, सटीक अलार्म और बैटरी सेटिंग जाँचें; पॉप-अप की गारंटी नहीं है।</string>
+    <string name="tw_custom">समय चुनें</string>
+    <string name="tw_save">सहेजें</string>
+    <string name="tw_cancel">रद्द करें</string>
+    <string name="tw_future">रिमाइंडर के लिए भविष्य का समय चुनें।</string>
+</resources>

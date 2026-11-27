@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-16",
+  "status": "host_verified_native_pending",
+  "base_source": "2cb48a627df02d47774a67e2e68e380111369909",
+  "notes_capability": 19,
+  "tasks_capability": 13,
+  "advanced_habit_portable_content": 17,
+  "full_host": {
+    "passed": 311,
+    "failed": 0,
+    "seconds": 412,
+    "log": "/tmp/bilga-completion-full-host3.log"
+  },
+  "subsequent_opt_in_ui_case": {
+    "passed": 1,
+    "seconds": 12,
+    "log": "/tmp/bilga-habit-reminder-ui7.log",
+    "included_in_full_run": false
+  },
+  "analyzer": {
+    "result": "No issues found",
+    "log": "/tmp/bilga-completion-analyze8.log"
+  },
+  "native_calendar_policy": "PASS leap/interval/long pause/quota/partial periods/DST",
+  "catalogs": {
+    "languages": 43,
+    "keys": 886,
+    "native_speaker_acceptance": false
+  },
+  "manifest_guards": 9,
+  "non_voice": "PASS",
+  "native_target": "integration_test/habits_advanced_review_test.dart",
+  "native_actual_cases_registered": 10,
+  "native_test_apk": {
+    "path": "build/review/bilga-habits-advanced-tests.apk",
+    "sha256": "0afab7a394df31c0ada10dc71274f9ec93d1b0c591f492b743ff520a1e720a3d"
+  },
+  "native_execution": "pending_tablet_reconnection",
+  "real_alarm_delivery": "not_yet_run",
+  "ordinary_habits_apk": "not_yet_built",
+  "installed_owner_source": "2cb48a6",
+  "production_data_operations": false,
+  "initial_kotlin_build_failure": "notification-link val declaration; corrected; build2 PASS38.5s",
+  "runtime_source_stable_during_full_host": true,
+  "format": {
+    "files": 254,
+    "changed": 0
+  },
+  "native_companion": {
+    "build": "PASS32s",
+    "path": "build/review/bilga-habits-native-companion.apk",
+    "sha256": "9bba989828488fb116de998e5c2c189bb4f2bb1cec87882107174f86a1ba460c",
+    "manifest_and_signer": "PASS",
+    "log": "/tmp/bilga-module-native-companion-build2.log",
+    "prior_attempt": "automatic approval timed out before process creation; retry approved"
+  }
+}

@@ -8,8 +8,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:bilga/features/notes/note_database.dart';
 import 'package:bilga/features/habits/habit_store.dart';
 
+import 'review_guard.dart';
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(requireReviewPackage);
   testWidgets('Encrypted habit survives closing and reopening the database', (
     tester,
   ) async {
@@ -78,7 +81,7 @@ void main() {
       );
       db = await NoteDatabase.openAt(path, secure: true);
       expect((await db.query('notes')).single['body'], 'Привет — مرحبا');
-      expect(await db.getVersion(), 11);
+      expect(await db.getVersion(), 21);
       await db.close();
       expect(
         String.fromCharCodes(await File(path).openRead(0, 16).first),

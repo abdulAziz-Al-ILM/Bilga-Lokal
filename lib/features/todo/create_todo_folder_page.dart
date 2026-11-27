@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/strings.dart';
+
 import 'todo_folder_model.dart';
 
 class CreateTodoFolderPage extends StatefulWidget {
@@ -45,7 +47,7 @@ class _CreateTodoFolderPageState extends State<CreateTodoFolderPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF071C16),
         foregroundColor: Colors.white,
-        title: const Text('Yangi papka'),
+        title: Text(context.tr('newFolder')),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -55,13 +57,13 @@ class _CreateTodoFolderPageState extends State<CreateTodoFolderPage> {
               controller: controller,
               autofocus: true,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Papka nomi',
-                labelStyle: TextStyle(color: Colors.white70),
-                enabledBorder: OutlineInputBorder(
+              decoration: InputDecoration(
+                labelText: context.tr('folderName'),
+                labelStyle: const TextStyle(color: Colors.white70),
+                enabledBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.white24),
                 ),
-                focusedBorder: OutlineInputBorder(
+                focusedBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Color(0xFF1E5A46)),
                 ),
               ),
@@ -75,7 +77,7 @@ class _CreateTodoFolderPageState extends State<CreateTodoFolderPage> {
               child: FilledButton.icon(
                 onPressed: createFolder,
                 icon: const Icon(Icons.create_new_folder_outlined),
-                label: const Text('Papka yaratish'),
+                label: Text(context.tr('newFolder')),
               ),
             ),
           ],

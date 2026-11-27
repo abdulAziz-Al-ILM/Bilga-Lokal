@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-15",
+  "suite": "integration_test/guided_review_test.dart",
+  "package": "com.ilmmizan.bilga.review",
+  "device": "Blackview Tab16 / Android 12 API31 / arm64",
+  "apkSha256": "caf7bed8ce4dda20b95c7c195c87c58ee3a68173fdc27e4dfab85b7a3049484d",
+  "durationSeconds": 251,
+  "scenarioCases": 14,
+  "scenariosPassed": 13,
+  "scenariosFailed": 1,
+  "runnerCasesIncludingHooks": 16,
+  "result": "FAIL",
+  "failure": {
+    "case": "Book library creates validated metadata, filters reading/favorites and searches author without losing details",
+    "assertion": "Expected corrected ISBN '978-0-306-40615-7'; actual earlier invalid ISBN '9780306406158'",
+    "location": "test/support/book_library_ui_cases.dart:62",
+    "rootCause": "Waiting for real IME attachment alone did not fix the fixture race. WidgetTester injects Dart-side input while integration_test leaves the real keyboard enabled. The fixture helper now synchronizes TextInput.setEditingState with the native client before injection, then checks text before and after blur. Manual keyboard acceptance remains separate."
+  },
+  "passedScope": [
+    "Actual startup/all ten routes/14 themes/Arabic RTL",
+    "Six encrypted Book metadata/storage/search/paging/rollback/backup/attachment cases",
+    "Book failed-save/legacy preservation and delayed-initial-load UI cases",
+    "Three Habit template/guide/failure-expiry-retry/skip-discard UI journeys",
+    "Four actual synthetic-fixture screenshots"
+  ],
+  "log": "/tmp/bilga-books-guidance-tablet-tests-3.log",
+  "nativeRotationVerified": false,
+  "metadataCorrection": "This binary no longer emits an unexecuted rotation marker in the focused suite.",
+  "productionPackageModified": false,
+  "clearOrUninstallUsed": false,
+  "overallProductComplete": false
+}

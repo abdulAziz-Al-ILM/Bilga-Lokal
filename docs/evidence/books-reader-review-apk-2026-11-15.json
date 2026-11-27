@@ -1,0 +1,81 @@
+{
+  "date": "2026-11-15",
+  "sourceCommit": "8ff1d3afd1f1309ad16427a712edca2742b398cb",
+  "applicationRuntimeSource": "ff59d5bf12a9f080e2270fdb5f2e3f06b4a62c77",
+  "sourceDifference": "8ff1d3a contains acceptance harness/evidence changes only; application runtime matches ff59d5b",
+  "apk": "build/review/bilga-reader-review-app.apk",
+  "sha256": "400d37d158e2615698afe6400e908ccb5f51ec35671dc258d8969092d3740bae",
+  "bytes": 217902184,
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "signerSha256": "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0",
+  "type": "ordinary development debug app, default lib/main.dart, not an integration runner",
+  "installedInPlace": true,
+  "launchStatus": "ok",
+  "launchState": "WARM",
+  "debugActivityLaunchTotalMillis": 4663,
+  "releasePerformanceAcceptance": false,
+  "kernelChecks": {
+    "BookReadingPage": true,
+    "ReadingStore": true,
+    "BookLibraryPage": true,
+    "GuideController": true,
+    "FinanceReportsPage": true,
+    "integrationTestRunnersPresent": false,
+    "referenceImagesBundled": false
+  },
+  "ordinaryBooksRoute": {
+    "physical_tap": "Kitoblar",
+    "package": "com.ilmmizan.bilga.review",
+    "recognized_controls": {
+      "xBooks": "Kitoblar",
+      "rImportBook": "Kitob qo‘shish",
+      "rHelp": "O‘qish bo‘yicha yordam",
+      "rStatistics": "O‘qish statistikasi",
+      "rLibraryPurpose": "Kitoblaringizni qulay o‘qing. Fayl qo‘shing va to‘xtagan joyingizdan davom eting.",
+      "rMyLibrary": "Kutubxonam",
+      "rHowRead": "Qanday ishlaydi",
+      "rTrySample": "Namunani sinash"
+    },
+    "no_book_import_or_record_mutation": true
+  },
+  "notesSchemaCapability": 17,
+  "tasksSchemaCapability": 13,
+  "portableReadingContentVersion": 15,
+  "productionMetadataBefore": {
+    "userId": "11022",
+    "versionCode": "9 minSdk=26 targetSdk=36",
+    "versionName": "1.4.0",
+    "firstInstallTime": "2026-10-06 07:57:29",
+    "lastUpdateTime": "2026-10-23 20:00:52"
+  },
+  "productionMetadataAfter": {
+    "userId": "11022",
+    "versionCode": "9 minSdk=26 targetSdk=36",
+    "versionName": "1.4.0",
+    "firstInstallTime": "2026-10-06 07:57:29",
+    "lastUpdateTime": "2026-10-23 20:00:52"
+  },
+  "productionMetadataIdentical": true,
+  "productionDatabasesReadOrModified": false,
+  "uninstallOrClearUsed": false,
+  "screenshots": "Secure ordinary window produced no screenshot; screenPrivacy remained enabled. Synthetic native test screenshot evidence is separate.",
+  "fixtureCleanup": {
+    "folder": "BilgaReviewReader-20261115-r2",
+    "removed_exact_hash_verified_generated_files": [
+      "BilgaReaderFixture-PDF.pdf",
+      "BilgaReaderFixture-EPUB.epub",
+      "BilgaReaderFixture-TXT.txt",
+      "BilgaReaderFixture-Invalid.epub"
+    ],
+    "empty_folder_removed": true,
+    "temporary_picker_hierarchy_removed": true,
+    "owner_files_touched": false
+  },
+  "runtimeCI": {
+    "run": 43708926430,
+    "conclusion": "success",
+    "fullHostTests": 287
+  },
+  "overallSixModuleProductComplete": false
+}

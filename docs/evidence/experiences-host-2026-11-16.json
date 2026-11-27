@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-16",
+  "base": "a8a353c",
+  "result": "PASS",
+  "full_host_tests": 301,
+  "elapsed_seconds": 375,
+  "log": "/tmp/bilga-completion-full-host2.log",
+  "log_sha256": "475345f3d5c6bb3e88b3aff5c053d45919400123145302f242520030fe5a964e",
+  "focused_cases": {
+    "experience_data": 6,
+    "experience_ui": 4,
+    "habit_schedule_model_only": 4
+  },
+  "analyzer": "No issues found; /tmp/bilga-completion-analyze3.log",
+  "catalogs": "43 x 826; English/Uzbek/Russian draft additions, English fallback elsewhere",
+  "manifest_tests": 9,
+  "non_voice_guard": "PASS",
+  "notes_database_version": 18,
+  "tasks_database_version": 13,
+  "portable_module_content_version": 16,
+  "native_result": "pending; not inferred from host tests",
+  "habit_advanced_schedule_ui": "not wired yet; pure model only",
+  "remaining_priorities": [
+    "complete Habits",
+    "Finance planning/recurrence/debts",
+    "Help Hub and all-module tours",
+    "final integration/device acceptance"
+  ],
+  "earlier_diagnostic_run": "295pass/2fail; uncommitted source changed during this diagnostic run, including synthetic schema fixtures and restored-link uniqueness. Not accepted. The complete current suite was rerun to PASS."
+}

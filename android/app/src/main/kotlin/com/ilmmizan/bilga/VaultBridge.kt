@@ -16,6 +16,20 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 class VaultBridge(private val activity: Activity, messenger: BinaryMessenger) {
+ companion object {
+  /** Native task actions may unwrap the existing key, never create/rotate it. */
+  internal fun existingDatabaseKey(c:Context):ByteArray {
+   val saved=c.getSharedPreferences("bilga-vault",Context.MODE_PRIVATE).getString("wrapped",null) ?: error("no_existing_key")
+   val store=KeyStore.getInstance("AndroidKeyStore").apply{load(null)}
+   val key=store.getKey("bilga.vault.wrap.v1",null) as SecretKey
+   val sealed=Base64.decode(saved,Base64.NO_WRAP);require(sealed.size==60)
+   val cipher=Cipher.getInstance("AES/GCM/NoPadding")
+   cipher.init(Cipher.DECRYPT_MODE,key,GCMParameterSpec(128,sealed.copyOfRange(0,12)))
+   val plain=cipher.doFinal(sealed.copyOfRange(12,sealed.size))
+   try { return plain.joinToString(""){"%02x".format(it.toInt() and 255)}.toByteArray(Charsets.UTF_8) }
+   finally { plain.fill(0) }
+  }
+ }
  init {MethodChannel(messenger,"bilga/vault").setMethodCallHandler {call,result ->
   try {when(call.method){
    "key" -> result.success(key())

@@ -4,6 +4,7 @@ class Note {
   final String id;
   final String title;
   final String body;
+  final String? richBody;
   final String? folderId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -11,11 +12,14 @@ class Note {
   final bool isFavorite;
   final bool isArchived;
   final List<String> tags;
+  // Null means a legacy caller supplied names; hydrated notes carry stable IDs.
+  final List<String>? tagIds;
 
   const Note({
     required this.id,
     required this.title,
     required this.body,
+    this.richBody,
     this.folderId,
     required this.createdAt,
     required this.updatedAt,
@@ -23,6 +27,7 @@ class Note {
     this.isFavorite = false,
     this.isArchived = false,
     this.tags = const [],
+    this.tagIds,
   });
 
   Map<String, dynamic> toMap() {
@@ -30,6 +35,7 @@ class Note {
       'id': id,
       'title': title,
       'body': body,
+      'rich_body': richBody,
       'folder_id': folderId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -45,6 +51,7 @@ class Note {
       id: map['id'] as String,
       title: map['title'] as String,
       body: map['body'] as String,
+      richBody: map['rich_body'] as String?,
       folderId: map['folder_id'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
@@ -54,6 +61,9 @@ class Note {
       tags: List<String>.from(
         jsonDecode(map['tags'] as String? ?? '[]') as List,
       ),
+      tagIds: map['tag_ids'] == null
+          ? null
+          : List<String>.from(jsonDecode(map['tag_ids'] as String) as List),
     );
   }
 
@@ -61,6 +71,7 @@ class Note {
     String? id,
     String? title,
     String? body,
+    Object? richBody = _noChange,
     Object? folderId = _noChange,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -68,11 +79,15 @@ class Note {
     bool? isFavorite,
     bool? isArchived,
     List<String>? tags,
+    Object? tagIds = _noChange,
   }) {
     return Note(
       id: id ?? this.id,
       title: title ?? this.title,
       body: body ?? this.body,
+      richBody: identical(richBody, _noChange)
+          ? (body != null && body != this.body ? null : this.richBody)
+          : richBody as String?,
       folderId: identical(folderId, _noChange)
           ? this.folderId
           : folderId as String?,
@@ -82,6 +97,9 @@ class Note {
       isFavorite: isFavorite ?? this.isFavorite,
       isArchived: isArchived ?? this.isArchived,
       tags: tags ?? this.tags,
+      tagIds: identical(tagIds, _noChange)
+          ? (tags == null ? this.tagIds : null)
+          : tagIds as List<String>?,
     );
   }
 }

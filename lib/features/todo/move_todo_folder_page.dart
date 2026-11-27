@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/strings.dart';
+
 import 'todo_folder_model.dart';
 import 'todo_folder_service.dart';
 
@@ -87,7 +89,7 @@ class _MoveTodoFolderPageState extends State<MoveTodoFolderPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF071C16),
         foregroundColor: Colors.white,
-        title: const Text('Papkani ko‘chirish'),
+        title: Text(context.tr('move')),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -114,10 +116,10 @@ class _MoveTodoFolderPageState extends State<MoveTodoFolderPage> {
                         children: [
                           const Icon(Icons.home_outlined, color: Colors.white),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Home',
-                              style: TextStyle(
+                              context.tr('home'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

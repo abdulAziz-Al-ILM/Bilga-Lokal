@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "268462908f55b86c4e83713f033a932c969fdfb2",
+  "apk": "build/review/bilga-recurrence-review-app.apk",
+  "sha256": "0f8f1efc3c3dd53d6fb4135e22a4c681f228dab7764c602208ac2bc76e7b304b",
+  "bytes": 217901916,
+  "signerSha256": [
+    "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0"
+  ],
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "type": "debug development; Stage A incomplete"
+}

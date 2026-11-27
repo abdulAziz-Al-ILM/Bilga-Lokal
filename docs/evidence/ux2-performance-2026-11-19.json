@@ -1,0 +1,133 @@
+{
+  "date": "2026-11-19",
+  "device": "Tab16NEU0045423",
+  "mode": "Flutter profile ARM64 AOT",
+  "workload": "Twelve module carousel swipes on the same isolated Review tablet. Two Flutter reporting windows before and after the compositing change.",
+  "before": {
+    "frames": 643,
+    "slow_frames": 175,
+    "windows": [
+      {
+        "frames": 201,
+        "stage_over_16_667_ms": 93,
+        "build_ms": {
+          "p50": 0.76,
+          "p95": 1.32,
+          "p99": 2.88
+        },
+        "raster_ms": {
+          "p50": 16.57,
+          "p95": 18.96,
+          "p99": 25.43
+        },
+        "total_ms": {
+          "p50": 27.26,
+          "p95": 31.68,
+          "p99": 37.48
+        }
+      },
+      {
+        "frames": 442,
+        "stage_over_16_667_ms": 82,
+        "build_ms": {
+          "p50": 0.91,
+          "p95": 1.23,
+          "p99": 2.27
+        },
+        "raster_ms": {
+          "p50": 9.99,
+          "p95": 18.29,
+          "p99": 20.34
+        },
+        "total_ms": {
+          "p50": 12.68,
+          "p95": 30.62,
+          "p99": 31.76
+        }
+      }
+    ]
+  },
+  "after": {
+    "frames": 650,
+    "slow_frames": 61,
+    "windows": [
+      {
+        "frames": 467,
+        "stage_over_16_667_ms": 27,
+        "build_ms": {
+          "p50": 0.74,
+          "p95": 1.26,
+          "p99": 2.87
+        },
+        "raster_ms": {
+          "p50": 8.16,
+          "p95": 16.74,
+          "p99": 19.15
+        },
+        "total_ms": {
+          "p50": 10.53,
+          "p95": 28.97,
+          "p99": 71.75
+        }
+      },
+      {
+        "frames": 183,
+        "stage_over_16_667_ms": 34,
+        "build_ms": {
+          "p50": 0.96,
+          "p95": 1.28,
+          "p99": 2.43
+        },
+        "raster_ms": {
+          "p50": 9.32,
+          "p95": 18.24,
+          "p99": 20.29
+        },
+        "total_ms": {
+          "p50": 12.08,
+          "p95": 28.68,
+          "p99": 30.83
+        }
+      }
+    ]
+  },
+  "changes": [
+    "Removed per-frame carousel opacity layer",
+    "Kept stable card content inside a repaint boundary",
+    "Size-bounded home thumbnails"
+  ],
+  "profile_navigation_before_compositing": {
+    "screens": [
+      "Notes",
+      "Tasks",
+      "Habits",
+      "Finance",
+      "Experiences",
+      "Books",
+      "Notifications",
+      "Help"
+    ],
+    "finance_selected_ledger_ms": 3.15,
+    "fts_query_ms": [
+      11.603,
+      10.411,
+      6.647,
+      6.238
+    ],
+    "working_set_pss_kib": 224268,
+    "working_set_rss_kib": 373684
+  },
+  "total_frame_span_includes_vsync_wait": true,
+  "limits": "Sampled route and carousel interactions only. PDF rendering, attachment loading, GC and a full release workload were not separately profiled. The sample includes isolated long frames.",
+  "source": "14a5cc32ff94c8e455932ad7c8b81850938a994a",
+  "before_source": "3b0ddf066252e29d3959c8f3debee954d25d15ae",
+  "cold_launch_final_ms": [
+    2476,
+    1528
+  ],
+  "final_idle_after_cold_launch": {
+    "working_set_pss_kib": 150136,
+    "working_set_rss_kib": 280380,
+    "dart_startup_ready_ms": 590.007
+  }
+}

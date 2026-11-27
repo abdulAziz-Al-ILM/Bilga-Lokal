@@ -1,0 +1,19 @@
+{
+  "description": "Synthetic Python server output. No private key or real receipt.",
+  "publicKey": "gj0qBWmnejEfBujVxw64VnfZ6IkntWHoGytv43ZdZfo=",
+  "request": {
+    "packageName": "com.ilmmizan.bilga",
+    "productId": "bilga_lifetime_unlock",
+    "installation": "abababababababababababababababab",
+    "receipt": "{\"packageName\":\"com.ilmmizan.bilga\",\"productId\":\"bilga_lifetime_unlock\",\"purchaseState\":0,\"purchaseToken\":\"public-protocol-fixture\"}",
+    "signature": "InWBW5NtKhZSM1vrMPauDMRVceWQ0rLxtd7CHXLyOLX8mFr03OT4mWhQGDU01YsxMgQjFcC0ssq0QcuC5emBgno2gpWNq05Mo5ui8sESGEDJTKIY+mnpcVsr1VxY/UPIWNMbA03cbPS4sy3rXEvGHJhlFgsaQpR3CESKLcvugtxIZqx5hhouUmadpgnviKD7Cb6+05v62jGKyMcbv9PZIab4SkcTwcSW9Q/h9D2WOVUBdEvjTmescv4CwDHsu/SJFzimsSlySj7DdAjl4gXIHDHlaWn0wAZGCkPhfyNuxG6lqVnjur4V2klF169ML8p4djxGMqWhCyh5ktX+IK8XfQ=="
+  },
+  "purchased": {
+    "payload": "{\"version\":1,\"packageName\":\"com.ilmmizan.bilga\",\"productId\":\"bilga_lifetime_unlock\",\"installation\":\"abababababababababababababababab\",\"receiptSha256\":\"43591c4928c1ebfd602d340792670368776db2a9ba75ea6a15b1282fbd9ce4f7\",\"entitlement\":\"lifetime\",\"status\":\"purchased\"}",
+    "signature": "EUNTH1FwJfQISRkuQFndFz4F2KPAf9l9cPEf/BYi/uBrc1u0J+irw6B8JA0ZYpghLsMVriYoRsZkWN60SwWQBQ=="
+  },
+  "revoked": {
+    "payload": "{\"version\":1,\"packageName\":\"com.ilmmizan.bilga\",\"productId\":\"bilga_lifetime_unlock\",\"installation\":\"abababababababababababababababab\",\"receiptSha256\":\"43591c4928c1ebfd602d340792670368776db2a9ba75ea6a15b1282fbd9ce4f7\",\"entitlement\":\"lifetime\",\"status\":\"revoked\"}",
+    "signature": "WjW3qs3CtbEzrhd44Jcxm1Ojtf8SSVkLd5t/HU46i7d7UPKFjOWz9rvxUpf6Npq/6+ujC6yKwgr6DlVHnWPSCQ=="
+  }
+}

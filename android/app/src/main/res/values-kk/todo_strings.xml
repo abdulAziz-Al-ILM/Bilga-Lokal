@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Тапсырмалар виджеті</string>
+    <string name="tw_todos">істеу</string>
+    <string name="tw_task">Тапсырма</string>
+    <string name="tw_new">Жаңа тапсырма</string>
+    <string name="tw_done">Орындалған</string>
+    <string name="tw_snooze">Кейінге қалдыру</string>
+    <string name="tw_empty">Бұл жерде әлі ештеңе жоқ</string>
+    <string name="tw_reminders">Еске салғыштар</string>
+    <string name="tw_limits">Android еске салуды кешіктіруі немесе панельді жасыруы мүмкін. Хабарландыру, дәл дабыл және батарея баптауларын тексеріңіз; қалқымалы хабарламаға кепілдік жоқ.</string>
+    <string name="tw_custom">Уақыт таңдау</string>
+    <string name="tw_save">Сақтау</string>
+    <string name="tw_cancel">Болдырмау</string>
+    <string name="tw_future">Болашақ еске салу уақытын таңдаңыз.</string>
+</resources>

@@ -1,3 +1,9 @@
+import '../guidance/guide_controller.dart';
+
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+
+import 'rich_note_codec.dart';
+import 'rich_note_widgets.dart';
 import '../attachments/attachments_page.dart';
 
 import 'dart:async';
@@ -7,17 +13,28 @@ import 'package:flutter/material.dart';
 import '../../core/strings.dart';
 import '../../core/dialogs.dart';
 import '../collections/collection_repository.dart';
+import '../voice/voice_screen_host.dart';
 import 'note_history_page.dart';
 import 'note_model.dart';
 import 'note_service.dart';
+import 'note_tag_picker.dart';
 
 /// Owns persistence: callers only reload their lists when this route closes.
 class NoteEditorPage extends StatefulWidget {
   final Note? note;
   final String? folderId;
   final NoteService? service;
+  final GuideController? guide;
+  final Map<String, GlobalKey> guideTargets;
 
-  const NoteEditorPage({super.key, this.note, this.folderId, this.service});
+  const NoteEditorPage({
+    super.key,
+    this.note,
+    this.folderId,
+    this.service,
+    this.guide,
+    this.guideTargets = const {},
+  });
 
   @override
   State<NoteEditorPage> createState() => _NoteEditorPageState();
@@ -26,10 +43,40 @@ class NoteEditorPage extends StatefulWidget {
 class _NoteEditorPageState extends State<NoteEditorPage>
     with WidgetsBindingObserver {
   late final TextEditingController _title;
-  late final TextEditingController _body;
+  late final quill.QuillController _document;
+  final _bodyFocus = FocusNode();
+  final _bodyScroll = ScrollController();
+  StreamSubscription<quill.DocChange>? _documentChanges;
+  bool _formatFailure = false;
+  int _richRevision = 0, _savedRichRevision = 0;
+  String get _bodyText {
+    final text = _document.document.toPlainText();
+    return text.substring(0, text.length - 1);
+  }
+
+  String? _richSnapshot() {
+    final ops = _document.document.toDelta().toJson();
+    if (_note.richBody == null &&
+        ops.length == 1 &&
+        ops.single.length == 1 &&
+        ops.single['insert'] == '${_note.body}\n') {
+      return null;
+    }
+    return RichNoteCodec.encode(ops, body: _bodyText);
+  }
+
+  void _listenToDocument() {
+    _documentChanges = _document.document.changes.listen((_) {
+      _richRevision++;
+      if (mounted) _changed('');
+    });
+  }
+
   late final NoteService _service;
   late Note _note;
   late bool _inserted;
+  late List<String> _tagNames;
+  List<String>? _tagIds;
   bool _historyRecorded = false;
   bool _allowPop = false;
   bool _busy = false;
@@ -53,14 +100,84 @@ class _NoteEditorPageState extends State<NoteEditorPage>
           updatedAt: now,
         );
     _inserted = widget.note != null;
+    _tagNames = List.of(_note.tags);
+    _tagIds = _note.tagIds == null ? null : List.of(_note.tagIds!);
     _service = widget.service ?? NoteService();
     _title = TextEditingController(text: _note.title);
-    _body = TextEditingController(text: _note.body);
+    quill.Document doc;
+    try {
+      doc = quill.Document.fromJson(
+        _note.richBody == null
+            ? [
+                {'insert': '${_note.body}\n'},
+              ]
+            : RichNoteCodec.decode(_note.richBody!, expectedBody: _note.body),
+      );
+    } on FormatException {
+      _formatFailure = true;
+      doc = quill.Document.fromJson([
+        {'insert': '${_note.body}\n'},
+      ]);
+    }
+    _document = quill.QuillController(
+      document: doc,
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    _listenToDocument();
   }
 
-  bool get _dirty => _title.text != _note.title || _body.text != _note.body;
+  bool _same(List<String>? a, List<String>? b) => a == null || b == null
+      ? a == b
+      : a.length == b.length &&
+            a.asMap().entries.every((e) => b[e.key] == e.value);
+  bool get _dirty =>
+      _title.text != _note.title ||
+      _bodyText != _note.body ||
+      _richRevision != _savedRichRevision ||
+      !_same(_tagIds, _note.tagIds) ||
+      !_same(_tagNames, _note.tags);
+
+  Future<void> _chooseTags() async {
+    if (_busy) return;
+    try {
+      final store = await _service.tagStore;
+      final currentIds =
+          _tagIds ?? (await store.forNote(_note.id)).map((t) => t.id).toList();
+      if (!mounted) return;
+      final picked = await showNoteTagPicker(
+        context,
+        store,
+        selected: currentIds,
+      );
+      // Apply a confirmed selection before another Save/Back can close the
+      // editor. IDs are validated/canonicalized by the transactional tag store.
+      final selected =
+          picked ??
+          (await store.all()).where((t) => currentIds.contains(t.id)).toList();
+      if (!mounted) return;
+      setState(() {
+        _tagIds = selected.map((t) => t.id).toList();
+        _tagNames = selected.map((t) => t.name).toList();
+      });
+      _changed('');
+    } catch (_) {
+      if (mounted) showError(context);
+    }
+  }
+
+  void _removeTag(String id) {
+    final index = _tagIds?.indexOf(id) ?? -1;
+    if (index < 0) return;
+    setState(() {
+      _tagIds!.removeAt(index);
+      _tagNames.removeAt(index);
+    });
+    _changed('');
+  }
 
   void _changed(String _) {
+    widget.guide?.satisfy('titleEntered', valid: _title.text.trim().isNotEmpty);
+    widget.guide?.satisfy('bodyEntered', valid: _bodyText.trim().isNotEmpty);
     _debounce?.cancel();
     setState(() {});
     _debounce = Timer(const Duration(milliseconds: 700), () {
@@ -70,15 +187,35 @@ class _NoteEditorPageState extends State<NoteEditorPage>
 
   Future<bool> _persist() {
     final title = _title.text;
-    final body = _body.text;
+    if (_formatFailure) return Future.value(false);
+    final body = _bodyText;
+    String? rich;
+    try {
+      rich = _richSnapshot();
+    } catch (_) {
+      if (mounted) setState(() => _error = 'saveError');
+      return Future.value(false);
+    }
+    final richRevision = _richRevision;
+    final names = List<String>.of(_tagNames);
+    final ids = _tagIds == null ? null : List<String>.of(_tagIds!);
     final completion = Completer<bool>();
     _queue = _queue.then((_) async {
       try {
-        if (!_inserted && title.trim().isEmpty && body.trim().isEmpty) {
+        if (!_inserted &&
+            title.trim().isEmpty &&
+            body.trim().isEmpty &&
+            names.isEmpty) {
           completion.complete(true);
           return;
         }
-        if (_inserted && title == _note.title && body == _note.body) {
+        if (_inserted &&
+            title == _note.title &&
+            body == _note.body &&
+            rich == _note.richBody &&
+            _same(ids, _note.tagIds) &&
+            _same(names, _note.tags)) {
+          _savedRichRevision = richRevision;
           if (mounted) setState(() => _error = null);
           completion.complete(true);
           return;
@@ -86,16 +223,25 @@ class _NoteEditorPageState extends State<NoteEditorPage>
         final next = _note.copyWith(
           title: title,
           body: body,
+          richBody: rich,
           updatedAt: DateTime.now(),
+          tags: names,
+          tagIds: ids,
         );
         if (_inserted) {
           await _service.updateNote(next, recordHistory: !_historyRecorded);
         } else {
           await _service.addNote(next);
         }
+        if (!_inserted ||
+            title != _note.title ||
+            body != _note.body ||
+            rich != _note.richBody) {
+          _historyRecorded = true;
+        }
         _inserted = true;
-        _historyRecorded = true;
         _note = next;
+        _savedRichRevision = richRevision;
         if (mounted) setState(() => _error = null);
         completion.complete(true);
       } catch (_) {
@@ -117,6 +263,10 @@ class _NoteEditorPageState extends State<NoteEditorPage>
 
   Future<void> _close() async {
     if (_busy) return;
+    if (_formatFailure) {
+      await _pop();
+      return;
+    }
     setState(() => _busy = true);
     _debounce?.cancel();
     final saved = await _persist();
@@ -125,6 +275,7 @@ class _NoteEditorPageState extends State<NoteEditorPage>
       setState(() => _busy = false);
       return;
     }
+    if (_inserted) widget.guide?.event('saved');
     await _pop();
   }
 
@@ -194,11 +345,53 @@ class _NoteEditorPageState extends State<NoteEditorPage>
       if (restored != null) {
         _note = restored;
         _title.text = restored.title;
-        _body.text = restored.body;
+        await _documentChanges?.cancel();
+        final previousDocument = _document.document;
+        _document.document = quill.Document.fromJson(
+          restored.richBody == null
+              ? [
+                  {'insert': '${restored.body}\n'},
+                ]
+              : RichNoteCodec.decode(
+                  restored.richBody!,
+                  expectedBody: restored.body,
+                ),
+        );
+        previousDocument.close();
+        _richRevision = _savedRichRevision = 0;
+        _listenToDocument();
+        _tagIds = restored.tagIds;
+        _tagNames = List.of(restored.tags);
       }
       _historyRecorded = false;
     }
     if (mounted) setState(() => _busy = false);
+  }
+
+  Future<void> _attachments() async {
+    if (_busy || _formatFailure) return;
+    setState(() => _busy = true);
+    _debounce?.cancel();
+    try {
+      if (!_inserted &&
+          _title.text.trim().isEmpty &&
+          _bodyText.trim().isEmpty) {
+        _title.text = context.tr('untitled');
+      }
+      if (!await _persist() || !mounted || !_inserted) return;
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AttachmentsPage(
+            kind: 'note',
+            owner: _note.id,
+            title: _note.title,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _move() async {
@@ -250,7 +443,10 @@ class _NoteEditorPageState extends State<NoteEditorPage>
     WidgetsBinding.instance.removeObserver(this);
     _debounce?.cancel();
     _title.dispose();
-    _body.dispose();
+    unawaited(_documentChanges?.cancel());
+    _bodyFocus.dispose();
+    _bodyScroll.dispose();
+    _document.dispose();
     super.dispose();
   }
 
@@ -258,7 +454,16 @@ class _NoteEditorPageState extends State<NoteEditorPage>
       '${MaterialLocalizations.of(context).formatMediumDate(value)} ${TimeOfDay.fromDateTime(value).format(context)}';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => VoiceReadRegion(
+    read: () => [_title.text, _bodyText.replaceAll('\uFFFC', ' ')].join('\n\n'),
+    child: _editor(context),
+  );
+
+  Widget _editor(BuildContext context) {
+    _document.readOnly = _busy || _formatFailure;
+    final compact =
+        MediaQuery.viewInsetsOf(context).bottom > 0 ||
+        MediaQuery.sizeOf(context).height < 550;
     return PopScope<Note>(
       canPop: _allowPop,
       onPopInvokedWithResult: (didPop, result) {
@@ -278,39 +483,23 @@ class _NoteEditorPageState extends State<NoteEditorPage>
             IconButton(
               icon: const Icon(Icons.attach_file),
               tooltip: context.tr('xAttach'),
-              onPressed: _busy
-                  ? null
-                  : () async {
-                      if (!await _persist() || !context.mounted) return;
-                      if (!_inserted) return;
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AttachmentsPage(
-                            kind: 'note',
-                            owner: _note.id,
-                            title: _note.title,
-                          ),
-                        ),
-                      );
-                    },
+              onPressed: _busy || _formatFailure ? null : _attachments,
+            ),
+            PopupMenuButton<String>(
+              enabled: !_busy && !_formatFailure,
+              onSelected: (value) {
+                if (value == 'history') _history();
+                if (value == 'move') _move();
+                if (value == 'trash') _trash();
+                if (value == 'tags') _chooseTags();
+              },
+              itemBuilder: (c) => [
+                for (final key in ['tags', 'history', 'move', 'trash'])
+                  PopupMenuItem(value: key, child: Text(c.tr(key))),
+              ],
             ),
             IconButton(
-              tooltip: context.tr('history'),
-              onPressed: _busy ? null : _history,
-              icon: const Icon(Icons.history),
-            ),
-            IconButton(
-              tooltip: context.tr('move'),
-              onPressed: _busy ? null : _move,
-              icon: const Icon(Icons.drive_file_move_outline),
-            ),
-            IconButton(
-              tooltip: context.tr('trash'),
-              onPressed: _busy ? null : _trash,
-              icon: const Icon(Icons.delete_outline),
-            ),
-            IconButton(
+              key: widget.guideTargets['save'],
               tooltip: context.tr('save'),
               onPressed: _busy ? null : _close,
               icon: const Icon(Icons.check),
@@ -318,47 +507,76 @@ class _NoteEditorPageState extends State<NoteEditorPage>
           ],
         ),
         body: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(compact ? 12 : 20),
           child: Column(
             children: [
-              TextField(
-                autocorrect: false,
-                enableSuggestions: false,
-                enableIMEPersonalizedLearning: false,
-                key: const Key('note-title'),
-                controller: _title,
-                readOnly: _busy,
-                onChanged: _changed,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  hintText: context.tr('title'),
-                  border: InputBorder.none,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
+              KeyedSubtree(
+                key: widget.guideTargets['title'],
                 child: TextField(
                   autocorrect: false,
                   enableSuggestions: false,
                   enableIMEPersonalizedLearning: false,
-                  key: const Key('note-body'),
-                  controller: _body,
-                  readOnly: _busy,
+                  key: const Key('note-title'),
+                  controller: _title,
+                  readOnly: _busy || _formatFailure,
                   onChanged: _changed,
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  style: const TextStyle(fontSize: 17),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
                   decoration: InputDecoration(
-                    hintText: context.tr('write'),
+                    hintText: context.tr('title'),
                     border: InputBorder.none,
                   ),
                 ),
               ),
-              if (_inserted)
+              if (!compact)
+                Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: _busy || _formatFailure ? null : _chooseTags,
+                      icon: const Icon(Icons.label_outline, size: 18),
+                      label: Text(context.tr('tags')),
+                    ),
+                    Expanded(
+                      child: NoteTagChips(
+                        names: _tagNames,
+                        ids: _tagIds,
+                        onRemoved: _busy || _formatFailure ? null : _removeTag,
+                      ),
+                    ),
+                  ],
+                ),
+              SizedBox(height: compact ? 4 : 12),
+              RichNoteToolbar(
+                controller: _document,
+                focusNode: _bodyFocus,
+                enabled: !_busy && !_formatFailure,
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                key: widget.guideTargets['body'],
+                child: noteQuillLocalizations(
+                  context,
+                  quill.QuillEditor(
+                    key: const Key('note-body'),
+                    controller: _document,
+                    focusNode: _bodyFocus,
+                    scrollController: _bodyScroll,
+                    config: quill.QuillEditorConfig(
+                      expands: true,
+                      placeholder: context.tr('write'),
+                      onLaunchUrl: (url) => launchNoteLink(context, url),
+                    ),
+                  ),
+                ),
+              ),
+              if (_formatFailure)
+                Text(
+                  context.tr('richUnsupported'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              if (_inserted && !compact)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(

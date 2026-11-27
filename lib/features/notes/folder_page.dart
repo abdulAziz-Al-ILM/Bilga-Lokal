@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/strings.dart';
+
 import 'create_folder_page.dart';
 import 'create_note_page.dart';
 import 'edit_note_page.dart';
@@ -111,18 +113,18 @@ class _FolderPageState extends State<FolderPage> {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF0D2B22),
-          title: const Text(
-            'Papka nomini o‘zgartirish',
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            context.tr('rename'),
+            style: const TextStyle(color: Colors.white),
           ),
           content: TextField(
             controller: controller,
             autofocus: true,
             style: const TextStyle(color: Colors.white),
             cursorColor: Colors.white,
-            decoration: const InputDecoration(
-              hintText: 'Papka nomi',
-              hintStyle: TextStyle(color: Colors.white38),
+            decoration: InputDecoration(
+              hintText: context.tr('folderName'),
+              hintStyle: const TextStyle(color: Colors.white38),
             ),
             onSubmitted: (value) {
               final name = value.trim();
@@ -137,7 +139,7 @@ class _FolderPageState extends State<FolderPage> {
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
-              child: const Text('Bekor qilish'),
+              child: Text(context.tr('cancel')),
             ),
             TextButton(
               onPressed: () {
@@ -147,7 +149,7 @@ class _FolderPageState extends State<FolderPage> {
 
                 Navigator.pop(dialogContext, name);
               },
-              child: const Text('Saqlash'),
+              child: Text(context.tr('save')),
             ),
           ],
         );
@@ -196,11 +198,8 @@ class _FolderPageState extends State<FolderPage> {
     if (!mounted) return;
 
     if (!moved) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bu folderni tanlangan joyga ko‘chirib bo‘lmaydi.'),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr('moveUnavailable'))));
 
       return;
     }
@@ -214,12 +213,12 @@ class _FolderPageState extends State<FolderPage> {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF0D2B22),
-          title: const Text(
-            'Savatga yuborish',
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            context.tr('trash'),
+            style: const TextStyle(color: Colors.white),
           ),
           content: Text(
-            '"${currentFolder.name}" papkasi va uning ichidagi barcha yozuv va ichki papkalar savatga yuboriladi.',
+            '${currentFolder.name}\n\n${context.tr('orgDeleteInfo')}',
             style: const TextStyle(color: Colors.white70),
           ),
           actions: [
@@ -227,15 +226,15 @@ class _FolderPageState extends State<FolderPage> {
               onPressed: () {
                 Navigator.pop(dialogContext, false);
               },
-              child: const Text('Bekor qilish'),
+              child: Text(context.tr('cancel')),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext, true);
               },
-              child: const Text(
-                'Savatga yuborish',
-                style: TextStyle(color: Colors.redAccent),
+              child: Text(
+                context.tr('trash'),
+                style: const TextStyle(color: Colors.redAccent),
               ),
             ),
           ],
@@ -288,15 +287,19 @@ class _FolderPageState extends State<FolderPage> {
           InkWell(
             borderRadius: BorderRadius.circular(8),
             onTap: goToHome,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
               child: Row(
                 children: [
-                  Icon(Icons.home_outlined, size: 16, color: Colors.white54),
-                  SizedBox(width: 4),
+                  const Icon(
+                    Icons.home_outlined,
+                    size: 16,
+                    color: Colors.white54,
+                  ),
+                  const SizedBox(width: 4),
                   Text(
-                    'Bosh sahifa',
-                    style: TextStyle(color: Colors.white54, fontSize: 13),
+                    context.tr('home'),
+                    style: const TextStyle(color: Colors.white54, fontSize: 13),
                   ),
                 ],
               ),
@@ -352,9 +355,9 @@ class _FolderPageState extends State<FolderPage> {
                     Icons.note_add_outlined,
                     color: Colors.white,
                   ),
-                  title: const Text(
-                    'Yangi yozuv',
-                    style: TextStyle(color: Colors.white),
+                  title: Text(
+                    context.tr('newNote'),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -366,9 +369,9 @@ class _FolderPageState extends State<FolderPage> {
                     Icons.create_new_folder_outlined,
                     color: Colors.white,
                   ),
-                  title: const Text(
-                    'Yangi papka',
-                    style: TextStyle(color: Colors.white),
+                  title: Text(
+                    context.tr('newFolder'),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -394,17 +397,17 @@ class _FolderPageState extends State<FolderPage> {
         title: Text(currentFolder.name),
         actions: [
           IconButton(
-            tooltip: 'Nomini o‘zgartirish',
+            tooltip: context.tr('rename'),
             onPressed: renameFolder,
             icon: const Icon(Icons.edit_outlined),
           ),
           IconButton(
-            tooltip: 'Folderni ko‘chirish',
+            tooltip: context.tr('move'),
             onPressed: moveFolder,
             icon: const Icon(Icons.drive_file_move_outline),
           ),
           IconButton(
-            tooltip: 'Savatga yuborish',
+            tooltip: context.tr('trash'),
             onPressed: moveFolderToTrash,
             icon: const Icon(Icons.delete_outline),
           ),
@@ -424,10 +427,10 @@ class _FolderPageState extends State<FolderPage> {
                 ),
                 Expanded(
                   child: subFolders.isEmpty && notes.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'Bu folder hali bo‘sh',
-                            style: TextStyle(
+                            context.tr('empty'),
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 18,
                             ),
@@ -437,9 +440,9 @@ class _FolderPageState extends State<FolderPage> {
                           padding: const EdgeInsets.all(16),
                           children: [
                             if (subFolders.isNotEmpty) ...[
-                              const Text(
-                                'Papkalar',
-                                style: TextStyle(
+                              Text(
+                                context.tr('folderView'),
+                                style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -493,9 +496,9 @@ class _FolderPageState extends State<FolderPage> {
                             ],
 
                             if (notes.isNotEmpty) ...[
-                              const Text(
-                                'Notes',
-                                style: TextStyle(
+                              Text(
+                                context.tr('notes'),
+                                style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -529,7 +532,7 @@ class _FolderPageState extends State<FolderPage> {
                                           children: [
                                             Text(
                                               note.title.isEmpty
-                                                  ? 'Sarlavhasiz yozuv'
+                                                  ? context.tr('untitled')
                                                   : note.title,
                                               style: const TextStyle(
                                                 color: Colors.white,

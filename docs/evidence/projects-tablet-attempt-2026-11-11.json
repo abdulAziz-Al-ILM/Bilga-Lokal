@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-11",
+  "baseCommit": "cc8516b5a3d33ec18bd04a7acc8433d250872ae7",
+  "sourceState": "project working tree before keyboard/focus correction",
+  "deviceModel": "Blackview Tab16",
+  "androidApi": 31,
+  "package": "com.ilmmizan.bilga.review",
+  "productionPackageModified": false,
+  "testApkSha256": "d56f54f30e9f36b249e34eacf28029f508aacf4240f6d0a7745b4025a396d8e6",
+  "scenarioCasesTotal": 43,
+  "scenarioCasesPassed": 41,
+  "scenarioCasesFailed": 2,
+  "runnerPassedIncludingHooks": 47,
+  "runnerFailed": 2,
+  "durationSeconds": 213,
+  "result": "FAILED; not final tablet acceptance",
+  "failures": [
+    {
+      "test": "Custom task template UI journey",
+      "observed": "Add-subtask control disappeared after programmatic scroll while IME was active"
+    },
+    {
+      "test": "Project UI journey",
+      "observed": "Active status label not found after programmatic scroll while IME was active"
+    }
+  ],
+  "dataFixtureCases": "All six encrypted project fixture cases passed",
+  "correction": "Unfocus before test scroll; stable status-control key; editor keyboard dismissal on drag and save. Repeat pending.",
+  "repeatBlocker": "Default Flutter test runner could not bind a loopback socket. Escalated-command approval review is unavailable because of usage limit."
+}

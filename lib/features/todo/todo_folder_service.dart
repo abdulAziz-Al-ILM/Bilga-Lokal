@@ -1,3 +1,5 @@
+import 'todo_changes.dart';
+
 import 'package:sqflite/sqflite.dart';
 
 import 'todo_database.dart';
@@ -54,6 +56,7 @@ class TodoFolderService {
       folder.toMap(),
       conflictAlgorithm: ConflictAlgorithm.abort,
     );
+    TodoChanges.committed();
   }
 
   Future<void> renameFolder(TodoFolder folder, String newName) async {
@@ -65,6 +68,7 @@ class TodoFolderService {
       where: 'id = ?',
       whereArgs: [folder.id],
     );
+    TodoChanges.committed();
   }
 
   Future<void> moveFolder(TodoFolder folder, String? newParentId) async {
@@ -77,11 +81,11 @@ class TodoFolderService {
       String? current = newParentId;
       while (current != null) {
         if (!visited.add(current)) {
-          throw StateError('Papkani o‘z ichiga ko‘chirib bo‘lmaydi');
+          throw StateError('A folder cannot be moved into itself.');
         }
         final row = byId[current];
         if (row == null || row['is_deleted'] == 1) {
-          throw StateError('Papka topilmadi');
+          throw StateError('Folder no longer exists.');
         }
         current = row['parent_id'] as String?;
       }
@@ -96,6 +100,7 @@ class TodoFolderService {
       where: 'id = ?',
       whereArgs: [folder.id],
     );
+    TodoChanges.committed();
   }
 
   Future<void> deleteFolder(String folderId) async {
@@ -115,9 +120,10 @@ class TodoFolderService {
         limit: 1,
       );
       if (children.isNotEmpty || tasks.isNotEmpty) {
-        throw StateError('Bo‘sh bo‘lmagan papkani o‘chirib bo‘lmaydi');
+        throw StateError('A folder must be empty before it can be deleted.');
       }
       await txn.delete('todo_folders', where: 'id = ?', whereArgs: [folderId]);
     });
+    TodoChanges.committed();
   }
 }

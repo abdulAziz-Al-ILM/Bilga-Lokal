@@ -1,3 +1,6 @@
+import '../features/reminders/module_reminder_host.dart';
+import '../features/todo/reminders/todo_host.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -5,10 +8,21 @@ import '../core/settings.dart';
 import '../core/strings.dart';
 import '../core/regional_localizations.dart';
 import '../core/app_lock.dart';
+import '../features/agent/core_access_gate.dart';
+import '../features/notes/widget/notes_widget_host.dart';
+import '../features/voice/voice_screen_host.dart';
 import 'home_page.dart';
 
-class BilgaApp extends StatelessWidget {
+class BilgaApp extends StatefulWidget {
   const BilgaApp({super.key});
+
+  @override
+  State<BilgaApp> createState() => _BilgaAppState();
+}
+
+class _BilgaAppState extends State<BilgaApp> {
+  final _voiceRoutes = VoiceScreenNavigator();
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: AppSettings.instance,
@@ -32,9 +46,19 @@ class BilgaApp extends StatelessWidget {
         theme: bilgaTheme(settings.palette, Brightness.light),
         darkTheme: bilgaTheme(settings.palette, Brightness.dark),
         themeMode: settings.mode,
-        builder: (context, child) =>
-            AppLock(child: child ?? const SizedBox.shrink()),
-        home: const HomePage(),
+        navigatorObservers: [_voiceRoutes],
+        builder: (context, child) => AppLock(
+          child: CoreAccessGate(
+            child: VoiceScreenHost(
+              routes: _voiceRoutes,
+              enabled: settings.voiceScreenControls,
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
+        ),
+        home: const NotesWidgetHost(
+          child: TodoHost(child: ModuleReminderHost(child: HomePage())),
+        ),
       );
     },
   );

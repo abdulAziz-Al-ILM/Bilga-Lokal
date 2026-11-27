@@ -1,0 +1,23 @@
+{
+  "sourceCommit": "121d876075e595d7a786ae4b2d095bbf996f60e5",
+  "apk": "build/review/bilga-finance-history-review-app.apk",
+  "sha256": "f2ea789f0d3487eecac926dec425eeccce23257a794af2505970fa84ebbf3bfe",
+  "bytes": 217901916,
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "signerSha256": [
+    "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0"
+  ],
+  "installedInPlace": true,
+  "launchStatus": "ok",
+  "launchState": "COLD",
+  "debugColdActivityMillis": 5629,
+  "tasksDatabaseSchema": 13,
+  "notesDatabaseSchema": 16,
+  "type": "ordinary debug development app; six-module completion and owner acceptance pending",
+  "productionPackageModified": false,
+  "binaryScope": {
+    "transactionHistoryPage": true,
+    "unverifiedAnalyticsPage": false
+  }
+}

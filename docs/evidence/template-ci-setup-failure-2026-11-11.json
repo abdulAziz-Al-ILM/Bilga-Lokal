@@ -1,0 +1,9 @@
+{
+  "runId": 43034401498,
+  "sourceCommit": "cc8516b5a3d33ec18bd04a7acc8433d250872ae7",
+  "failedStage": "Install matching Android build tools",
+  "cause": "Temporary failure resolving azure.archive.ubuntu.com while apt installed libopengl0/libglu1-mesa",
+  "exitCode": 100,
+  "applicationTestsReached": false,
+  "correction": "Bounded Acquire::Retries=3 and APT::Update::Error-Mode=any. New hosted CI pending."
+}

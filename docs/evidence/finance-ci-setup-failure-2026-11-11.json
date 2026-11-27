@@ -1,0 +1,12 @@
+{
+  "runId": 43055188574,
+  "url": "https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/43055188574",
+  "headSha": "6270268d92397d4037df8fa0ec7a96e6899d9638",
+  "conclusion": "failure",
+  "stage": "Install matching Android build tools",
+  "applicationTestsStarted": false,
+  "reason": "A required-by-setup missing desktop GLU package triggered apt refresh, which still could not resolve azure.archive.ubuntu.com after bounded retries; exit 100",
+  "localLog": "/tmp/bilga-finance-ci-failure.log",
+  "change": "Remove the unnecessary desktop GLU dependency from this headless Flutter-test/Android-build workflow; retain required SQLite presence/install checks. Local ldd of the pinned flutter_tester lists only standard libc/libm/libpthread/libdl and no GLU.",
+  "changeVerifiedOnHostedRunner": false
+}

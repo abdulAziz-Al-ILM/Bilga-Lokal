@@ -1,0 +1,10 @@
+eSpeak NG 1.52.0 is a separate command-line program, distributed under
+the GNU General Public License version 3 or later. The release source and
+its notices are in espeak-ng-1.52.0-source.tgz in this directory.
+build_embedded_speech.sh contains the build instructions and the only
+source change, which disables fetching an unused audio dependency.
+Upstream release: https://github.com/espeak-ng/espeak-ng/releases/tag/1.52.0
+
+Bilga invokes the program with UTF-8 text on standard input and receives
+WAV audio on standard output. Its own code uses the standard Android
+audio APIs for playback.

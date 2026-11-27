@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <instrumentation android:name="com.ilmmizan.bilga.NotesWidgetChecks"
+        android:targetPackage="${bilgaTestTarget}"/>
+    <!-- Self-targeted UI probe: never restarts Bilga or disturbs its reminders. -->
+    <instrumentation android:name="com.ilmmizan.bilga.WidgetUiProbe"
+        android:targetPackage="${bilgaTestTarget}.test"/>
+</manifest>

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# A prebuilt, verified binary is mandatory: no implicit production-app build.
+set -euo pipefail
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
+mkdir -p .bilga-tools
+# Keep the lock in flock's parent, never in ADB/Gradle descendants.
+if [[ "${BILGA_REVIEW_LOCKED:-}" != 1 ]]; then
+  exec flock --close -n .bilga-tools/build.lock env BILGA_REVIEW_LOCKED=1 bash "$PWD/tool/test_tablet_review.sh" "$@"
+fi
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  echo 'Usage: bash tool/test_tablet_review.sh <device-serial> <review-test.apk> [integration_test/target_test.dart]' >&2
+  exit 1
+fi
+bilga_device="$1"
+bilga_apk="$2"
+bilga_target="${3:-integration_test/tablet_review_test.dart}"
+if [[ ! "$bilga_target" =~ ^integration_test/[a-z0-9_]+_test\.dart$ || ! -f "$bilga_target" ]]; then
+  echo 'Expected an existing integration_test/*_test.dart target; refusing device access.' >&2
+  exit 1
+fi
+export ANDROID_HOME="${ANDROID_HOME:-$PWD/.bilga-tools/android}"
+export JAVA_HOME="${JAVA_HOME:-$(printf '%s\n' "$PWD"/.bilga-tools/java/jdk-*)}"
+export PATH="$JAVA_HOME/bin:$PATH"
+export PUB_CACHE="${PUB_CACHE:-$PWD/.bilga-tools/pub-cache}"
+export DART_SUPPRESS_ANALYTICS=true
+mkdir -p build/review/evidence
+"$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest print "$bilga_apk" > build/review/test-manifest.xml
+python3 tool/verify_review_manifest.py build/review/test-manifest.xml
+"$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$bilga_apk"
+"$JAVA_HOME/bin/keytool" -exportcert -keystore .bilga-tools/review-signing/debug.keystore -alias androiddebugkey -storepass android -file build/review/review-cert.der
+python3 - "$bilga_apk" <<'PY'
+import hashlib, sys
+from pathlib import Path
+from tool.apk_signer_fingerprint import fingerprints
+expected = hashlib.sha256(Path('build/review/review-cert.der').read_bytes()).hexdigest()
+if fingerprints(sys.argv[1]) != [expected]:
+    raise SystemExit('APK must use this checkout\'s isolated review signing key')
+PY
+"$ANDROID_HOME/platform-tools/adb" -s "$bilga_device" get-state
+python3 tool/check_tablet_review_install.py "$bilga_device" "$bilga_apk"
+# Flutter reads the actual package from this checked APK. The target specifies
+# test identity for the driver; --use-application-binary prevents rebuilding.
+.bilga-tools/flutter/bin/flutter drive --no-pub -d "$bilga_device" \
+  --keep-app-running \
+  --target "$bilga_target" \
+  --driver test_driver/tablet_review_driver.dart \
+  --use-application-binary "$bilga_apk"

@@ -1,0 +1,10 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:fillViewport="true">
+ <LinearLayout android:id="@+id/todo_picker_body" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp">
+  <TextView android:id="@+id/todo_picker_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="20sp" android:paddingBottom="8dp"/>
+  <DatePicker android:id="@+id/todo_picker_date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:datePickerMode="spinner" android:calendarViewShown="false"/>
+  <TimePicker android:id="@+id/todo_picker_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:timePickerMode="spinner"/>
+  <TextView android:id="@+id/todo_picker_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityLiveRegion="polite"/>
+  <Button android:id="@+id/todo_picker_save" android:layout_width="match_parent" android:layout_height="wrap_content" android:filterTouchesWhenObscured="true"/>
+  <Button android:id="@+id/todo_picker_cancel" android:layout_width="match_parent" android:layout_height="wrap_content" android:filterTouchesWhenObscured="true"/>
+ </LinearLayout>
+</ScrollView>

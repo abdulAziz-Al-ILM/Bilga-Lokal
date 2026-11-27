@@ -1,11 +1,20 @@
+import '../core/diagnostics.dart';
+import '../features/reminders/notification_center.dart';
+import '../features/voice/voice_page.dart';
+import '../features/voice/voice_screen_host.dart';
+import '../features/guidance/help_hub.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../features/search/library_page.dart';
+import '../features/planning/today_page.dart';
+
 import 'package:flutter/services.dart';
 
 import '../core/settings.dart';
 import '../core/strings.dart';
-import '../core/start_strings.dart';
 import '../core/loop_carousel.dart';
 import '../features/ambience/ambient_scene.dart';
 import '../features/notes/notes_page.dart';
@@ -44,8 +53,9 @@ class _HomePageState extends State<HomePage> {
       if (mounted) await consumeShare();
     } on MissingPluginException {
       // Share intents are available only on the Android host.
-    } catch (_) {
+    } catch (error) {
       shareOpen = false;
+      logFailure('Could not open incoming share', error);
     }
   }
 
@@ -66,7 +76,9 @@ class _HomePageState extends State<HomePage> {
           await openAgent();
         }
       } on MissingPluginException {
-        /* Desktop and widget tests. */
+        // The assistant launch channel is only installed by Android.
+      } on PlatformException catch (error) {
+        logFailure('Could not consume assistant launch', error);
       }
     });
   }
@@ -86,10 +98,13 @@ class _HomePageState extends State<HomePage> {
     agentOpen = false;
   }
 
-  Future<void> open(Widget page) async {
+  Future<void> open(Widget page, {String? routeName}) async {
     await Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (_) => page),
+      MaterialPageRoute(
+        settings: RouteSettings(name: routeName),
+        builder: (_) => page,
+      ),
     );
     if (mounted) setState(() {});
   }
@@ -122,29 +137,25 @@ class _HomePageState extends State<HomePage> {
     final entries = <(String, String, IconData, Widget)>[
       (
         context.tr('notes'),
-        startText('Fikrlarni saqlang', 'Capture your ideas', 'Сохраняйте идеи'),
+        context.tr('homeNotesCaption'),
         Icons.edit_note_rounded,
         const NotesPage(),
       ),
       (
         context.tr('todos'),
-        startText(
-          'Rejadan natijaga',
-          'Turn plans into progress',
-          'От плана к результату',
-        ),
+        context.tr('homeTasksCaption'),
         Icons.task_alt_rounded,
         const TodoPage(),
       ),
       (
         context.tr('xHabits'),
-        startText('Har kuni bir qadam', 'One step every day', 'Шаг за шагом'),
+        context.tr('homeHabitsCaption'),
         Icons.local_fire_department_outlined,
         const HabitsPage(),
       ),
       (
-        context.tr('xAgent'),
-        'Start • ${startText('Ovozli yordamchi', 'Voice assistant', 'Голосовой помощник')}',
+        context.tr('textAssistant'),
+        context.tr('searchAssistantShort'),
         Icons.auto_awesome_rounded,
         const AgentHub(),
       ),
@@ -169,21 +180,69 @@ class _HomePageState extends State<HomePage> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            ClipRRect(
+        title: LayoutBuilder(
+          builder: (context, width) {
+            final logo = ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 'assets/brand/bilga.png',
                 width: 40,
                 height: 40,
+                semanticLabel: 'Bilga',
               ),
-            ),
-            const SizedBox(width: 12),
-            const Text('Bilga'),
-          ],
+            );
+            if (width.maxWidth < 64) {
+              return Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SizedBox(
+                  width: width.maxWidth.clamp(0.0, 36.0),
+                  height: 36,
+                  child: logo,
+                ),
+              );
+            }
+            return Row(
+              children: [
+                logo,
+                const SizedBox(width: 12),
+                const Flexible(
+                  child: Text(
+                    'Bilga',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         actions: [
+          IconButton(
+            key: const Key('home-voice-open'),
+            tooltip: context.tr('voiceTitle'),
+            onPressed: () => open(
+              const VoicePage(),
+              routeName: VoiceScreenNavigator.assistantRoute,
+            ),
+            icon: const Icon(Icons.mic_none),
+          ),
+          IconButton(
+            key: const Key('home-notification-center'),
+            tooltip: context.tr('ncTitle'),
+            onPressed: () => open(const NotificationCenter()),
+            icon: const Icon(Icons.notifications_none),
+          ),
+          IconButton(
+            key: const Key('home-help-hub'),
+            tooltip: context.tr('helpHub'),
+            onPressed: () => open(const HelpHubPage()),
+            icon: const Icon(Icons.help_outline),
+          ),
+          IconButton(
+            tooltip: context.tr('search'),
+            onPressed: () => open(const LibraryPage()),
+            icon: const Icon(Icons.search),
+          ),
           IconButton(
             tooltip: context.tr('profile'),
             onPressed: () => open(const ProfilePage()),
@@ -199,6 +258,21 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 12),
               children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
+                  child: Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.today_outlined),
+                      title: Text(context.tr('todayPlan')),
+                      subtitle: Text(context.tr('weekAhead')),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => open(const TodayPage()),
+                    ),
+                  ),
+                ),
                 if (settings.nickname.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -210,11 +284,7 @@ class _HomePageState extends State<HomePage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
                   child: Text(
-                    startText(
-                      'Fikr. Reja. Harakat.',
-                      'Ideas. Plans. Progress.',
-                      'Идеи. Планы. Действия.',
-                    ),
+                    context.tr('homeHeadline'),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
@@ -296,6 +366,12 @@ class _HomePageState extends State<HomePage> {
                         Image.asset(
                           'assets/ambience/${keys[index]}.jpg',
                           fit: BoxFit.cover,
+                          cacheWidth:
+                              (MediaQuery.sizeOf(context).width *
+                                      MediaQuery.devicePixelRatioOf(context) *
+                                      .68)
+                                  .round()
+                                  .clamp(280, 840),
                         ),
                         const ColoredBox(color: Color(0x55000000)),
                         Center(

@@ -4,6 +4,8 @@ import 'todo_status_indicator.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../core/strings.dart';
+
 import 'create_todo_folder_page.dart';
 import 'move_todo_folder_page.dart';
 import 'todo_folder_model.dart';
@@ -77,11 +79,11 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Papka nomini o‘zgartirish'),
+          title: Text(context.tr('rename')),
           content: TextField(
             controller: controller,
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'Papka nomi'),
+            decoration: InputDecoration(labelText: context.tr('folderName')),
             onSubmitted: (value) {
               Navigator.pop(context, value.trim());
             },
@@ -91,13 +93,13 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('Bekor qilish'),
+              child: Text(context.tr('cancel')),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(context, controller.text.trim());
               },
-              child: const Text('Saqlash'),
+              child: Text(context.tr('save')),
             ),
           ],
         );
@@ -159,9 +161,9 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                   Icons.check_circle_outline,
                   color: Colors.white,
                 ),
-                title: const Text(
-                  'Yangi vazifa',
-                  style: TextStyle(color: Colors.white),
+                title: Text(
+                  context.tr('newTask'),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 onTap: () {
                   Navigator.pop(context, 'todo');
@@ -172,9 +174,9 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                   Icons.create_new_folder_outlined,
                   color: Colors.white,
                 ),
-                title: const Text(
-                  'Yangi papka',
-                  style: TextStyle(color: Colors.white),
+                title: Text(
+                  context.tr('newFolder'),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 onTap: () {
                   Navigator.pop(context, 'folder');
@@ -215,9 +217,6 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
 
     final date = await showDatePicker(
       context: context,
-      helpText: 'Sanani tanlang',
-      cancelText: 'Bekor qilish',
-      confirmText: 'Tanlash',
       initialDate: initial.isBefore(now) ? now : initial,
       firstDate: DateTime(now.year, now.month, now.day),
       lastDate: DateTime(now.year + 10),
@@ -228,9 +227,6 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initial),
-      helpText: 'Vaqtni tanlang',
-      cancelText: 'Bekor qilish',
-      confirmText: 'Tanlash',
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
         child: child!,
@@ -247,35 +243,35 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Muhimlik darajasi'),
+          title: Text(context.tr('priority')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               priorityOption(
                 context,
                 TodoPriority.normal,
-                'Oddiy',
+                context.tr('normal'),
                 const Color(0xFF4CAF50),
                 currentPriority,
               ),
               priorityOption(
                 context,
                 TodoPriority.important,
-                'Muhim',
+                context.tr('important'),
                 const Color(0xFFFFC107),
                 currentPriority,
               ),
               priorityOption(
                 context,
                 TodoPriority.veryImportant,
-                'Juda muhim',
+                context.tr('veryImportant'),
                 const Color(0xFFFF9800),
                 currentPriority,
               ),
               priorityOption(
                 context,
                 TodoPriority.critical,
-                'Kritik',
+                context.tr('critical'),
                 const Color(0xFFF44336),
                 currentPriority,
               ),
@@ -314,11 +310,11 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Yangi vazifa'),
+          title: Text(context.tr('newTask')),
           content: TextField(
             controller: controller,
             autofocus: true,
-            decoration: const InputDecoration(hintText: 'Vazifa nomi'),
+            decoration: InputDecoration(hintText: context.tr('title')),
             onSubmitted: (value) {
               Navigator.pop(context, value.trim());
             },
@@ -328,13 +324,15 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('Bekor qilish'),
+              child: Text(context.tr('cancel')),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(context, controller.text.trim());
               },
-              child: const Text('Keyingi'),
+              child: Text(
+                MaterialLocalizations.of(context).continueButtonLabel,
+              ),
             ),
           ],
         );
@@ -380,7 +378,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Vazifani tahrirlash'),
+              title: Text(context.tr('editTask')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -388,14 +386,14 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                   children: [
                     TextField(
                       controller: controller,
-                      decoration: const InputDecoration(
-                        labelText: 'Vazifa nomi',
+                      decoration: InputDecoration(
+                        labelText: context.tr('title'),
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      'Muhimlik',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    Text(
+                      context.tr('priority'),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
@@ -435,9 +433,9 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      'Muddat',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    Text(
+                      context.tr('due'),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
@@ -465,7 +463,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                             Expanded(
                               child: Text(
                                 dueAt == null
-                                    ? 'Muddat yo‘q'
+                                    ? context.tr('none')
                                     : formatDateTime(dueAt!),
                               ),
                             ),
@@ -482,13 +480,13 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                   onPressed: () {
                     Navigator.pop(context, false);
                   },
-                  child: const Text('Bekor qilish'),
+                  child: Text(context.tr('cancel')),
                 ),
                 FilledButton(
                   onPressed: () {
                     Navigator.pop(context, true);
                   },
-                  child: const Text('Saqlash'),
+                  child: Text(context.tr('save')),
                 ),
               ],
             );
@@ -538,20 +536,20 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Vazifani o‘chirish'),
-          content: Text('"${todo.title}" vazifasini o‘chirmoqchimisiz?'),
+          title: Text(context.tr('delete')),
+          content: Text('${todo.title}\n\n${context.tr('trashConfirm')}'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: const Text('Bekor qilish'),
+              child: Text(context.tr('cancel')),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(context, true);
               },
-              child: const Text('O‘chirish'),
+              child: Text(context.tr('delete')),
             ),
           ],
         );
@@ -595,13 +593,13 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
   String priorityText(TodoPriority priority) {
     switch (priority) {
       case TodoPriority.normal:
-        return 'Oddiy';
+        return context.tr('normal');
       case TodoPriority.important:
-        return 'Muhim';
+        return context.tr('important');
       case TodoPriority.veryImportant:
-        return 'Juda muhim';
+        return context.tr('veryImportant');
       case TodoPriority.critical:
-        return 'Kritik';
+        return context.tr('critical');
     }
   }
 
@@ -699,18 +697,46 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
     final parts = <String>[];
 
     if (days > 0) {
-      parts.add('$days kun');
+      parts.add(
+        context
+            .tr('durationDays')
+            .replaceAll(
+              '{count}',
+              MaterialLocalizations.of(context).formatDecimal(days),
+            ),
+      );
     }
 
     if (hours > 0 || days > 0) {
-      parts.add('$hours soat');
+      parts.add(
+        context
+            .tr('durationHours')
+            .replaceAll(
+              '{count}',
+              MaterialLocalizations.of(context).formatDecimal(hours),
+            ),
+      );
     }
 
     if (minutes > 0 || hours > 0 || days > 0) {
-      parts.add('$minutes daqiqa');
+      parts.add(
+        context
+            .tr('durationMinutes')
+            .replaceAll(
+              '{count}',
+              MaterialLocalizations.of(context).formatDecimal(minutes),
+            ),
+      );
     }
 
-    parts.add('$seconds soniya');
+    parts.add(
+      context
+          .tr('durationSeconds')
+          .replaceAll(
+            '{count}',
+            MaterialLocalizations.of(context).formatDecimal(seconds),
+          ),
+    );
 
     return parts.join(' ');
   }
@@ -836,7 +862,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Qo‘yildi: ${formatDateTime(todo.createdAt)}',
+                      '${context.tr('created')}: ${formatDateTime(todo.createdAt)}',
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 13,
@@ -845,7 +871,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                     if (todo.dueAt != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        'Bajarish: ${formatDateTime(todo.dueAt!)}',
+                        '${context.tr('due')}: ${formatDateTime(todo.dueAt!)}',
                         style: TextStyle(
                           color: overdue ? Colors.redAccent : Colors.white70,
                           fontSize: 13,
@@ -855,8 +881,8 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                         const SizedBox(height: 4),
                         Text(
                           overdue
-                              ? 'Kechikdi: ${formatDuration(timeLeft)}'
-                              : 'Qoldi: ${formatDuration(timeLeft)}',
+                              ? '${context.tr('overdue')}: ${formatDuration(timeLeft)}'
+                              : '${context.tr('remaining')}: ${formatDuration(timeLeft)}',
                           style: TextStyle(
                             color: overdue ? Colors.redAccent : Colors.white,
                             fontSize: 13,
@@ -872,7 +898,7 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                           postponeTodo(todo);
                         },
                         icon: const Icon(Icons.update, size: 18),
-                        label: const Text('Kechiktirish'),
+                        label: Text(context.tr('reminderSnooze')),
                       ),
                     ],
                   ],
@@ -940,12 +966,12 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
         title: Text(currentFolder.name),
         actions: [
           IconButton(
-            tooltip: 'Nomini o‘zgartirish',
+            tooltip: context.tr('rename'),
             onPressed: renameFolder,
             icon: const Icon(Icons.edit_outlined),
           ),
           IconButton(
-            tooltip: 'Ko‘chirish',
+            tooltip: context.tr('move'),
             onPressed: moveFolder,
             icon: const Icon(Icons.drive_file_move_outline),
           ),
@@ -960,17 +986,20 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : !hasContent
-          ? const Center(
+          ? Center(
               child: Text(
-                'Bu papka hozircha bo‘sh',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+                context.tr('empty'),
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
             )
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
                 if (subFolders.isNotEmpty) ...[
-                  buildSectionTitle('Papkalar', subFolders.length),
+                  buildSectionTitle(
+                    context.tr('folderView'),
+                    subFolders.length,
+                  ),
                   ...subFolders.map(
                     (folder) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -979,7 +1008,10 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                   ),
                 ],
                 if (activeTodos.isNotEmpty) ...[
-                  buildSectionTitle('Faol vazifalar', activeTodos.length),
+                  buildSectionTitle(
+                    context.tr('activeTasks'),
+                    activeTodos.length,
+                  ),
                   ...activeTodos.map(
                     (todo) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -988,7 +1020,10 @@ class _TodoFolderPageState extends State<TodoFolderPage> {
                   ),
                 ],
                 if (completedTodos.isNotEmpty) ...[
-                  buildSectionTitle('Bajarilganlar', completedTodos.length),
+                  buildSectionTitle(
+                    context.tr('completedTasks'),
+                    completedTodos.length,
+                  ),
                   ...completedTodos.map(
                     (todo) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),

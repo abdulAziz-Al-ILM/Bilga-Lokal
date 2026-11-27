@@ -1,0 +1,26 @@
+{
+  "runtime_source": "c0d18e2bffa13a33bf7d20d30eae3f357be78d7e",
+  "run": 43703600208,
+  "url": "https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/43703600208",
+  "conclusion": "success",
+  "host_tests_passed": 287,
+  "host_tests_elapsed_seconds": 198,
+  "checks": [
+    "locked dependencies",
+    "format",
+    "43 catalogues",
+    "non-voice guard",
+    "9 manifest tests",
+    "purchase-backend protocol tests",
+    "analyzer",
+    "Dart/Java DST recurrence",
+    "complete Flutter suite",
+    "Android multi-ABI debug build",
+    "APK integrity/signature/manifest"
+  ],
+  "hosted_debug_apk_sha256": "7c0439405cdcaf309b1f6fb9d929f1e3b02df2549562d8011d40ee67d6432714",
+  "cloud_apk_uploaded": false,
+  "upload": "optional and skipped; all build and validation steps executed",
+  "owner_review_apk": "separate local Review build required",
+  "log_sha256": "85a3b631a7655a5f6e66d495f4db4d08ffb5dcb8a791c20023f23fe3bcdac182"
+}

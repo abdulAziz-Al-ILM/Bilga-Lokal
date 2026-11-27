@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Wijeti ya kazi</string>
+    <string name="tw_todos">Majukumu</string>
+    <string name="tw_task">Jukumu</string>
+    <string name="tw_new">Jukumu jipya</string>
+    <string name="tw_done">Yaliyokamilika</string>
+    <string name="tw_snooze">Ahirisha</string>
+    <string name="tw_empty">Bado hakuna kitu hapa</string>
+    <string name="tw_reminders">Vikumbusho</string>
+    <string name="tw_limits">Android inaweza kuchelewesha vikumbusho au kuficha paneli. Angalia arifa, kengele sahihi na betri; arifa ibukizi haihakikishwi.</string>
+    <string name="tw_custom">Chagua wakati</string>
+    <string name="tw_save">Hifadhi</string>
+    <string name="tw_cancel">Ghairi</string>
+    <string name="tw_future">Chagua wakati wa baadaye wa kikumbusho.</string>
+</resources>

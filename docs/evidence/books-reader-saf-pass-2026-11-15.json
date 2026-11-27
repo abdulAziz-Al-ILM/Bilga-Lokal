@@ -1,0 +1,32 @@
+{
+  "test_source": "8ff1d3a",
+  "runtime_source": "ff59d5bf12a9f080e2270fdb5f2e3f06b4a62c77",
+  "apk": "build/review/bilga-reader-saf-tests-v4.apk",
+  "sha256": "f7e081782cc51a2c07c0537274c029d4d22acbb0dc1594579ab24809279e082b",
+  "target": "integration_test/reading_saf_review_test.dart",
+  "device": "Tab16NEU0045423",
+  "package": "com.ilmmizan.bilga.review",
+  "result": "PASS; complete actual SAF sequence without operator intervention",
+  "elapsed_seconds": 285,
+  "actual_scenarios_passed": 12,
+  "runner_cases_including_hooks": 14,
+  "log": "/tmp/bilga-reader-saf-tablet6.log",
+  "log_sha256": "16d76881de8ee46c16b3d8cd8aee2a2cd3c602f1c251712323b078bb59e6d38b",
+  "actual_native_sequence": [
+    "cancel and verify dismissal",
+    "PDF managed copy import/read",
+    "EPUB managed copy import/read",
+    "TXT persistent external reference import/read",
+    "duplicate PDF cancel, retain three books",
+    "corrupt EPUB rejected, retain three books"
+  ],
+  "additional_assertions": [
+    "11 encrypted parser/data/rich-recovery/migration/link cases",
+    "real PDF jump154 and bookmark saved before close",
+    "saved progress page154 verified after reader disposal",
+    "scoped encrypted fixture preserved for a separate process-restart run"
+  ],
+  "restart_result": "PASS; separate phase B, see books-reader-process-restart-2026-11-15.json",
+  "manual_keyboard_acceptance": false,
+  "production_touched": false
+}

@@ -98,6 +98,7 @@ void registerDataSafetyTests() {
             'saved',
             folderId: version >= 5 ? 'parent' : null,
           ).toMap();
+          row.remove('rich_body');
           if (version < 8) {
             row.remove('is_favorite');
             row.remove('is_archived');
@@ -114,7 +115,7 @@ void registerDataSafetyTests() {
       await old.close();
       final db = await NoteDatabase.openAt(path);
       opened.add(db);
-      expect(await db.getVersion(), 11);
+      expect(await db.getVersion(), 21);
       expect(await db.query('habits'), isEmpty);
       final rows = await db.query('notes');
       expect(rows.single['body'], 'matn');

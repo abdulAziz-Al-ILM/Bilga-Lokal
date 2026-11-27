@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/strings.dart';
+
 import 'note_database.dart';
 import 'folder_model.dart';
 import 'folder_service.dart';
@@ -71,14 +73,14 @@ class _TrashFolderPageState extends State<TrashFolderPage> {
         return AlertDialog(
           backgroundColor: const Color(0xFF0D2B22),
           title: Text(
-            note.title.isEmpty ? 'Sarlavhasiz yozuv' : note.title,
+            note.title.isEmpty ? context.tr('untitled') : note.title,
             style: const TextStyle(color: Colors.white),
           ),
           content: SizedBox(
             width: double.maxFinite,
             child: SingleChildScrollView(
               child: Text(
-                note.body.isEmpty ? 'Bu yozuv bo‘sh' : note.body,
+                note.body.isEmpty ? context.tr('emptyNote') : note.body,
                 style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
             ),
@@ -88,7 +90,7 @@ class _TrashFolderPageState extends State<TrashFolderPage> {
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
-              child: const Text('Yopish'),
+              child: Text(context.tr('close')),
             ),
           ],
         );
@@ -114,19 +116,19 @@ class _TrashFolderPageState extends State<TrashFolderPage> {
               child: CircularProgressIndicator(color: Color(0xFF1E5A46)),
             )
           : isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'Bu papka bo‘sh',
-                style: TextStyle(color: Colors.white54, fontSize: 18),
+                context.tr('empty'),
+                style: const TextStyle(color: Colors.white54, fontSize: 18),
               ),
             )
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
                 if (subFolders.isNotEmpty) ...[
-                  const Text(
-                    'Papkalar',
-                    style: TextStyle(
+                  Text(
+                    context.tr('folderView'),
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -181,9 +183,9 @@ class _TrashFolderPageState extends State<TrashFolderPage> {
                 ],
 
                 if (notes.isNotEmpty) ...[
-                  const Text(
-                    'Notes',
-                    style: TextStyle(
+                  Text(
+                    context.tr('notes'),
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -216,7 +218,7 @@ class _TrashFolderPageState extends State<TrashFolderPage> {
                               children: [
                                 Text(
                                   note.title.isEmpty
-                                      ? 'Sarlavhasiz yozuv'
+                                      ? context.tr('untitled')
                                       : note.title,
                                   style: const TextStyle(
                                     color: Colors.white,

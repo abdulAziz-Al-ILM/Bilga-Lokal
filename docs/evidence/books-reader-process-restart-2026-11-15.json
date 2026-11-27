@@ -1,0 +1,25 @@
+{
+  "before_pid": "9097",
+  "after_force_stop_pid": "",
+  "only_review_force_stopped": true,
+  "test_source": "8ff1d3a",
+  "runtime_source": "ff59d5bf12a9f080e2270fdb5f2e3f06b4a62c77",
+  "apk": "build/review/bilga-reader-saf-tests-v4.apk",
+  "apk_sha256": "f7e081782cc51a2c07c0537274c029d4d22acbb0dc1594579ab24809279e082b",
+  "device": "Tab16NEU0045423",
+  "reopened_pid": "9098",
+  "result": "PASS",
+  "actual_cases": 12,
+  "runner_cases_including_hooks": 14,
+  "elapsed_seconds": 77,
+  "log": "/tmp/bilga-reader-saf-restart1.log",
+  "log_sha256": "034017e9496ccb6f64f536a7ffa38b2ca37968ded7b2776f6e0098f0365c0002",
+  "assertions": [
+    "original encrypted managed PDF reopened at page154",
+    "bookmark Restart bookmark survived",
+    "external TXT materialized through persisted SAF URI grant after real process death",
+    "11 encrypted parser/recovery/migration/link cases rerun",
+    "only scoped synthetic checkpoint/vault removed by test finally"
+  ],
+  "production_touched": false
+}

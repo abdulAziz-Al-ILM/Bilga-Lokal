@@ -1,0 +1,56 @@
+{
+  "deviceSuite": "isolated Bilga Review",
+  "visitedModules": [
+    "notes",
+    "todos",
+    "xHabits",
+    "textAssistant",
+    "xFinance",
+    "xExperience",
+    "xBooks",
+    "today",
+    "search",
+    "settings"
+  ],
+  "themeVariants": 14,
+  "rtl": "Arabic",
+  "realEditorRotation": "portrait-landscape-portrait",
+  "notification": {
+    "realDelivery": true,
+    "snoozeDelivery": true,
+    "nativePendingIntentCompletion": true,
+    "exactPermission": true,
+    "sound": false
+  },
+  "recurrence": {
+    "nativeAdvance": true,
+    "checklistHistoryPreservedAndSuccessorReset": true,
+    "nextReminderDeliveredWithoutDartRefresh": true,
+    "futureWidgetConsentInherited": false
+  },
+  "checklist": {
+    "encryptedFixtures": true,
+    "realEditorReorderAndCompletion": true,
+    "listProgress": true,
+    "independentDuplication": true
+  },
+  "taskTemplates": {
+    "encryptedFixtures": true,
+    "realCreatePreviewApplyEditSnapshotDelete": true
+  },
+  "date": "2026-11-11",
+  "deviceModel": "Blackview Tab16",
+  "androidApi": 31,
+  "scenarioCasesPassed": 36,
+  "runnerCountIncludingHooks": 42,
+  "durationSeconds": 222,
+  "productionPackageModified": false,
+  "testApkSha256": "64e810c919f37bc96db172b41ccba15cc94d4bbe5f6fbde89f24459a254607d1",
+  "tasksDatabaseSchema": 12,
+  "tasksPortableContentSchema": 10,
+  "source": "custom task template milestone; see containing commit history",
+  "nativeChecks": {
+    "notesWidgets": 13,
+    "tasks": 46
+  }
+}

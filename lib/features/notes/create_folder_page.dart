@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/strings.dart';
+
 import 'folder_model.dart';
 
 class CreateFolderPage extends StatefulWidget {
@@ -47,10 +49,10 @@ class _CreateFolderPageState extends State<CreateFolderPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF071C16),
         foregroundColor: Colors.white,
-        title: const Text('Yangi papka'),
+        title: Text(context.tr('newFolder')),
         actions: [
           IconButton(
-            tooltip: 'Saqlash',
+            tooltip: context.tr('save'),
             onPressed: saveFolder,
             icon: const Icon(Icons.check),
           ),
@@ -62,9 +64,9 @@ class _CreateFolderPageState extends State<CreateFolderPage> {
           controller: nameController,
           autofocus: true,
           style: const TextStyle(color: Colors.white, fontSize: 20),
-          decoration: const InputDecoration(
-            hintText: 'Papka nomi',
-            hintStyle: TextStyle(color: Colors.white38),
+          decoration: InputDecoration(
+            hintText: context.tr('folderName'),
+            hintStyle: const TextStyle(color: Colors.white38),
             border: InputBorder.none,
           ),
           onSubmitted: (_) {

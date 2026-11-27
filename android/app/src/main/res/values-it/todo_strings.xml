@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tw_widget">Widget attività</string>
+    <string name="tw_todos">Da fare</string>
+    <string name="tw_task">Compito</string>
+    <string name="tw_new">Nuovo compito</string>
+    <string name="tw_done">Completate</string>
+    <string name="tw_snooze">Posticipa</string>
+    <string name="tw_empty">Qui ancora niente</string>
+    <string name="tw_reminders">Promemoria</string>
+    <string name="tw_limits">Android può ritardare promemoria o nascondere pannelli. Controlla notifiche, sveglie esatte e batteria; la comparsa del popup non è garantita.</string>
+    <string name="tw_custom">Scegli l’ora</string>
+    <string name="tw_save">Salva</string>
+    <string name="tw_cancel">Annulla</string>
+    <string name="tw_future">Scegli un orario futuro per il promemoria.</string>
+</resources>

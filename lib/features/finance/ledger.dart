@@ -1,3 +1,7 @@
+import 'finance_planning.dart';
+import 'account_ledger.dart';
+import 'transaction_edits.dart';
+
 const maxMoney = 900000000000000;
 const currencies = {
   'UZS': 2,
@@ -39,7 +43,7 @@ const currencies = {
   'BHD': 3,
   'OMR': 3,
 };
-int parseMoney(String input, String currency) {
+int parseMoney(String input, String currency, {bool allowZero = false}) {
   final places = currencies[currency];
   if (places == null) throw const FormatException('currency');
   var s = input.trim();
@@ -62,7 +66,9 @@ int parseMoney(String input, String currency) {
   final n =
       BigInt.parse(parts.first) * BigInt.from(scale) +
       BigInt.parse(parts.length == 1 ? '0' : parts.last.padRight(places, '0'));
-  if (n <= BigInt.zero || n > BigInt.from(maxMoney)) {
+  if (n < BigInt.zero ||
+      (!allowZero && n == BigInt.zero) ||
+      n > BigInt.from(maxMoney)) {
     throw const FormatException('amount');
   }
   return n.toInt();
@@ -112,16 +118,16 @@ class Ledger {
       if (e is! Map ||
           e['id'] is! String ||
           !ids.add(e['id']) ||
-          !types.contains(e['type']) ||
+          (!types.contains(e['type']) &&
+              !AccountLedger.specialTypes.contains(e['type'])) ||
           e['amount'] is! int ||
           e['amount'] <= 0 ||
           e['amount'] > maxMoney ||
-          e['date'] is! String ||
-          !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(e['date']) ||
-          DateTime.tryParse(e['date'])?.toIso8601String().substring(0, 10) !=
-              e['date'] ||
+          !AccountLedger.validDate(e['date']) ||
           e['category'] is! String ||
           e['description'] is! String ||
+          e['party'] != null &&
+              (e['party'] is! String || (e['party'] as String).length > 200) ||
           e['void'] is! bool) {
         throw const FormatException('entry');
       }
@@ -154,19 +160,24 @@ class Ledger {
             data['budget'] > maxMoney)) {
       throw const FormatException('budget');
     }
+    AccountLedger.validate(data, maxMoney: maxMoney);
+    TransactionEdits.validate(data, maxMoney: maxMoney);
+    FinancePlanning.validate(data);
   }
 
-  static int balance(Map<String, dynamic> d) => [
-    for (final e in d['entries'])
-      if (e['void'] != true)
-        ({'income', 'borrowed', 'repaymentIn'}.contains(e['type']) ? 1 : -1) *
-            (e['amount'] as int),
-  ].fold(0, (a, b) => a + b);
-  static Map<String, int> expenses(Map<String, dynamic> d, String month) {
+  static int balance(Map<String, dynamic> d, {String? throughDate}) =>
+      AccountLedger.total(d, throughDate: throughDate);
+  static Map<String, int> expenses(
+    Map<String, dynamic> d,
+    String month, {
+    String? throughDate,
+  }) {
     final r = <String, int>{};
     for (final e in d['entries']) {
       if (e['void'] != true &&
           e['type'] == 'expense' &&
+          (throughDate == null ||
+              (e['date'] as String).compareTo(throughDate) <= 0) &&
           (e['date'] as String).startsWith(month)) {
         r[e['category']] = (r[e['category']] ?? 0) + (e['amount'] as int);
       }
@@ -174,39 +185,149 @@ class Ledger {
     return r;
   }
 
-  static int outstanding(Map<String, dynamic> data, Map debt) =>
+  static int outstanding(
+    Map<String, dynamic> data,
+    Map debt, {
+    String? throughDate,
+  }) =>
       (debt['amount'] as int) -
-      (data['entries'] as List)
-          .where((e) => e['void'] != true && e['parent'] == debt['id'])
-          .fold<int>(0, (total, e) => total + (e['amount'] as int));
-  static int income(Map<String, dynamic> data, String month) =>
       (data['entries'] as List)
           .where(
             (e) =>
                 e['void'] != true &&
-                e['type'] == 'income' &&
-                (e['date'] as String).startsWith(month),
+                e['parent'] == debt['id'] &&
+                e['type'] ==
+                    (debt['type'] == 'lent' ? 'repaymentIn' : 'repaymentOut') &&
+                (throughDate == null ||
+                    (e['date'] as String).compareTo(throughDate) <= 0),
           )
           .fold<int>(0, (total, e) => total + (e['amount'] as int));
+  static int income(
+    Map<String, dynamic> data,
+    String month, {
+    String? throughDate,
+  }) => (data['entries'] as List)
+      .where(
+        (e) =>
+            e['void'] != true &&
+            e['type'] == 'income' &&
+            (throughDate == null ||
+                (e['date'] as String).compareTo(throughDate) <= 0) &&
+            (e['date'] as String).startsWith(month),
+      )
+      .fold<int>(0, (total, e) => total + (e['amount'] as int));
 
-  static String csv(Map<String, dynamic> d) {
-    String cell(Object? v) {
-      var s = '$v';
-      if (RegExp(r'^[\s]*[=+@-]').hasMatch(s)) s = "'$s";
-      return '"${s.replaceAll('"', '""')}"';
-    }
+  static String _cell(Object? value) {
+    var text = '$value';
+    if (RegExp(r'^[\s]*[=+@-]').hasMatch(text)) text = "'$text";
+    return '"${text.replaceAll('"', '""')}"';
+  }
 
-    return [
-      ['Date', 'Type', 'Amount', 'Category', 'Description', 'Voided'],
-      for (final e in d['entries'])
+  static String _csv(List<List<Object?>> rows) =>
+      rows.map((row) => row.map(_cell).join(',')).join('\r\n');
+
+  static String csv(Map<String, dynamic> data) {
+    final names = {
+      for (final account in AccountLedger.accounts(data))
+        account['id']: account['name'],
+    };
+    return _csv([
+      [
+        'Date',
+        'Type',
+        'Amount',
+        'Currency',
+        'Category',
+        'Description',
+        'Counterparty',
+        'Voided',
+        'Account',
+        'From account',
+        'To account',
+      ],
+      for (final entry in data['entries'])
         [
-          e['date'],
-          e['type'],
-          moneyText(e['amount'], d['currency']),
-          e['category'],
-          e['description'],
-          e['void'],
+          entry['date'],
+          entry['type'],
+          moneyText(
+            entry['amount'],
+            entry['currency'] ?? data['currency'],
+          ).split(' ').first,
+          entry['currency'] ?? data['currency'],
+          entry['category'],
+          entry['description'],
+          entry['party'] ?? '',
+          entry['void'],
+          entry['type'] == 'transfer'
+              ? ''
+              : names[entry['account'] ?? AccountLedger.legacyId],
+          entry['type'] == 'transfer' ? names[entry['from']] : '',
+          entry['type'] == 'transfer' ? names[entry['to']] : '',
         ],
-    ].map((r) => r.map(cell).join(',')).join('\r\n');
+    ]);
+  }
+
+  static String accountsCsv(
+    Map<String, dynamic> data, {
+    required String throughDate,
+  }) {
+    final balances = AccountLedger.balances(data, throughDate: throughDate);
+    return _csv([
+      [
+        'Account',
+        'Type',
+        'Currency',
+        'Opening balance',
+        'Opening date',
+        'Balance as of',
+        'Current balance',
+        'Archived',
+      ],
+      for (final account in AccountLedger.accounts(data))
+        [
+          account['name'],
+          account['type'],
+          account['currency'],
+          moneyText(account['opening'], account['currency']).split(' ').first,
+          account['openedOn'] ?? '',
+          throughDate,
+          moneyText(
+            balances[account['id']]!,
+            account['currency'],
+          ).split(' ').first,
+          account['archived'],
+        ],
+    ]);
+  }
+
+  static String reconciliationsCsv(Map<String, dynamic> data) {
+    final names = {
+      for (final account in AccountLedger.accounts(data))
+        account['id']: account['name'],
+    };
+    final entries = {
+      for (final entry in data['entries'] as List) entry['id']: entry,
+    };
+    return _csv([
+      [
+        'Date',
+        'Account',
+        'Observed balance',
+        'Currency',
+        'Reason',
+        'Adjustment ID',
+        'Adjustment voided',
+      ],
+      for (final event in data['reconciliations'] as List? ?? [])
+        [
+          event['date'],
+          names[event['account']],
+          moneyText(event['observed'], data['currency']).split(' ').first,
+          data['currency'],
+          event['description'],
+          event['adjustment'] ?? '',
+          entries[event['adjustment']]?['void'] ?? false,
+        ],
+    ]);
   }
 }
