@@ -10,6 +10,8 @@ import '../../core/editor_form.dart';
 import '../../core/settings.dart';
 import 'voice_command.dart';
 import 'voice_actions.dart';
+import 'voice_read_command.dart';
+import 'voice_screen_host.dart';
 import 'speech_bridge.dart';
 
 class VoicePage extends StatefulWidget {
@@ -216,7 +218,8 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
         controlsBusy) {
       return;
     }
-    await capture(++generation);
+    final result = await capture(++generation);
+    if (result != null && screenReady) _readPreviousScreen(result);
   }
 
   Future<SpeechRecognition?> listenForFollowUp(int attempt) async {
@@ -350,6 +353,7 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
             attempt != generation) {
           break;
         }
+        if (_readPreviousScreen(result)) return;
         final control = ConversationControl.parse(result);
         if (control == ConversationControl.stop) break;
         if (control == ConversationControl.pause) {
@@ -457,8 +461,13 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
 
   void reviewCommand() {
     FocusManager.instance.primaryFocus?.unfocus();
+    if (_readPreviousScreen(text.text)) return;
     setState(() => command = VoiceCommand.parse(text.text));
   }
+
+  bool _readPreviousScreen(String text) =>
+      VoiceReadCommand.parse(text) == VoiceReadCommand.read &&
+      VoiceScreenNavigator.of(context)?.readPreviousScreen() == true;
 
   Future<void> execute() async {
     final value = command;
@@ -799,7 +808,8 @@ class _VoiceState extends State<VoicePage> with WidgetsBindingObserver {
                     ),
                     if (command!.argument.isNotEmpty)
                       Text(
-                        command!.action == VoiceAction.openSection
+                        command!.action == VoiceAction.openSection ||
+                                command!.action == VoiceAction.readSection
                             ? c.tr(
                                 VoiceSection.values
                                     .byName(command!.argument)

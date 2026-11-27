@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -122,6 +123,45 @@ class SpeechOutput {
       'rate': rate,
     });
   }
+
+  static List<String> readingChunks(String text, String language) {
+    final prepared = (language == 'uz-UZ' ? _uzbekSpeech(text) : text).trim();
+    const limit = 960;
+    final sentenceBreak = RegExp(r'[.!?…]\s+|\n+');
+    final wordBreak = RegExp(r'\s+');
+    final chunks = <String>[];
+    for (var start = 0; start < prepared.length;) {
+      var end = math.min(start + limit, prepared.length);
+      if (end < prepared.length) {
+        final next = prepared.codeUnitAt(end);
+        if (next >= 0xdc00 && next <= 0xdfff) end--;
+        final window = prepared.substring(start, end);
+        final sentence = sentenceBreak.allMatches(window).lastOrNull?.end;
+        final word = wordBreak.allMatches(window).lastOrNull?.end;
+        end =
+            start +
+            (sentence != null && sentence >= limit ~/ 2
+                ? sentence
+                : word != null && word >= limit ~/ 2
+                ? word
+                : window.length);
+      }
+      final chunk = prepared.substring(start, end).trim();
+      if (chunk.isNotEmpty) chunks.add(chunk);
+      start = end;
+    }
+    return chunks;
+  }
+
+  static Future<void> speakReadingChunk(
+    String chunk,
+    String language, {
+    double rate = .92,
+  }) => _channel.invokeMethod<void>('speak', {
+    'language': language,
+    'text': chunk,
+    'rate': rate,
+  });
 
   static Future<void> stop() async {
     try {

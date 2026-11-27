@@ -42,6 +42,7 @@ import '../books/reading/book_reading_page.dart';
 import '../books/reading/reading_store.dart';
 import '../books/reading/reading_hub.dart';
 import 'voice_command.dart';
+import 'voice_screen_host.dart';
 
 typedef VoiceAnswer = ({String title, List<String> excerpts});
 
@@ -59,8 +60,16 @@ class VoiceActions {
     }
   }
 
-  Future<void> page(BuildContext c, Widget page) =>
-      Navigator.push<void>(c, MaterialPageRoute(builder: (_) => page));
+  Future<void> page(BuildContext c, Widget page, {bool read = false}) =>
+      Navigator.push<void>(
+        c,
+        MaterialPageRoute(
+          settings: read
+              ? const RouteSettings(name: VoiceScreenNavigator.readSectionRoute)
+              : null,
+          builder: (_) => page,
+        ),
+      );
   Future<String?> choose(
     BuildContext c,
     String title,
@@ -129,6 +138,7 @@ class VoiceActions {
       case VoiceAction.readFolder:
         await answer(c, command, language);
       case VoiceAction.openSection:
+      case VoiceAction.readSection:
         await page(c, switch (VoiceSection.values.byName(argument)) {
           VoiceSection.notes => const NotesPage(),
           VoiceSection.tasks => const TodoPage(),
@@ -148,7 +158,7 @@ class VoiceActions {
           VoiceSection.help => const HelpHubPage(),
           VoiceSection.alerts => const NotificationCenter(),
           VoiceSection.profile => const ProfilePage(),
-        });
+        }, read: command.action == VoiceAction.readSection);
       case VoiceAction.unknown:
         throw StateError('voice_unknown');
     }
@@ -303,12 +313,7 @@ class VoiceActions {
     );
     if (fields.isEmpty) return [];
     final row = fields.single;
-    final content = (row['body'] as String).runes.toList();
-    return [
-      row['title'] as String,
-      for (var i = 0; i < content.length; i += 1000)
-        String.fromCharCodes(content.skip(i).take(1000)),
-    ];
+    return ['${row['title']}\n\n${row['body']}'];
   }
 
   Future<void> note(BuildContext c, String text) async {

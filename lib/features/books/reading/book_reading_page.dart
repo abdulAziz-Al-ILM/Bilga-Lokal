@@ -28,6 +28,7 @@ import 'reading_clock.dart';
 import '../../attachments/attachment_store.dart';
 import '../../guidance/guide_controller.dart';
 import '../../guidance/guide_host.dart';
+import '../../voice/voice_screen_host.dart';
 
 const markColors = {
   'yellow': Color(0xffffe082),
@@ -1201,8 +1202,20 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
         ),
     ],
   );
+  Future<String> _textForReading() async {
+    if (loading || error != null) return '';
+    if (!isPdf) return blocks.map((block) => block.text).join('\n');
+    final pages = document?.pages;
+    final current = pdf.isReady ? (pdf.pageNumber ?? page) : page;
+    if (pages == null || current < 1 || current > pages.length) return '';
+    return (await pages[current - 1].loadText())?.fullText ?? '';
+  }
+
   @override
-  Widget build(BuildContext c) => GuideHost(
+  Widget build(BuildContext c) =>
+      VoiceReadRegion(read: _textForReading, child: _reader(c));
+
+  Widget _reader(BuildContext c) => GuideHost(
     controller: guide,
     targets: {
       'content': contentAnchor,

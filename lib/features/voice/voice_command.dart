@@ -23,9 +23,14 @@ enum VoiceAction {
   weeklySpending,
   readFolder,
   openSection,
+  readSection,
   unknown;
 
-  String get label => this == tomorrow ? 'tomorrow' : 'voiceAction$name';
+  String get label => switch (this) {
+    tomorrow => 'tomorrow',
+    readSection => 'voiceReadAloud',
+    _ => 'voiceAction$name',
+  };
 }
 
 enum VoiceSection {
@@ -206,6 +211,10 @@ class VoiceCommand {
     final section = _openSection(lower);
     if (section != null) {
       return VoiceCommand(VoiceAction.openSection, section.name);
+    }
+    final readSection = _readSection(lower);
+    if (readSection != null) {
+      return VoiceCommand(VoiceAction.readSection, readSection.name);
     }
     final folder = RegExp(
       r"^(?:read (?:my )?(.+?) folder|(.+?) papkasini o'qib ber|прочитай папку (.+))$",
@@ -469,6 +478,19 @@ class VoiceCommand {
       'настройки' => VoiceSection.profile,
       _ => null,
     };
+  }
+
+  static VoiceSection? _readSection(String phrase) {
+    final uzbek = RegExp(
+      r"^(.+?)(?: bo'limidagi matn(?:lar)?ni| bo'limini|dagi matn(?:lar)?ni)? (?:o'?qib ber(?:ing)?|o'?qi)$",
+    ).firstMatch(phrase);
+    final english = RegExp(r'^read (?:the )?(.+?)(?: section)?(?: aloud)?$')
+        .firstMatch(phrase);
+    final russian = RegExp(
+      r'^(?:прочитай|озвучь) (?:раздел )?(.+?)(?: вслух)?$',
+    ).firstMatch(phrase);
+    final name = uzbek?[1] ?? english?[1] ?? russian?[1];
+    return name == null ? null : _openSection('open $name');
   }
 }
 

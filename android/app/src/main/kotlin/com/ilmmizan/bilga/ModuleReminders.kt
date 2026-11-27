@@ -23,22 +23,25 @@ internal object ModuleReminders {
     data class Candidate(val row:JSONObject,val at:Long,val key:String)
     fun rows(root:JSONObject):List<JSONObject> = root.optJSONArray("rows")?.let { a -> (0 until a.length()).map { a.getJSONObject(it) } } ?: emptyList()
     fun root(c:Context)=TodoStore.read(c,STORE) ?: JSONObject().put("v",1).put("rows",JSONArray())
-    fun channel(c:Context):String {
+    fun channel(c:Context,priority:Int=0):String {
         val manager=c.getSystemService(NotificationManager::class.java)
         val sound=TodoReminders.audible(TodoStore.read(c) ?: JSONObject())
         // A user block on the original module channel still applies on upgrade.
         val legacyBlocked=manager.getNotificationChannel(QUIET_CHANNEL)?.importance==NotificationManager.IMPORTANCE_NONE &&
             manager.getNotificationChannel(SOUND_CHANNEL)==null
         val audible=sound && !legacyBlocked
+        if (audible && priority in 1..3 && TodoReminders.prioritySoundAllowed(manager,SOUND_CHANNEL)) {
+            return TodoReminders.priorityChannel(c,priority)
+        }
         val id=if(audible) SOUND_CHANNEL else QUIET_CHANNEL
         val importance=if(audible) NotificationManager.IMPORTANCE_HIGH else NotificationManager.IMPORTANCE_DEFAULT
         manager.createNotificationChannel(TodoReminders.reminderChannel(id,"Bilga",audible,importance))
         return id
     }
-    private fun permittedChannel(c:Context):String? {
+    private fun permittedChannel(c:Context,priority:Int=0):String? {
         if(!TodoReminders.enabled(c)) return null
-        val id=channel(c)
-        return id.takeIf { c.getSystemService(NotificationManager::class.java).getNotificationChannel(it)?.importance!=NotificationManager.IMPORTANCE_NONE }
+        val id=channel(c,priority)
+        return id.takeIf { TodoReminders.channelEnabled(c.getSystemService(NotificationManager::class.java),it) }
     }
     fun enabled(c:Context)=permittedChannel(c)!=null
     private fun alarm(c:Context)=PendingIntent.getBroadcast(c,812,Intent(c,ModuleReminderReceiver::class.java).setAction(WAKE),PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -150,8 +153,11 @@ internal object ModuleReminders {
         val delivered=root.optJSONObject("delivered")?:JSONObject().also { root.put("delivered",it) }
         for(item in due){val id=item.row.getString("id");val old=delivered.optJSONArray(id)?:JSONArray();val keep=JSONArray();val cutoff=LocalDate.now().minusDays(35).toString();for(i in 0 until old.length()){val key=old.getString(i);if(key.startsWith("once:")||key.removePrefix("repeat:").take(10)>=cutoff)keep.put(key)};keep.put(item.key);delivered.put(id,keep)}
         TodoStore.write(c,root,STORE) // Claim delivery before posting; reboot cannot replay it.
-        val channel=if(due.isEmpty()) null else permittedChannel(c)
-        if(channel!=null)for(item in due){val row=item.row;val labels=root.optJSONObject("labels")?:JSONObject();val kind=row.getString("kind");val label=labels.optString(row.optString("event").ifEmpty { if(kind=="finance")"financeDebt" else "habit" },"Bilga");val text=labels.optString("message","Bilga")
+        val channels=mutableMapOf<Int,String?>()
+        for(item in due){val row=item.row;val labels=root.optJSONObject("labels")?:JSONObject();val kind=row.getString("kind");val label=labels.optString(row.optString("event").ifEmpty { if(kind=="finance")"financeDebt" else "habit" },"Bilga");val text=labels.optString("message","Bilga")
+            val priority=if(kind=="task") row.optInt("priority").coerceIn(0,3) else 0
+            if(!channels.containsKey(priority)) channels[priority]=permittedChannel(c,priority)
+            val channel=channels[priority] ?: continue
             val open=Intent(c,MainActivity::class.java).setAction(OPEN).setData(Uri.parse("bilga-module://$kind/${Uri.encode(row.getString("target"))}/${Uri.encode(row.optString("event"))}")).putExtra("module_kind",if(kind=="review")"habit" else kind).putExtra("module_target",row.getString("target")).putExtra("module_event",row.optString("event",if(kind=="finance")"financeDebt" else ""))
             val intent=PendingIntent.getActivity(c,813,open,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val notification=Notification.Builder(c,channel).setSmallIcon(R.drawable.todo_notification).setContentTitle("Bilga · $label").setContentText(text).setVisibility(Notification.VISIBILITY_PRIVATE).setGroup("bilga.module.$kind").setCategory(Notification.CATEGORY_REMINDER).setOnlyAlertOnce(true).setAutoCancel(true).setContentIntent(intent).build()

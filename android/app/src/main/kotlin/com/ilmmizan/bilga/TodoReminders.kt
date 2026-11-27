@@ -28,11 +28,16 @@ internal object TodoReminders {
     fun enabled(c: Context): Boolean = c.getSystemService(NotificationManager::class.java).areNotificationsEnabled() &&
         (Build.VERSION.SDK_INT<33 || c.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)==android.content.pm.PackageManager.PERMISSION_GRANTED)
     fun audible(root: JSONObject): Boolean = settings(root).optBoolean("sound",true)
-    fun permitted(c: Context,root: JSONObject): Boolean {
-        if(!enabled(c)) return false
-        val sound=audible(root)
-        return c.getSystemService(NotificationManager::class.java).getNotificationChannel(if(sound) "bilga.todo.sound.v1" else "bilga.todo.quiet.v1")?.importance!=NotificationManager.IMPORTANCE_NONE
-    }
+    private const val SOUND_CHANNEL = "bilga.todo.sound.v1"
+    private const val QUIET_CHANNEL = "bilga.todo.quiet.v1"
+
+    fun channelEnabled(manager: NotificationManager, id: String): Boolean =
+        manager.getNotificationChannel(id)?.importance != NotificationManager.IMPORTANCE_NONE
+
+    internal fun prioritySoundAllowed(manager: NotificationManager, base: String): Boolean =
+        manager.getNotificationChannel(base)?.let {
+            it.importance >= NotificationManager.IMPORTANCE_DEFAULT && it.sound != null
+        } ?: true
     fun alarm(c: Context) = PendingIntent.getBroadcast(c,810,Intent(c,TodoReceiver::class.java).setAction(WAKE),PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     @Synchronized fun schedule(c: Context, root: JSONObject? = TodoStore.read(c)) {
         val manager=c.getSystemService(AlarmManager::class.java)
@@ -69,11 +74,13 @@ internal object TodoReminders {
         val due=claim(root,System.currentTimeMillis())
         TodoStore.write(c,root)
         for(task in due) {
-            if(permitted(c,root)) c.getSystemService(NotificationManager::class.java).notify(task.getString("id"),901,notification(c,root,task))
+            val manager=c.getSystemService(NotificationManager::class.java)
+            val permitted=enabled(c) && channelEnabled(manager, channel(c,audible(root),task.optInt("priority")))
+            if(permitted) manager.notify(task.getString("id"),901,notification(c,root,task))
             if(foreground) bridge?.due(task.getString("id"))
             val options=settings(root)
             val wantsPanel=options.optBoolean("overlay") && !foreground && Settings.canDrawOverlays(c)
-            if((foreground || exact(c)) && permitted(c,root) && !private(c,root) && wantsPanel) {
+            if((foreground || exact(c)) && permitted && !private(c,root) && wantsPanel) {
                 try { c.startForegroundService(Intent(c,TodoOverlayService::class.java).putExtra("todo_id",task.getString("id"))) }
                 catch (_: Exception) { /* Normal action notification already posted. */ }
             }
@@ -88,18 +95,39 @@ internal object TodoReminders {
         }
         return due
     }
-    fun channel(c: Context,sound: Boolean): String {
-        val id=if(sound) "bilga.todo.sound.v1" else "bilga.todo.quiet.v1"
+    fun channel(c: Context,sound: Boolean,priority: Int=0): String {
+        val manager=c.getSystemService(NotificationManager::class.java)
+        if (sound && priority in 1..3 && prioritySoundAllowed(manager,SOUND_CHANNEL)) {
+            return priorityChannel(c,priority)
+        }
+        val id=if(sound) SOUND_CHANNEL else QUIET_CHANNEL
         val ch=reminderChannel(id,c.getString(R.string.tw_reminders),sound)
         ch.description=c.getString(R.string.tw_limits)
-        c.getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
+        manager.createNotificationChannel(ch)
         return id
     }
+
+    internal fun priorityChannel(c: Context,priority: Int): String {
+        val (tone,label)=when(priority) {
+            1 -> R.raw.reminder_important to R.string.reminder_tone_important
+            2 -> R.raw.reminder_very_important to R.string.reminder_tone_very_important
+            3 -> R.raw.reminder_critical to R.string.reminder_tone_critical
+            else -> error("unsupported_reminder_priority")
+        }
+        val resource=c.resources.getResourceEntryName(tone)
+        val uri=Uri.parse("android.resource://${c.packageName}/raw/$resource")
+        val id="bilga.todo.priority.$priority.v1"
+        val channel=reminderChannel(id,c.getString(label),true,soundUri=uri)
+        c.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        return id
+    }
+
     internal fun reminderChannel(id: String,name: String,sound: Boolean,
-        importance: Int=NotificationManager.IMPORTANCE_HIGH): NotificationChannel =
+        importance: Int=NotificationManager.IMPORTANCE_HIGH,
+        soundUri: Uri=RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)): NotificationChannel =
         NotificationChannel(id,name,importance).apply {
             if (sound) {
-                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
+                setSound(soundUri,
                     AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build())
             } else {
                 setSound(null,null)
@@ -112,7 +140,7 @@ internal object TodoReminders {
         val generic=label(root,"reminderMessage")
         val text=if(!private(c,root) && settings(root).optBoolean("showTitles")) task.optString("title").ifBlank { generic } else generic
         val public=Notification.Builder(c,channel(c,false)).setSmallIcon(R.drawable.todo_notification).setContentTitle("Bilga").setContentText(generic).build()
-        return Notification.Builder(c,channel(c,audible(root)))
+        return Notification.Builder(c,channel(c,audible(root),task.optInt("priority")))
             .setSmallIcon(R.drawable.todo_notification).setContentTitle("Bilga · ${label(root,"todos")}").setContentText(text)
             .setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(public).setCategory(Notification.CATEGORY_REMINDER)
             .setOnlyAlertOnce(true).setAutoCancel(false).setOngoing(ongoing)

@@ -57,7 +57,14 @@ class _AnswerState extends State<VoiceAnswerPage> with WidgetsBindingObserver {
       error = null;
     });
     try {
-      await SpeechOutput.speak(text, widget.language, rate: rate);
+      for (final chunk in SpeechOutput.readingChunks(text, widget.language)) {
+        if (!mounted || attempt != generation) return;
+        await SpeechOutput.speakReadingChunk(
+          chunk,
+          widget.language,
+          rate: rate,
+        );
+      }
     } on PlatformException catch (e) {
       if (mounted && attempt == generation && e.code != 'cancelled') {
         setState(

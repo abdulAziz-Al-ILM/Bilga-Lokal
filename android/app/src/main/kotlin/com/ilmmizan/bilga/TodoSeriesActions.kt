@@ -123,6 +123,7 @@ internal object TodoSeriesActions {
         db.execSQL("UPDATE todo_series SET head_task_id=?,current_sequence=?,updated_at=? WHERE id=?",arrayOf<Any?>(nextId,sequence,stamp,series))
         val task=JSONObject().put("id",nextId).put("title",data.getString("title")).put("version",stamp)
             .put("series",series).put("sequence",sequence)
+            .put("priority",data.getInt("priority"))
             .put("due",due).put("done",false).put("widgetAllowed",false).put("actionToken",UUID.randomUUID().toString())
         if(!data.isNull("reminder")) {
             val pattern=data.getJSONObject("reminder")

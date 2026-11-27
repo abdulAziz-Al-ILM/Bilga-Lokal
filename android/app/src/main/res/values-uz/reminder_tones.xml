@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminder_tone_important">Muhim vazifa eslatmalari</string>
+    <string name="reminder_tone_very_important">Juda muhim vazifa eslatmalari</string>
+    <string name="reminder_tone_critical">O‘ta muhim vazifa eslatmalari</string>
+</resources>

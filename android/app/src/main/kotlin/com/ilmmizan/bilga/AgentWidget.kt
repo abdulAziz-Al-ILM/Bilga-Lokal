@@ -17,7 +17,7 @@ class AgentWidget : AppWidgetProvider() {
             val pending = PendingIntent.getActivity(context, 710, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val views = RemoteViews(context.packageName, R.layout.agent_widget)
-            views.setInt(R.id.agent_widget_root,"setBackgroundColor",WidgetTheme.background(context))
+            WidgetTheme.card(context,views)
             views.setTextColor(R.id.agent_widget_title,WidgetTheme.foreground(context))
             views.setInt(R.id.agent_widget_icon,"setColorFilter",WidgetTheme.accent(context))
             views.setOnClickPendingIntent(R.id.agent_widget_root, pending)

@@ -1,4 +1,5 @@
 import '../guidance/guide_controller.dart';
+import '../voice/voice_screen_host.dart';
 import 'reminders/todo_reminder_store.dart';
 import 'reminders/todo_bridge.dart';
 import 'reminders/todo_settings_page.dart';
@@ -414,7 +415,17 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
   }
 
   @override
-  Widget build(BuildContext context) => PopScope<bool>(
+  Widget build(BuildContext context) => VoiceReadRegion(
+    read: () => [
+      title.text,
+      description.text,
+      if (checklist.isNotEmpty) context.tr('taskChecklist'),
+      for (final item in checklist) item.title,
+    ].join('\n'),
+    child: _editor(context),
+  );
+
+  Widget _editor(BuildContext context) => PopScope<bool>(
     canPop: allowPop,
     onPopInvokedWithResult: (didPop, result) {
       if (!didPop) leave();

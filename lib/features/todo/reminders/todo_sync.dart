@@ -82,6 +82,7 @@ class TodoSync {
                 'version': task['updated_at'],
                 'due': task['due_at'],
                 'done': task['is_done'] == 1,
+                'priority': task['priority'] ?? 0,
                 if (occurrences[task['id']] case final occurrence?) ...{
                   'series': occurrence['series_id'],
                   'sequence': occurrence['sequence'],
