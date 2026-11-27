@@ -2,7 +2,7 @@
 
 [![Flutter CI](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/workflows/ci.yml)
 ![Flutter 3.47.8](https://img.shields.io/badge/Flutter-3.47.8-02569B?logo=flutter)
-![License pending](https://img.shields.io/badge/License-pending-lightgrey)
+[![GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
 Bilga is an offline-first Flutter app for Android. It puts notes, tasks, habits, personal finances, journals, and books in one place, with encrypted local storage and optional encrypted backups.
 
@@ -89,3 +89,7 @@ python3 tool/check_catalogs.py
 ```
 
 Android hardware checks use the isolated **Bilga Review** package. Release signing requires the existing upload key. See the [release verification evidence](docs/RELEASE_READINESS.md) and [Play release checklist](release/PLAY_LAUNCH_CHECKLIST.md) for build status, device results, and billing prerequisites.
+
+## License
+
+Bilga’s original source code is licensed under the [GNU General Public License, version 3](LICENSE) (`GPL-3.0-only`). Third-party components retain the terms in their accompanying licenses and notices.
