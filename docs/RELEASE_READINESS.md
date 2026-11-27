@@ -1,3 +1,13 @@
+## Closed testing package — 2026-11-27
+
+The verified release bundle is staged locally at `build/play-closed-test/bilga-1.4.0-20-closed-testing.aab`. Its SHA-256 is `8635031a68a1c1e38319dd1c1cf9817582f6ee922830deb0ba0f54ca85b4c613`. It is the same signed binary as the three-ABI technical preflight below. It supports feature testing on fresh tester accounts with the normal 40-day trial. The existing purchase gate disables purchases without a Play key and configured verifier. Use the configured build to test purchases, restores and upgrades for existing purchasers. Keep this artifact on the closed test track. The publishing build still requires billing configuration.
+
+The purchase verifier booted locally under Gunicorn using synthetic credentials through a private Unix socket. `/healthz` returned 200, the private SQLite ledger opened, and an invalid purchase request returned 400 before a Google lookup. This validates local startup. Play Console still needs the real product and publisher service identity for a live purchase test.
+
+Ubuntu granted access to view an existing browser window. The temporary session was closed after Ubuntu rejected keyboard and pointer control. No Play Console changes or uploads were made. Version code 20 and the local upload certificate still need comparison against the app's Console records before upload.
+
+---
+
 ## Release preflight 1.4.0+20 — 2026-11-27
 
 The loading and retry screen now suppresses Flutter's DEBUG banner. The signed ARM64 tablet APK is `build/review/bilga-review-no-banner-v20-2026-11-27.apk`, SHA-256 `ed50465067ff5e2c1ae2e60925597b0c1ca1013a3e9a1fb9323ba887e12936ca`. Its manifest passed the isolated Review checks. The tablet was absent from ADB when the update was ready.
