@@ -12,6 +12,7 @@ import 'package:bilga/features/books/book_library.dart';
 import 'package:bilga/features/books/book_library_store.dart';
 import 'package:bilga/features/books/book_library_page.dart';
 import 'package:bilga/features/notes/note_database.dart';
+import 'package:bilga/features/organization/folders_page.dart';
 import 'package:bilga/features/private_space/record_store.dart';
 import 'package:bilga/features/private_space/space_page.dart';
 import 'package:flutter/material.dart';
@@ -229,8 +230,30 @@ void registerBookLibraryUiTests({
           ))!.single.id,
           saved.id,
         );
-        await tester.pageBack();
+        final foldersBrowser = find.byWidgetPredicate(
+          (widget) => widget is FoldersPage && widget.moveItem == null,
+        );
+        final foldersBack = find
+            .descendant(of: foldersBrowser, matching: find.byType(BackButton))
+            .hitTestable();
+        bool browserIsCurrent() => foldersBrowser.evaluate().any(
+          (element) => ModalRoute.of(element)?.isCurrent == true,
+        );
+        // The move has committed, but the destination picker can still be
+        // closing while the original folder route becomes interactive again.
+        final transition = Stopwatch()..start();
+        while ((!browserIsCurrent() || foldersBack.evaluate().isEmpty) &&
+            transition.elapsed < const Duration(seconds: 20)) {
+          await tester.pump(const Duration(milliseconds: 40));
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 10)),
+          );
+        }
+        expect(browserIsCurrent(), isTrue);
+        expect(foldersBack, findsOneWidget);
+        await tester.tap(foldersBack);
         await settle(tester);
+        expect(find.byType(BookLibraryPage), findsOneWidget);
         if (find
             .byKey(const Key('book-filter-status-all'))
             .evaluate()
