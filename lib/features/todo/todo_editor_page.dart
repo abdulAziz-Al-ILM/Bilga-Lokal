@@ -1,14 +1,14 @@
+import 'dart:async';
+
 import '../guidance/guide_controller.dart';
 import '../voice/voice_screen_host.dart';
-import 'reminders/todo_reminder_store.dart';
-import 'reminders/todo_bridge.dart';
+import 'reminders/todo_notification_permission.dart';
 import 'reminders/todo_settings_page.dart';
-import 'todo_changes.dart';
-import 'todo_series_store.dart';
 import 'recurrence_rule.dart';
 import 'recurrence_dialog.dart';
 import 'todo_checklist_store.dart';
 import 'todo_checklist_editor.dart';
+import 'todo_editor_store.dart';
 
 import 'package:sqflite/sqflite.dart';
 
@@ -19,7 +19,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
 import '../../core/dialogs.dart';
-import 'todo_database.dart';
 
 class TodoEditorPage extends StatefulWidget {
   final Map<String, Object?>? todo;
@@ -47,6 +46,9 @@ class TodoEditorPage extends StatefulWidget {
 
 class _TodoEditorPageState extends State<TodoEditorPage> {
   late final TextEditingController title, description;
+  late final TodoEditorStore store = TodoEditorStore(database: widget.database);
+  String? get taskId => widget.todo?['id'] as String?;
+  bool requestingNotifications = false;
   late int priority;
   late DateTime? due;
   DateTime? remindAt, originalReminder;
@@ -100,19 +102,16 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
       reminder = true;
       reminderExplicit = true;
     }
-    loadReminder();
-    loadSeries();
-    loadChecklist();
+    unawaited(loadReminder());
+    unawaited(loadSeries());
+    unawaited(loadChecklist());
   }
 
   Future<void> loadChecklist() async {
     try {
       final items = widget.todo == null
           ? <TodoChecklistItem>[]
-          : await TodoChecklistStore.load(
-              widget.database ?? await TodoDatabase.database,
-              widget.todo!['id'] as String,
-            );
+          : await store.checklistFor(taskId!);
       if (mounted) {
         setState(() {
           checklist = items;
@@ -131,11 +130,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
       return;
     }
     try {
-      final db = widget.database ?? await TodoDatabase.database;
-      final value = await TodoSeriesStore.forTask(
-        db,
-        widget.todo!['id'] as String,
-      );
+      final value = await store.seriesFor(taskId!);
       if (!mounted) return;
       setState(() {
         series = value;
@@ -186,18 +181,12 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
       return;
     }
     try {
-      final db = widget.database ?? await TodoDatabase.database;
-      final rows = await db.query(
-        'todo_reminders',
-        where: 'todo_id=?',
-        whereArgs: [widget.todo!['id']],
-      );
+      final value = await store.reminderFor(taskId!);
       if (!mounted) return;
       setState(() {
-        if (rows.isNotEmpty) {
-          reminder = rows.first['enabled'] == 1;
-          remindAt = DateTime.tryParse(rows.first['remind_at'] as String)
-              ?.toLocal();
+        if (value != null) {
+          reminder = value.enabled;
+          remindAt = value.time;
         }
         originalEnabled = reminder;
         originalReminder = remindAt;
@@ -275,15 +264,22 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
   }
 
   Future<void> requestNotifications() async {
+    if (requestingNotifications) return;
+    requestingNotifications = true;
     try {
-      final state = await TodoBridge.state();
-      if (state['notifications'] != true) {
-        await TodoBridge.channel.invokeMethod<void>(
-          'permission',
-          'notifications',
-        );
+      final permission = await TodoNotificationPermission.request();
+      if (!mounted || !reminder) return;
+      switch (permission) {
+        case TodoNotificationPermission.allowed:
+          break;
+        case TodoNotificationPermission.blocked:
+          showError(context, 'moduleReminderBlocked');
+        case TodoNotificationPermission.unavailable:
+          showError(context, 'moduleReminderUnavailable');
       }
-    } catch (_) {}
+    } finally {
+      requestingNotifications = false;
+    }
   }
 
   Future<void> save() async {
@@ -298,111 +294,39 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
       showError(context, 'repeatDueRequired');
       return;
     }
+    final draft = TodoEditorDraft(
+      taskId: taskId,
+      folderId: widget.folderId,
+      title: title.text,
+      description: description.text,
+      priority: priority,
+      due: due,
+      originalDue: widget.todo?['due_at'] as String?,
+      reminder: (enabled: reminder, time: remindAt),
+      originalReminder: (enabled: originalEnabled, time: originalReminder),
+      checklist: List.unmodifiable(checklist),
+      checklistChanged: checklistDirty,
+      recurrence: repeat,
+      recurrenceChanged: repeatDirty,
+      recurrenceReadOnly: repeatReadOnly,
+      applyToFuture: applyFuture,
+      hasSeries: series != null,
+    );
     if (reminder &&
-        (widget.todo == null ||
-            reminder != originalEnabled ||
-            remindAt != originalReminder ||
-            due !=
-                DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')
-                    ?.toLocal()) &&
+        draft.reminderChanged &&
         (remindAt == null || !remindAt!.isAfter(DateTime.now()))) {
       showError(context, 'reminderFuture');
       return;
     }
-    if (title.text.trim().isEmpty) {
+    if (draft.title.trim().isEmpty) {
       showError(context, 'required');
       return;
     }
     setState(() => busy = true);
     try {
-      final db = widget.database ?? await TodoDatabase.database;
-      final now = DateTime.now().toIso8601String();
-      final data = <String, Object?>{
-        if (widget.todo != null) 'id': widget.todo!['id'],
-        'title': title.text.trim(),
-        'description': description.text,
-        'priority': priority,
-        'due_at':
-            due ==
-                DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')
-                    ?.toLocal()
-            ? (widget.todo?['due_at'])
-            : due?.toIso8601String(),
-        'updated_at': now,
-      };
-      await db.transaction((txn) async {
-        if (widget.todo == null) {
-          data.addAll({
-            'id': DateTime.now().microsecondsSinceEpoch.toString(),
-            'is_done': 0,
-            'is_deleted': 0,
-            'folder_id': widget.folderId,
-            'created_at': now,
-          });
-          await txn.insert('todos', data);
-        } else {
-          final current = await txn.query(
-            'todos',
-            where: 'id=? AND is_deleted=0',
-            whereArgs: [widget.todo!['id']],
-          );
-          if (current.isEmpty) throw StateError('task_missing');
-          await txn.update(
-            'todos',
-            data,
-            where: 'id = ?',
-            whereArgs: [widget.todo!['id']],
-          );
-        }
-        if (widget.todo == null ||
-            reminder != originalEnabled ||
-            remindAt != originalReminder ||
-            due !=
-                DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')
-                    ?.toLocal()) {
-          await TodoReminderStore.save(
-            txn,
-            data['id'] as String,
-            remindAt,
-            enabled:
-                reminder &&
-                (await txn.query(
-                      'todos',
-                      where: 'id=?',
-                      whereArgs: [data['id']],
-                    )).single['is_done'] !=
-                    1,
-          );
-        }
-        if (checklistDirty) {
-          await TodoChecklistStore.replace(
-            txn,
-            data['id'] as String,
-            checklist,
-          );
-        }
-        if (!repeatReadOnly) {
-          if (repeat == null && repeatDirty) {
-            await TodoSeriesStore.stop(txn, data['id'] as String);
-          } else if (repeat != null &&
-              (widget.todo == null || repeatDirty || applyFuture)) {
-            await TodoSeriesStore.configure(
-              txn,
-              data['id'] as String,
-              repeat!,
-              updateDefaults: applyFuture || series == null,
-              resetAnchor:
-                  applyFuture &&
-                  due !=
-                      DateTime.tryParse(widget.todo?['due_at'] as String? ?? '')
-                          ?.toLocal(),
-            );
-          }
-        }
-      });
-      TodoChanges.committed();
-      widget.guide?.event('saved');
+      await store.save(draft);
       if (!mounted) return;
+      widget.guide?.event('saved');
       setState(() => allowPop = true);
       await WidgetsBinding.instance.endOfFrame;
       if (mounted) Navigator.pop(context, true);

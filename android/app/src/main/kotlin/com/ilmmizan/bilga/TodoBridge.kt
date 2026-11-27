@@ -11,9 +11,14 @@ import org.json.*
 import java.util.UUID
 
 class TodoBridge(private val activity: Activity,messenger: BinaryMessenger) {
+    private companion object {
+        const val NOTIFICATION_REQUEST = 713
+    }
+
     private val channel=MethodChannel(messenger,"bilga/todo")
     private var launch: Map<String,Any?>?=null
     private var reply: Pair<Int,ResultReceiver>?=null
+    private var notificationResult: MethodChannel.Result? = null
     init {
         TodoReminders.bridge=this; TodoWidget.observe(activity); receive(activity.intent)
         channel.setMethodCallHandler { call,result ->
@@ -29,7 +34,10 @@ class TodoBridge(private val activity: Activity,messenger: BinaryMessenger) {
                         val tag=call.argument<String>("tag") ?: error("no_tag")
                         val source=call.argument<String>("sourceFixture")
                         val cached=TodoReminders.tasks(TodoStore.read(activity) ?: JSONObject())
-                        val fixture=cached.firstOrNull { it.optString("id")==source && source?.startsWith("bilga-review-notification-")==true }
+                        val fixture = cached.firstOrNull {
+                            source != null && source.startsWith("bilga-review-notification-") &&
+                                it.optString("id") == source
+                        }
                         val generated=cached.firstOrNull { it.optString("id")==tag }
                         require(tag.startsWith("bilga-review-notification-") ||
                             (fixture!=null && generated!=null && fixture.optString("series").isNotEmpty() &&
@@ -148,6 +156,7 @@ class TodoBridge(private val activity: Activity,messenger: BinaryMessenger) {
                         if(root!=null) { root.put("redacted",true); TodoStore.write(activity,root); TodoReminders.redact(activity) }
                         result.success(null)
                     }
+                    "requestNotificationPermission" -> requestNotificationPermission(result)
                     "permission" -> {
                         when(call.arguments as? String) {
                             "notifications" -> if(Build.VERSION.SDK_INT>=33) activity.requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),712)
@@ -181,6 +190,41 @@ class TodoBridge(private val activity: Activity,messenger: BinaryMessenger) {
             } } catch (_: Exception) { result.error("todo_unavailable","To-Do unavailable",null) }
         }
     }
+    private fun requestNotificationPermission(result: MethodChannel.Result) {
+        if (notificationResult != null) {
+            result.error("notification_request_in_progress", null, null)
+            return
+        }
+        if (TodoReminders.enabled(activity)) {
+            result.success(true)
+            return
+        }
+        notificationResult = result
+        try {
+            val permission = android.Manifest.permission.POST_NOTIFICATIONS
+            if (Build.VERSION.SDK_INT >= 33 &&
+                activity.checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                activity.requestPermissions(arrayOf(permission), NOTIFICATION_REQUEST)
+            } else {
+                val settings = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+                activity.startActivityForResult(settings, NOTIFICATION_REQUEST)
+            }
+        } catch (error: Exception) {
+            notificationResult = null
+            throw error
+        }
+    }
+
+    fun completeNotificationRequest(requestCode: Int): Boolean {
+        if (requestCode != NOTIFICATION_REQUEST) return false
+        val pending = notificationResult ?: return false
+        notificationResult = null
+        pending.success(TodoReminders.enabled(activity))
+        return true
+    }
+
     fun receive(intent: Intent?) {
         val action=intent?.getStringExtra("todo_action") ?: return
         if(action !in listOf("open","create","list","done","snooze","configure")) return
@@ -198,7 +242,12 @@ class TodoBridge(private val activity: Activity,messenger: BinaryMessenger) {
     fun due(id: String) { channel.invokeMethod("due",id) }
     fun changed() { channel.invokeMethod("changed",null) }
     fun ready() { changed(); channel.invokeMethod("launch",null) }
-    fun close() { if(TodoReminders.bridge===this) TodoReminders.bridge=null; channel.setMethodCallHandler(null) }
+    fun close() {
+        notificationResult?.error("notification_request_interrupted", null, null)
+        notificationResult = null
+        if (TodoReminders.bridge === this) TodoReminders.bridge = null
+        channel.setMethodCallHandler(null)
+    }
     private fun map(value: JSONObject): Map<String,Any?> = value.keys().asSequence().associateWith { key ->
         when(val v=value.get(key)) { JSONObject.NULL -> null; is JSONObject -> map(v); else -> v }
     }

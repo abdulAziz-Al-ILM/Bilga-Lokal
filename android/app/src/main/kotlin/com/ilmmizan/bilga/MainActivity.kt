@@ -98,10 +98,12 @@ open class MainActivity : AudioServiceFragmentActivity() {
     override fun onStop() { speech?.foreground(false); speechOutput?.foreground(false);TodoReminders.foreground=false; super.onStop() }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (files?.activityResult(requestCode, resultCode, data) == true) return
+        if (todoBridge?.completeNotificationRequest(requestCode) == true) return
         super.onActivityResult(requestCode, resultCode, data)
     }
     override fun onRequestPermissionsResult(requestCode:Int,permissions:Array<out String>,grantResults:IntArray){
         if(speech?.permissionResult(requestCode,grantResults)==true)return
+        if (todoBridge?.completeNotificationRequest(requestCode) == true) return
         super.onRequestPermissionsResult(requestCode,permissions,grantResults)
     }
     override fun onDestroy() { speechOutput?.close(); speechOutput=null; speech?.close();speech=null; moduleReminders?.close();moduleReminders=null; todoBridge?.close(); todoBridge=null; notesWidget?.close(); notesWidget = null; files?.close(); files = null; assistant = null; super.onDestroy() }
