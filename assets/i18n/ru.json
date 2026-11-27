@@ -1140,5 +1140,20 @@
   "ncEventbookReading": "Ежедневное напоминание о чтении",
   "ncEventbookCards": "Карточки готовы к повторению",
   "fxCurrencyTotal": "Все журналы в этой валюте",
-  "fxCategoryShort": "Категория"
+  "fxCategoryShort": "Категория",
+  "folderName": "Название папки",
+  "moveUnavailable": "Эту папку нельзя переместить в выбранное место.",
+  "openFolderHint": "Нажмите, чтобы открыть",
+  "emptyNote": "Эта заметка пуста.",
+  "editTask": "Изменить задачу",
+  "activeTasks": "Активные задачи",
+  "completedTasks": "Выполненные задачи",
+  "durationDays": "{count} д",
+  "durationHours": "{count} ч",
+  "durationMinutes": "{count} мин",
+  "durationSeconds": "{count} с",
+  "homeNotesCaption": "Сохраняйте идеи",
+  "homeTasksCaption": "От плана к результату",
+  "homeHabitsCaption": "Шаг за шагом",
+  "homeHeadline": "Идеи. Планы. Действия."
 }

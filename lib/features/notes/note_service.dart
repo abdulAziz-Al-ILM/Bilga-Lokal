@@ -103,7 +103,7 @@ class NoteService {
         where: 'id = ?',
         whereArgs: [note.id],
       );
-      if (rows.isEmpty) throw StateError('Yozuv topilmadi');
+      if (rows.isEmpty) throw StateError('Note no longer exists.');
       final old = Note.fromMap(rows.single);
       if (recordHistory &&
           (old.title != note.title ||
@@ -169,7 +169,7 @@ class NoteService {
   Future<Note> restoreVersion(Note currentNote, NoteVersion version) async {
     RichNoteCodec.validate(version.richBody, version.body);
     if (version.noteId != currentNote.id) {
-      throw ArgumentError('Tarix boshqa yozuvga tegishli');
+      throw ArgumentError('This version belongs to a different note.');
     }
     final db = await _db;
     return NotesChanges.after(
@@ -179,7 +179,7 @@ class NoteService {
           where: 'id = ?',
           whereArgs: [currentNote.id],
         );
-        if (rows.isEmpty) throw StateError('Yozuv topilmadi');
+        if (rows.isEmpty) throw StateError('Note no longer exists.');
         final stored = (await _notes(txn, rows)).single;
         // Preserve both the durable version and any editor draft.
         await _saveVersion(txn, stored);
@@ -242,7 +242,7 @@ class NoteService {
         where: 'id = ? AND is_deleted = 0',
         whereArgs: [folderId],
       );
-      if (folders.isEmpty) throw StateError('Papka topilmadi');
+      if (folders.isEmpty) throw StateError('Folder no longer exists.');
     }
     await updateNote(
       note.copyWith(folderId: folderId, updatedAt: DateTime.now()),

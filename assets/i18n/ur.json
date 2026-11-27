@@ -1140,5 +1140,20 @@
   "ncEventbookReading": "Daily reading reminder",
   "ncEventbookCards": "Flashcards ready to review",
   "fxCurrencyTotal": "All journals in this currency",
-  "fxCategoryShort": "Category"
+  "fxCategoryShort": "Category",
+  "folderName": "Folder name",
+  "moveUnavailable": "This folder cannot be moved to the selected location.",
+  "openFolderHint": "Tap to open",
+  "emptyNote": "This note is empty.",
+  "editTask": "Edit task",
+  "activeTasks": "Active tasks",
+  "completedTasks": "Completed tasks",
+  "durationDays": "{count}d",
+  "durationHours": "{count}h",
+  "durationMinutes": "{count}m",
+  "durationSeconds": "{count}s",
+  "homeNotesCaption": "Capture your ideas",
+  "homeTasksCaption": "Turn plans into progress",
+  "homeHabitsCaption": "One step every day",
+  "homeHeadline": "Ideas. Plans. Progress."
 }

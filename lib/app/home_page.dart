@@ -14,7 +14,6 @@ import 'package:flutter/services.dart';
 
 import '../core/settings.dart';
 import '../core/strings.dart';
-import '../core/start_strings.dart';
 import '../core/loop_carousel.dart';
 import '../features/ambience/ambient_scene.dart';
 import '../features/notes/notes_page.dart';
@@ -134,23 +133,19 @@ class _HomePageState extends State<HomePage> {
     final entries = <(String, String, IconData, Widget)>[
       (
         context.tr('notes'),
-        startText('Fikrlarni saqlang', 'Capture your ideas', 'Сохраняйте идеи'),
+        context.tr('homeNotesCaption'),
         Icons.edit_note_rounded,
         const NotesPage(),
       ),
       (
         context.tr('todos'),
-        startText(
-          'Rejadan natijaga',
-          'Turn plans into progress',
-          'От плана к результату',
-        ),
+        context.tr('homeTasksCaption'),
         Icons.task_alt_rounded,
         const TodoPage(),
       ),
       (
         context.tr('xHabits'),
-        startText('Har kuni bir qadam', 'One step every day', 'Шаг за шагом'),
+        context.tr('homeHabitsCaption'),
         Icons.local_fire_department_outlined,
         const HabitsPage(),
       ),
@@ -285,11 +280,7 @@ class _HomePageState extends State<HomePage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
                   child: Text(
-                    startText(
-                      'Fikr. Reja. Harakat.',
-                      'Ideas. Plans. Progress.',
-                      'Идеи. Планы. Действия.',
-                    ),
+                    context.tr('homeHeadline'),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),

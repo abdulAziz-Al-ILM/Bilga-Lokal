@@ -57,7 +57,14 @@ class _StartupState extends State<_Startup> {
             child: snapshot.hasError
                 ? TextButton(
                     onPressed: () => setState(() => loading = load()),
-                    child: Text(Strings.get('uz', 'retry')),
+                    child: Text(
+                      Strings.catalogs[AppSettings
+                              .instance
+                              .language]?['retry'] ??
+                          Strings.catalogs[AppSettings
+                              .defaultLanguage]?['retry'] ??
+                          'Try again',
+                    ),
                   )
                 : const CircularProgressIndicator(),
           ),

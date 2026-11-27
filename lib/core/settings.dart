@@ -6,8 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
   static final instance = AppSettings();
+  static const defaultLanguage = 'en';
   SharedPreferences? _prefs;
-  String language = 'uz';
+  String language = defaultLanguage;
   String palette = 'forest';
   ThemeMode mode = ThemeMode.dark;
   String nickname = '';
@@ -59,7 +60,7 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
       _observing = true;
     }
     _prefs = await SharedPreferences.getInstance();
-    language = _prefs!.getString('bilga.language') ?? 'uz';
+    language = _prefs!.getString('bilga.language') ?? defaultLanguage;
     palette = _prefs!.getString('bilga.palette') ?? 'forest';
     mode = ThemeMode.values.firstWhere(
       (m) => m.name == _prefs!.getString('bilga.themeMode'),
@@ -88,6 +89,12 @@ class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
     } on MissingPluginException {
       /* Non-Android tests do not provide a window. */
     }
+  }
+
+  @override
+  void dispose() {
+    if (_observing) WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> save() async {

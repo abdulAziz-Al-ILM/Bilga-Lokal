@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/strings.dart';
+
 import 'folder_model.dart';
 import 'folder_service.dart';
 
@@ -72,7 +74,7 @@ class _MoveFolderPageState extends State<MoveFolderPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF071C16),
         foregroundColor: Colors.white,
-        title: const Text('Papkani ko‘chirish'),
+        title: Text(context.tr('move')),
       ),
 
       body: isLoading
@@ -98,8 +100,8 @@ class _MoveFolderPageState extends State<MoveFolderPage> {
                           Icons.home_outlined,
                           color: Colors.white70,
                         ),
-                        title: const Text(
-                          'Bosh sahifa',
+                        title: Text(
+                          context.tr('home'),
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
@@ -117,10 +119,10 @@ class _MoveFolderPageState extends State<MoveFolderPage> {
                 const SizedBox(height: 16),
 
                 if (folders.isNotEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4, bottom: 10),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 10),
                     child: Text(
-                      'Papkalar',
+                      context.tr('folderView'),
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 14,

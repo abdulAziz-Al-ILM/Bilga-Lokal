@@ -81,11 +81,11 @@ class TodoFolderService {
       String? current = newParentId;
       while (current != null) {
         if (!visited.add(current)) {
-          throw StateError('Papkani o‘z ichiga ko‘chirib bo‘lmaydi');
+          throw StateError('A folder cannot be moved into itself.');
         }
         final row = byId[current];
         if (row == null || row['is_deleted'] == 1) {
-          throw StateError('Papka topilmadi');
+          throw StateError('Folder no longer exists.');
         }
         current = row['parent_id'] as String?;
       }
@@ -120,7 +120,7 @@ class TodoFolderService {
         limit: 1,
       );
       if (children.isNotEmpty || tasks.isNotEmpty) {
-        throw StateError('Bo‘sh bo‘lmagan papkani o‘chirib bo‘lmaydi');
+        throw StateError('A folder must be empty before it can be deleted.');
       }
       await txn.delete('todo_folders', where: 'id = ?', whereArgs: [folderId]);
     });

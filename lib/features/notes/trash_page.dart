@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/strings.dart';
+
 import 'folder_model.dart';
 import 'folder_service.dart';
 import 'note_model.dart';
@@ -62,12 +64,12 @@ class _TrashPageState extends State<TrashPage> {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF0D2B22),
-          title: const Text(
-            'Butunlay o‘chirish',
+          title: Text(
+            context.tr('deleteForever'),
             style: TextStyle(color: Colors.white),
           ),
           content: Text(
-            '"${note.title.isEmpty ? 'Sarlavhasiz yozuv' : note.title}" butunlay o‘chiriladi. Qayta tiklab bo‘lmaydi.',
+            '${note.title.isEmpty ? context.tr('untitled') : note.title}\n\n${context.tr('permanentConfirm')}',
             style: const TextStyle(color: Colors.white70),
           ),
           actions: [
@@ -75,14 +77,14 @@ class _TrashPageState extends State<TrashPage> {
               onPressed: () {
                 Navigator.pop(dialogContext, false);
               },
-              child: const Text('Bekor qilish'),
+              child: Text(context.tr('cancel')),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext, true);
               },
-              child: const Text(
-                'Butunlay o‘chirish',
+              child: Text(
+                context.tr('deleteForever'),
                 style: TextStyle(color: Colors.redAccent),
               ),
             ),
@@ -108,12 +110,12 @@ class _TrashPageState extends State<TrashPage> {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF0D2B22),
-          title: const Text(
-            'Folderni butunlay o‘chirish',
+          title: Text(
+            context.tr('deleteForever'),
             style: TextStyle(color: Colors.white),
           ),
           content: Text(
-            '"${folder.name}" folderi ichidagi barcha note va subfolderlari bilan birga butunlay o‘chiriladi.',
+            '${folder.name}\n\n${context.tr('permanentConfirm')}',
             style: const TextStyle(color: Colors.white70),
           ),
           actions: [
@@ -121,14 +123,14 @@ class _TrashPageState extends State<TrashPage> {
               onPressed: () {
                 Navigator.pop(dialogContext, false);
               },
-              child: const Text('Bekor qilish'),
+              child: Text(context.tr('cancel')),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext, true);
               },
-              child: const Text(
-                'Butunlay o‘chirish',
+              child: Text(
+                context.tr('deleteForever'),
                 style: TextStyle(color: Colors.redAccent),
               ),
             ),
@@ -152,16 +154,16 @@ class _TrashPageState extends State<TrashPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF071C16),
         foregroundColor: Colors.white,
-        title: const Text('Savat'),
+        title: Text(context.tr('trash')),
       ),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF1E5A46)),
             )
           : trashIsEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'Trash bo‘sh',
+                context.tr('empty'),
                 style: TextStyle(color: Colors.white54, fontSize: 18),
               ),
             )
@@ -169,8 +171,8 @@ class _TrashPageState extends State<TrashPage> {
               padding: const EdgeInsets.all(16),
               children: [
                 if (deletedFolders.isNotEmpty) ...[
-                  const Text(
-                    'Papkalar',
+                  Text(
+                    context.tr('folderView'),
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
@@ -211,8 +213,8 @@ class _TrashPageState extends State<TrashPage> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              subtitle: const Text(
-                                'Bosib ichini ko‘rish mumkin',
+                              subtitle: Text(
+                                context.tr('openFolderHint'),
                                 style: TextStyle(
                                   color: Colors.white38,
                                   fontSize: 12,
@@ -222,7 +224,7 @@ class _TrashPageState extends State<TrashPage> {
                                 spacing: 4,
                                 children: [
                                   IconButton(
-                                    tooltip: 'Tiklash',
+                                    tooltip: context.tr('restore'),
                                     onPressed: () {
                                       restoreFolder(folder);
                                     },
@@ -232,7 +234,7 @@ class _TrashPageState extends State<TrashPage> {
                                     ),
                                   ),
                                   IconButton(
-                                    tooltip: 'Butunlay o‘chirish',
+                                    tooltip: context.tr('deleteForever'),
                                     onPressed: () {
                                       deleteFolderForever(folder);
                                     },
@@ -254,8 +256,8 @@ class _TrashPageState extends State<TrashPage> {
                 ],
 
                 if (deletedNotes.isNotEmpty) ...[
-                  const Text(
-                    'Notes',
+                  Text(
+                    context.tr('notes'),
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
@@ -283,7 +285,7 @@ class _TrashPageState extends State<TrashPage> {
                             ),
                             title: Text(
                               note.title.isEmpty
-                                  ? 'Sarlavhasiz yozuv'
+                                  ? context.tr('untitled')
                                   : note.title,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -305,7 +307,7 @@ class _TrashPageState extends State<TrashPage> {
                               spacing: 4,
                               children: [
                                 IconButton(
-                                  tooltip: 'Tiklash',
+                                  tooltip: context.tr('restore'),
                                   onPressed: () {
                                     restoreNote(note);
                                   },
@@ -315,7 +317,7 @@ class _TrashPageState extends State<TrashPage> {
                                   ),
                                 ),
                                 IconButton(
-                                  tooltip: 'Butunlay o‘chirish',
+                                  tooltip: context.tr('deleteForever'),
                                   onPressed: () {
                                     deleteNoteForever(note);
                                   },

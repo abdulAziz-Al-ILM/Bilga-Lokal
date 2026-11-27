@@ -1140,5 +1140,20 @@
   "ncEventbookReading": "Kundalik mutolaa eslatmasi",
   "ncEventbookCards": "Takrorlash uchun kartochkalar",
   "fxCurrencyTotal": "Shu valyutadagi barcha jurnallar",
-  "fxCategoryShort": "Toifa"
+  "fxCategoryShort": "Toifa",
+  "folderName": "Papka nomi",
+  "moveUnavailable": "Bu papkani tanlangan joyga ko‘chirib bo‘lmaydi.",
+  "openFolderHint": "Ochish uchun bosing",
+  "emptyNote": "Bu yozuv bo‘sh.",
+  "editTask": "Vazifani tahrirlash",
+  "activeTasks": "Faol vazifalar",
+  "completedTasks": "Bajarilgan vazifalar",
+  "durationDays": "{count} kun",
+  "durationHours": "{count} soat",
+  "durationMinutes": "{count} daqiqa",
+  "durationSeconds": "{count} soniya",
+  "homeNotesCaption": "Fikrlarni saqlang",
+  "homeTasksCaption": "Rejadan natijaga",
+  "homeHabitsCaption": "Har kuni bir qadam",
+  "homeHeadline": "Fikr. Reja. Harakat."
 }

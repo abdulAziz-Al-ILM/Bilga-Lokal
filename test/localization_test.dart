@@ -2,8 +2,11 @@ import 'package:bilga/core/settings.dart';
 import 'package:bilga/core/strings.dart';
 import 'package:bilga/core/regional_localizations.dart';
 import 'package:bilga/app/bilga_app.dart';
+import 'package:bilga/features/notes/create_folder_page.dart';
+import 'package:bilga/features/todo/create_todo_folder_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,6 +29,49 @@ void main() {
       );
     }
   });
+  test('Only a missing language preference defaults to English', () async {
+    SharedPreferences.setMockInitialValues({});
+    final fresh = AppSettings();
+    addTearDown(fresh.dispose);
+    await fresh.load();
+    expect(fresh.language, 'en');
+    expect(
+      (await SharedPreferences.getInstance()).containsKey('bilga.language'),
+      isFalse,
+    );
+
+    SharedPreferences.setMockInitialValues({'bilga.language': 'uz'});
+    final existing = AppSettings();
+    addTearDown(existing.dispose);
+    await existing.load();
+    expect(existing.language, 'uz');
+    expect(
+      (await SharedPreferences.getInstance()).getString('bilga.language'),
+      'uz',
+    );
+  });
+
+  testWidgets('Both folder forms use the selected interface language', (
+    tester,
+  ) async {
+    for (final language in ['en', 'uz']) {
+      for (final form in const [CreateFolderPage(), CreateTodoFolderPage()]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: Locale(language),
+            supportedLocales: const [Locale('en'), Locale('uz')],
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: form,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text(Strings.get(language, 'newFolder')), findsWidgets);
+        expect(find.text(Strings.get(language, 'folderName')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
+
   testWidgets('Every locale builds, including RTL; seven palettes render', (
     tester,
   ) async {
@@ -69,6 +115,7 @@ void main() {
     AppSettings.instance.nickname = 'Abdulaziz';
     await tester.runAsync(AppSettings.instance.save);
     final loaded = AppSettings();
+    addTearDown(loaded.dispose);
     await tester.runAsync(loaded.load);
     expect(loaded.nickname, 'Abdulaziz');
     expect(loaded.palette, 'mono');
@@ -88,13 +135,13 @@ void main() {
     await tester.runAsync(AppSettings.instance.load);
     await tester.pumpWidget(const BilgaApp());
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip(Strings.get('uz', 'profile')));
+    await tester.tap(find.byTooltip(Strings.get('en', 'profile')));
     await tester.pumpAndSettle();
     expect(find.byType(ChoiceChip), findsNWidgets(10));
-    expect(find.text(Strings.get('uz', 'language')), findsOneWidget);
-    expect(find.text(Strings.get('uz', 'connectGoogle')), findsOneWidget);
-    expect(find.text(Strings.get('uz', 'export')), findsOneWidget);
-    expect(find.text(Strings.get('uz', 'import')), findsOneWidget);
+    expect(find.text(Strings.get('en', 'language')), findsOneWidget);
+    expect(find.text(Strings.get('en', 'connectGoogle')), findsOneWidget);
+    expect(find.text(Strings.get('en', 'export')), findsOneWidget);
+    expect(find.text(Strings.get('en', 'import')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
