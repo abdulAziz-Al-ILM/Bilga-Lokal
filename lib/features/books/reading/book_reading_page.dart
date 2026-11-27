@@ -25,17 +25,14 @@ import 'reading_hub.dart';
 import 'text_document.dart';
 import 'reading_errors.dart';
 import 'reading_clock.dart';
+import 'reader_appearance_sheet.dart';
+import 'reader_content.dart';
+import 'reader_navigation.dart';
+import 'reader_toolbar.dart';
 import '../../attachments/attachment_store.dart';
 import '../../guidance/guide_controller.dart';
 import '../../guidance/guide_host.dart';
 import '../../voice/voice_screen_host.dart';
-
-const markColors = {
-  'yellow': Color(0xffffe082),
-  'green': Color(0xffa5d6a7),
-  'blue': Color(0xff90caf9),
-  'pink': Color(0xfff48fb1),
-};
 
 class BookReadingPage extends StatefulWidget {
   final PrivateRecord book;
@@ -791,95 +788,28 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
 
   Future<void> appearance() async {
     final before = Map<String, dynamic>.from(settings);
-    await showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (c) => StatefulBuilder(
-        builder: (c, set) => SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isPdf) Text(c.tr('rPdfSettingsHint')),
-                if (!isPdf)
-                  for (final pair in [
-                    ('font', 12.0, 40.0, 'rFontSize'),
-                    ('line', 1.0, 2.5, 'rLineSpacing'),
-                    ('margin', 8.0, 64.0, 'rMargins'),
-                  ]) ...[
-                    Text(c.tr(pair.$4)),
-                    Slider(
-                      value: (settings[pair.$1] as num).toDouble(),
-                      min: pair.$2,
-                      max: pair.$3,
-                      onChanged: (n) {
-                        set(() => settings[pair.$1] = n);
-                        refresh();
-                      },
-                    ),
-                  ],
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final theme in ['light', 'dark', 'sepia'])
-                      ChoiceChip(
-                        label: Text(c.tr('rTheme_$theme')),
-                        selected: settings['theme'] == theme,
-                        onSelected: (_) {
-                          set(() => settings['theme'] = theme);
-                          refresh();
-                        },
-                      ),
-                  ],
-                ),
-                if (!isPdf)
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      for (final family in ['sans', 'serif', 'mono'])
-                        ChoiceChip(
-                          label: Text(c.tr('rFont_$family')),
-                          selected: settings['family'] == family,
-                          onSelected: (_) {
-                            set(() => settings['family'] = family);
-                            refresh();
-                          },
-                        ),
-                    ],
-                  ),
-                if (isPdf)
-                  SwitchListTile(
-                    title: Text(c.tr('rPageByPage')),
-                    value: paged,
-                    onChanged: (v) {
-                      final target = page;
-                      set(() {
-                        paged = v;
-                        settings['paged'] = v;
-                      });
-                      refresh();
-                      if (!v) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted && pdf.isReady) {
-                            pdf.goToPage(
-                              pageNumber: target,
-                              duration: Duration.zero,
-                            );
-                          }
-                        });
-                      }
-                    },
-                  ),
-                Text(c.tr('rSessionExplanation')),
-                TextButton(
-                  onPressed: () => Navigator.pop(c),
-                  child: Text(c.tr('gFinish')),
-                ),
-              ],
-            ),
-          ),
-        ),
+      builder: (_) => ReaderAppearanceSheet(
+        isPdf: isPdf,
+        settings: settings,
+        paged: paged,
+        onChange: (key, value) {
+          settings[key] = value;
+          if (key == 'paged') paged = value as bool;
+          refresh();
+          if (key == 'paged' && !paged) {
+            final target = page;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && pdf.isReady) {
+                unawaited(
+                  pdf.goToPage(pageNumber: target, duration: Duration.zero),
+                );
+              }
+            });
+          }
+        },
       ),
     );
     if (mapEquals(before, settings)) return;
@@ -965,243 +895,139 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
     if (chosen != null) await navigatePdf(chosen);
   }
 
-  Widget textBlock(int i) {
-    final b = blocks[i];
-    final key = ValueKey('reader-block-$sectionIndex-$i');
-    if (b.image != null && source!.data['format'] == 'epub') {
-      return Padding(
-        key: key,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: FutureBuilder(
-          future: TextDocument.image(file!.path, b.image!),
-          builder: (c, s) => s.hasData
-              ? Image.memory(
-                  s.data!,
-                  cacheWidth: 1000,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) =>
-                      Text(b.text, style: TextStyle(color: ink)),
-                )
-              : Text(b.text, style: TextStyle(color: ink)),
-        ),
-      );
-    }
-    final applicable = marks
-        .where(
-          (m) =>
-              m.kind == 'highlight' &&
-              m.data['location']['kind'] == 'text' &&
-              m.data['location']['section'] == sections[sectionIndex]['key'] &&
-              m.data['location']['block'] == i,
-        )
-        .toList();
-    final cuts = {0, b.text.length};
-    for (final m in applicable) {
-      cuts.add((m.data['location']['offset'] as int).clamp(0, b.text.length));
-      cuts.add(
-        (m.data['end'] as int? ?? b.text.length).clamp(0, b.text.length),
-      );
-    }
-    final positions = cuts.toList()..sort();
-    final spans = <InlineSpan>[];
-    for (var n = 0; n < positions.length - 1; n++) {
-      final a = positions[n], z = positions[n + 1];
-      final color = applicable
-          .where(
-            (m) =>
-                (m.data['location']['offset'] as int) <= a &&
-                (m.data['end'] as int? ?? b.text.length) >= z,
-          )
-          .lastOrNull
-          ?.data['color'];
-      spans.add(
-        TextSpan(
-          text: b.text.substring(a, z),
-          style: TextStyle(
-            backgroundColor: color == null
-                ? null
-                : markColors[color]?.withAlpha(dark ? 100 : 160),
-          ),
-        ),
-      );
-    }
-    return Padding(
-      key: key,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: SelectableText.rich(
-        TextSpan(children: spans),
-        style: TextStyle(
-          color: ink,
-          fontSize:
-              (settings['font'] as num).toDouble() * (b.heading ? 1.25 : 1),
-          height: (settings['line'] as num).toDouble(),
-          fontWeight: b.heading ? FontWeight.bold : FontWeight.normal,
-          fontFamily: switch (settings['family']) {
-            'serif' => 'serif',
-            'mono' => 'monospace',
-            _ => 'sans-serif',
-          },
-        ),
-        textDirection:
-            RegExp(r'^[^A-Za-z\u00c0-\u052f\u3400-\u9fff]*[\u0590-\u08ff]')
-                .hasMatch(b.text)
-            ? TextDirection.rtl
-            : TextDirection.ltr,
-        onSelectionChanged: (s, cause) {
-          if (s.isValid && !s.isCollapsed) {
-            selected = s.textInside(b.text);
-            selectionLocation = {
-              'kind': 'text',
-              'section': sections[sectionIndex]['key'],
-              'label': sections[sectionIndex]['title'],
-              'block': i,
-              'offset': s.start,
-            };
-            selectionEnd = s.end;
-          }
-        },
-        contextMenuBuilder: (c, state) =>
-            AdaptiveTextSelectionToolbar.buttonItems(
-              anchors: state.contextMenuAnchors,
-              buttonItems: [
-                ...state.contextMenuButtonItems,
-                if (writable && !loading && error == null) ...[
-                  for (final action in ['highlight', 'annotation', 'card'])
-                    ContextMenuButtonItem(
-                      label: c.tr(
-                        action == 'card' ? 'rSaveCard' : 'rKind_$action',
-                      ),
-                      onPressed: () {
-                        final s = selected,
-                            l = selectionLocation,
-                            end = selectionEnd;
-                        ContextMenuController.removeAny();
-                        if (action == 'card') {
-                          run(
-                            () => editReadingCard(
-                              context,
-                              widget.store,
-                              widget.book.id,
-                              () => writable,
-                              text: s,
-                              location: l,
-                            ),
-                          );
-                        } else {
-                          run(() => mark(action, text: s, at: l, end: end));
-                        }
-                      },
+  Widget textBlock(int index) {
+    final block = blocks[index];
+    final section = sections[sectionIndex];
+    return ReaderTextBlock(
+      key: ValueKey('reader-block-$sectionIndex-$index'),
+      blockIndex: index,
+      block: block,
+      sectionKey: section['key'],
+      epubPath: source!.data['format'] == 'epub' ? file!.path : null,
+      settings: settings,
+      marks: marks,
+      dark: dark,
+      ink: ink,
+      onSelection: (selection) {
+        selected = selection.textInside(block.text);
+        selectionLocation = {
+          'kind': 'text',
+          'section': section['key'],
+          'label': section['title'],
+          'block': index,
+          'offset': selection.start,
+        };
+        selectionEnd = selection.end;
+      },
+      onAction: writable && !loading && error == null
+          ? (action) {
+              final text = selected, at = selectionLocation, end = selectionEnd;
+              if (action == 'card') {
+                unawaited(
+                  run(
+                    () => editReadingCard(
+                      context,
+                      widget.store,
+                      widget.book.id,
+                      () => writable,
+                      text: text,
+                      location: at,
                     ),
-                ],
-              ],
-            ),
+                  ),
+                );
+              } else {
+                unawaited(
+                  run(() => mark(action, text: text, at: at, end: end)),
+                );
+              }
+            }
+          : null,
+    );
+  }
+
+  void restorePdfPosition(PdfViewerController controller) {
+    if (pdfRestored) return;
+    pdfRestored = true;
+    final saved = initialPdfLocation;
+    if (saved?['y'] is! num) return;
+    final rect = controller.layout.pageLayouts[page - 1];
+    unawaited(
+      controller.goToPosition(
+        documentOffset: Offset(
+          rect.left,
+          rect.top + rect.height * (saved!['y'] as num),
+        ),
+        zoom: saved['zoom'] is num
+            ? (saved['zoom'] as num).toDouble().clamp(
+                controller.minScale,
+                controller.maxScale,
+              )
+            : null,
       ),
     );
   }
 
-  Widget pdfReader() => Stack(
-    fit: StackFit.expand,
-    children: [
-      Offstage(
-        offstage: paged,
-        child: PdfViewer(
-          PdfDocumentRefDirect(document!, autoDispose: false),
-          controller: pdf,
-          initialPageNumber: page,
-          params: PdfViewerParams(
-            isVisible: !paged,
-            backgroundColor: paper,
-            maxImageBytesCachedOnMemory: 32 * 1024 * 1024,
-            verticalCacheExtent: .5,
-            horizontalCacheExtent: .3,
-            textSelectionParams: PdfTextSelectionParams(
-              enabled: document!.permissions?.allowsCopying != false,
-            ),
-            onPageChanged: (_) => changed(),
-            onInteractionEnd: (_) => changed(),
-            onViewerReady: (doc, controller) {
-              if (pdfRestored) return;
-              pdfRestored = true;
-              final saved = initialPdfLocation;
-              if (saved?['y'] is num) {
-                final rect = controller.layout.pageLayouts[page - 1];
-                controller.goToPosition(
-                  documentOffset: Offset(
-                    rect.left,
-                    rect.top + rect.height * (saved!['y'] as num),
-                  ),
-                  zoom: saved['zoom'] is num
-                      ? (saved['zoom'] as num).toDouble().clamp(
-                          controller.minScale,
-                          controller.maxScale,
-                        )
-                      : null,
-                );
-              }
-            },
-            customizeContextMenuItems: (params, items) {
-              if (writable &&
-                  params.textSelectionDelegate.isCopyAllowed &&
-                  params.textSelectionDelegate.hasSelectedText) {
-                for (final action in ['highlight', 'annotation', 'card']) {
-                  items.add(
-                    ContextMenuButtonItem(
-                      label: context.tr(
-                        action == 'card' ? 'rSaveCard' : 'rKind_$action',
-                      ),
-                      onPressed: () {
-                        params.dismissContextMenu();
-                        run(
-                          () => fromPdf(action, params.textSelectionDelegate),
-                        );
-                      },
-                    ),
-                  );
-                }
-              }
-            },
-            pagePaintCallbacks: [
-              searcher.pageTextMatchPaintCallback,
-              (canvas, rect, page) {
-                for (final m in marks.where((r) => r.kind == 'highlight')) {
-                  for (final v in m.data['rects'] as List? ?? []) {
-                    if (v[0] != page.pageNumber) continue;
-                    final bound = PdfRect(
-                      (v[1] as num).toDouble(),
-                      (v[2] as num).toDouble(),
-                      (v[3] as num).toDouble(),
-                      (v[4] as num).toDouble(),
-                    );
-                    canvas.drawRect(
-                      bound
-                          .toRect(page: page, scaledPageSize: rect.size)
-                          .translate(rect.left, rect.top),
-                      Paint()
-                        ..color = (markColors[m.data['color']] ?? Colors.yellow)
-                            .withAlpha(110),
-                    );
-                  }
-                }
-              },
-            ],
+  Future<void> handleMenu(BuildContext c, String v) async {
+    if (v == 'help') {
+      await help();
+      return;
+    }
+    if (v == 'thumbnails') {
+      await thumbnails();
+      return;
+    }
+    if (v == 'hub') {
+      await Navigator.push(
+        c,
+        MaterialPageRoute(
+          builder: (_) => ReadingHub(
+            store: widget.store,
+            book: widget.book.id,
+            title: widget.book.data['title'],
+            allowed: () => writable,
+            jump: jump,
           ),
         ),
-      ),
-      if (paged)
-        InteractiveViewer(
-          key: ValueKey('pdf-single-$page'),
-          minScale: 1,
-          maxScale: 8,
-          child: Center(
-            child: PdfPageView(
-              document: document,
-              pageNumber: page,
-              maximumDpi: 144,
-            ),
-          ),
-        ),
-    ],
-  );
+      );
+      return;
+    }
+    if (v == 'annotation') {
+      await mark('annotation');
+      return;
+    }
+    if (v == 'card' && c.mounted) {
+      await editReadingCard(
+        c,
+        widget.store,
+        widget.book.id,
+        () => writable,
+        location: location,
+        onSaved: () => guide.event('cardSaved'),
+      );
+    }
+    if (v == 'finish' && writable) {
+      final current = await widget.store.records.get(widget.book.id);
+      await widget.store.records.save(
+        'book',
+        BookLibrary.update(current.data, {
+          'status': 'completed',
+          'finishedOn': DateTime.now().toIso8601String().substring(0, 10),
+        }),
+        previous: current,
+      );
+    }
+    if (v == 'pause') {
+      paused = !paused;
+      if (paused) {
+        pauseTracking();
+      } else {
+        touch();
+      }
+      refresh();
+      queue(saveSession);
+    }
+  }
+
   Future<String> _textForReading() async {
     if (loading || error != null) return '';
     if (!isPdf) return blocks.map((block) => block.text).join('\n');
@@ -1227,141 +1053,23 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
     child: Scaffold(
       backgroundColor: paper,
       appBar: controls
-          ? AppBar(
-              backgroundColor: paper,
-              foregroundColor: ink,
-              title: Text(widget.book.data['title']),
-              actions: [
-                IconButton(
-                  key: const Key('reader-search'),
-                  tooltip: c.tr('rSearchBook'),
-                  onPressed: loading || error != null || (isPdf && paged)
-                      ? null
-                      : () => run(search),
-                  icon: const Icon(Icons.search),
-                ),
-                IconButton(
-                  key: appearanceAnchor,
-                  tooltip: c.tr('rAppearance'),
-                  onPressed: loading || error != null
-                      ? null
-                      : () => run(appearance),
-                  icon: Icon(
-                    isPdf ? Icons.tune : Icons.text_fields,
-                    key: const Key('reader-appearance'),
-                  ),
-                ),
-                IconButton(
-                  key: bookmarkAnchor,
-                  tooltip: c.tr('rKind_bookmark'),
-                  onPressed: loading || error != null || !writable
-                      ? null
-                      : () => run(() => mark('bookmark')),
-                  icon: const Icon(
-                    Icons.bookmark_add_outlined,
-                    key: Key('reader-bookmark'),
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  key: menuAnchor,
-                  onSelected: (v) => run(() async {
-                    if (v == 'help') {
-                      await help();
-                      return;
-                    }
-                    if (v == 'thumbnails') {
-                      await thumbnails();
-                      return;
-                    }
-                    if (v == 'hub') {
-                      await Navigator.push(
-                        c,
-                        MaterialPageRoute(
-                          builder: (_) => ReadingHub(
-                            store: widget.store,
-                            book: widget.book.id,
-                            title: widget.book.data['title'],
-                            allowed: () => writable,
-                            jump: jump,
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-                    if (v == 'annotation') {
-                      await mark('annotation');
-                      return;
-                    }
-                    if (v == 'card' && c.mounted) {
-                      await editReadingCard(
-                        c,
-                        widget.store,
-                        widget.book.id,
-                        () => writable,
-                        location: location,
-                        onSaved: () => guide.event('cardSaved'),
-                      );
-                    }
-                    if (v == 'finish' && writable) {
-                      final current = await widget.store.records.get(
-                        widget.book.id,
-                      );
-                      await widget.store.records.save(
-                        'book',
-                        BookLibrary.update(current.data, {
-                          'status': 'completed',
-                          'finishedOn': DateTime.now()
-                              .toIso8601String()
-                              .substring(0, 10),
-                        }),
-                        previous: current,
-                      );
-                    }
-                    if (v == 'pause') {
-                      paused = !paused;
-                      if (paused) {
-                        pauseTracking();
-                      } else {
-                        touch();
-                      }
-                      refresh();
-                      queue(saveSession);
-                    }
-                  }),
-                  itemBuilder: (c) => [
-                    PopupMenuItem(value: 'help', child: Text(c.tr('rHelp'))),
-                    if (isPdf && document != null)
-                      PopupMenuItem(
-                        value: 'thumbnails',
-                        child: Text(c.tr('rThumbnails')),
-                      ),
-                    PopupMenuItem(
-                      value: 'hub',
-                      child: Text(c.tr('rReadingNotes')),
-                    ),
-                    if (writable && !loading && error == null) ...[
-                      PopupMenuItem(
-                        value: 'annotation',
-                        child: Text(c.tr('rPageNote')),
-                      ),
-                      PopupMenuItem(
-                        value: 'card',
-                        child: Text(c.tr('rAddCard')),
-                      ),
-                      PopupMenuItem(
-                        value: 'finish',
-                        child: Text(c.tr('rMarkFinished')),
-                      ),
-                    ],
-                    PopupMenuItem(
-                      value: 'pause',
-                      child: Text(
-                        c.tr(paused ? 'rResumeTimer' : 'rPauseTimer'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          ? ReaderToolbar(
+              title: widget.book.data['title'] as String,
+              paper: paper,
+              ink: ink,
+              isPdf: isPdf,
+              paged: paged,
+              ready: !loading && error == null,
+              hasPdfDocument: document != null,
+              writable: writable,
+              paused: paused,
+              appearanceAnchor: appearanceAnchor,
+              bookmarkAnchor: bookmarkAnchor,
+              menuAnchor: menuAnchor,
+              onSearch: () => unawaited(run(search)),
+              onAppearance: () => unawaited(run(appearance)),
+              onBookmark: () => unawaited(run(() => mark('bookmark'))),
+              onMenu: (value) => unawaited(run(() => handleMenu(c, value))),
             )
           : null,
       body: SafeArea(
@@ -1416,7 +1124,22 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
                   },
                   onPointerSignal: (_) => touch(),
                   child: isPdf
-                      ? pdfReader()
+                      ? ReaderPdfViewport(
+                          document: document!,
+                          pdf: pdf,
+                          searcher: searcher,
+                          page: page,
+                          paged: paged,
+                          paper: paper,
+                          marks: marks,
+                          onReady: restorePdfPosition,
+                          onPositionChanged: changed,
+                          onAction: writable
+                              ? (action, selection) => unawaited(
+                                  run(() => fromPdf(action, selection)),
+                                )
+                              : null,
+                        )
                       : NotificationListener<ScrollNotification>(
                           onNotification: (n) {
                             if (n is ScrollUpdateNotification) changed();
@@ -1449,89 +1172,24 @@ class _ReadingState extends State<BookReadingPage> with WidgetsBindingObserver {
                 ),
               ),
             if (!loading && error == null && isPdf && searcher.pattern != null)
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  if (searcher.isSearching)
-                    Text(
-                      '${c.tr('rSearching')} ${((searcher.searchProgress ?? 0) * 100).round()}%',
-                    ),
-                  if (searcher.matches.isNotEmpty)
-                    Text(
-                      '${(searcher.currentIndex ?? -1) + 1}/${searcher.matches.length}',
-                    ),
-                  if (!searcher.isSearching && searcher.matches.isEmpty)
-                    Text(c.tr('rNoMatches')),
-                  IconButton(
-                    onPressed: searcher.matches.isNotEmpty
-                        ? () => searcher.goToPrevMatch()
-                        : null,
-                    icon: const Icon(Icons.arrow_upward),
-                  ),
-                  IconButton(
-                    key: const Key('reader-search-next'),
-                    onPressed: searcher.matches.isNotEmpty
-                        ? () => searcher.goToNextMatch()
-                        : null,
-                    icon: const Icon(Icons.arrow_downward),
-                  ),
-                ],
-              ),
+              ReaderPdfSearchControls(searcher: searcher),
             if (!loading && error == null && paged)
               Text(c.tr('rPagedHint'), style: TextStyle(color: ink)),
             if (!loading && error == null && controls)
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  LinearProgressIndicator(value: fraction.clamp(0, 1)),
-                  Wrap(
-                    key: navigationAnchor,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    children: [
-                      if (isPdf)
-                        IconButton(
-                          key: const Key('reader-previous'),
-                          onPressed: page > 1
-                              ? () => navigatePdf(page - 1)
-                              : null,
-                          icon: const Icon(Icons.chevron_left),
-                        )
-                      else
-                        IconButton(
-                          onPressed: sectionIndex > 0
-                              ? () => run(() => loadSection(sectionIndex - 1))
-                              : null,
-                          icon: const Icon(Icons.chevron_left),
-                        ),
-                      TextButton(
-                        key: const Key('reader-location'),
-                        onPressed: () => run(chapters),
-                        child: Text(
-                          isPdf
-                              ? '$page / ${document!.pages.length}'
-                              : '${sectionIndex + 1} / ${sections.length}',
-                        ),
-                      ),
-                      Text('${(fraction * 100).toStringAsFixed(1)}%'),
-                      if (isPdf)
-                        IconButton(
-                          key: const Key('reader-next'),
-                          onPressed: page < document!.pages.length
-                              ? () => navigatePdf(page + 1)
-                              : null,
-                          icon: const Icon(Icons.chevron_right),
-                        )
-                      else
-                        IconButton(
-                          onPressed: sectionIndex + 1 < sections.length
-                              ? () => run(() => loadSection(sectionIndex + 1))
-                              : null,
-                          icon: const Icon(Icons.chevron_right),
-                        ),
-                    ],
-                  ),
-                ],
+              ReaderNavigation(
+                anchor: navigationAnchor,
+                progress: fraction,
+                isPdf: isPdf,
+                position: isPdf ? page : sectionIndex + 1,
+                count: isPdf ? document!.pages.length : sections.length,
+                onChoose: () => unawaited(run(chapters)),
+                onMove: (delta) {
+                  if (isPdf) {
+                    unawaited(navigatePdf(page + delta));
+                  } else {
+                    unawaited(run(() => loadSection(sectionIndex + delta)));
+                  }
+                },
               ),
             Align(
               alignment: AlignmentDirectional.centerEnd,
