@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-15",
+  "device": "Blackview Tab16 / Android 12 API31 / arm64",
+  "package": "com.ilmmizan.bilga.review",
+  "target": "integration_test/book_editor_review_test.dart",
+  "result": "PASS",
+  "scenarioCasesPassed": 3,
+  "runnerCasesIncludingHooks": 5,
+  "durationSeconds": 160,
+  "apkSha256": "25bb843596ac36068ed223ea1817b62dfc600c3585f3499c5c3127bbf321917a",
+  "testApk": "build/review/bilga-book-editor-tests-v2.apk",
+  "log": "/tmp/bilga-book-editor-tablet-tests-2.log",
+  "driverReport": {
+    "bookLibraryUi": {
+      "realCreateValidateFilterSearch": true,
+      "encryptedTemporaryFixtures": true,
+      "realFieldRefocusedBeforeFixtureInput": true,
+      "manualKeyboardAcceptance": false,
+      "syntheticEntitlementOnly": true
+    }
+  },
+  "runtimeDartCatalogSha256": "9bfc179ae7d3b84e2198f3139ca603de8486a0e25d44861aa8f1e046665e402e",
+  "currentPassingScope": [
+    "Book create/invalid ISBN/corrected ISBN/save/reopen/metadata/status/favorite/filter/search",
+    "Failed Book storage save retains draft and legacy chapters/history/bookmark; explicit retry",
+    "Delayed initial filter loading plus new query retains correct choices/results"
+  ],
+  "earlierCombinedRun": {
+    "target": "integration_test/guided_review_test.dart",
+    "result": "FAIL",
+    "scenarioCases": 14,
+    "passed": 13,
+    "failed": 1,
+    "runnerCasesIncludingHooks": 16,
+    "durationSeconds": 251,
+    "evidence": "books-guidance-tablet-attempt-3-2026-11-15.json",
+    "acceptedPassingScope": [
+      "Real app startup/all ten module routes/14 palette variants/Arabic RTL",
+      "Six encrypted Book metadata/search/paging/stale-failed rollback/portable backup/attachment fixtures",
+      "Three Habit template/guide/failed-expired-save retry/skip-discard journeys",
+      "Four synthetic native screenshots"
+    ],
+    "previouslyFailedCaseNowPassesInFocusedRun": true
+  },
+  "singleCombinedTargetRerunAfterFix": false,
+  "runtimeProductSourceUnchangedBetweenRuns": true,
+  "harnessFix": "Tap the actual EditableText to refocus its native client before WidgetTester input; assert text before and after blur. The live binding caches focusedEditable after unfocus. Product ISBN validation and persistence are unchanged.",
+  "manualNativeKeyboardAcceptance": false,
+  "nativeRotationVerifiedInFocusedSuite": false,
+  "standaloneNotesWidgetAndTaskNativeChecksRerun": false,
+  "signerSha256": "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0",
+  "productionPackageModified": false,
+  "uninstallOrClearUsed": false,
+  "overallProductComplete": false
+}

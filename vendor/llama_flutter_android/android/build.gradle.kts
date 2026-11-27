@@ -30,10 +30,10 @@ plugins {
 
 android {
     namespace = "com.write4me.llama_flutter_android"
-    
+
     // Target Android 15 with 16KB page size support
     compileSdk = 35
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -54,11 +54,11 @@ android {
 
     defaultConfig {
         minSdk = 26  // Android 8.0 (for SharedMemory support)
-        
+
         ndk {
             abiFilters.addAll(listOf("arm64-v8a"))  // Only ARM64
         }
-        
+
         externalNativeBuild {
             cmake {
                 // Android 15 16KB page size compliance
@@ -68,7 +68,7 @@ android {
                     "-fvisibility=hidden",
                     "-Wl,-z,max-page-size=16384"
                 )
-                
+
                 // ARM64 optimization flags
                 arguments += listOf(
                     "-DANDROID_ARM_NEON=ON",
@@ -78,7 +78,7 @@ android {
             }
         }
     }
-    
+
     externalNativeBuild {
         cmake {
             path = file("CMakeLists.txt")
@@ -90,7 +90,7 @@ android {
         implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
-        
+
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.mockito:mockito-core:5.0.0")
     }

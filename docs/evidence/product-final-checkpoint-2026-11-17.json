@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-17",
+  "branch": "development/global-launch",
+  "prior_head": "a0743142e05c28d38b85d86e6acc90d6949d2ab2",
+  "result": "IN_PROGRESS",
+  "implemented": [
+    "Finance planning",
+    "all-six Help Hub and actual-control guides",
+    "foreground push-to-talk preview and real module actions"
+  ],
+  "host_full_attempt": {
+    "passed": 337,
+    "failed": 1,
+    "seconds": 566,
+    "remaining_failure": "Help Hub compact fixture scrolled wrong axis; helper corrected"
+  },
+  "affected_after_fixes": {
+    "passed": 34,
+    "failed": 0,
+    "seconds": 39
+  },
+  "other_focused": {
+    "risk": 20,
+    "io_layout_widgets": 13
+  },
+  "catalogs": {
+    "languages": 43,
+    "keys": 1056
+  },
+  "manifest_policy_tests": 12,
+  "purchase_backend_tests": 17,
+  "test_apk": {
+    "path": "build/review/bilga-product-completion-tests-2026-11-17.apk",
+    "sha256": "b063872755b74ea6e35960b96b235ce4610e93e5ab27bcbc080913f9d4f7dc44",
+    "signature_verified": true,
+    "native_speech_compiled": true,
+    "tablet_executed": false
+  },
+  "actual_recognition_verified": false,
+  "offline_recognition_verified": false,
+  "final_ordinary_apk_pending": true,
+  "production_changes": false,
+  "logs": {
+    "/tmp/bilga-final-full-host2.log": {
+      "sha256": "c89074ea8a6965bfafc129c906e5b13e02a320612acd5c1b23ca051588641006"
+    },
+    "/tmp/bilga-final-affected2.log": {
+      "sha256": "1b7c9027390778fa7d5bf52c0f4f439aaf50a4aa9af336d3c38b8dc99f475dc5"
+    },
+    "/tmp/bilga-final-regression-fixes1.log": {
+      "sha256": "d646b3c8b37d4718173794d1991146ebcb52a542eabef5857d239b76654ddede"
+    },
+    "/tmp/bilga-final-risk-batch1.log": {
+      "sha256": "27ec9e48c95f9360127bf97c65d45688874e798bc1d272d7dcaaf7a5f9a79348"
+    },
+    "/tmp/bilga-final-tablet-build2.log": {
+      "sha256": "6428900caeb609a3a35280733fd113c35eede79134797009e46ac6e33ebb9886"
+    }
+  }
+}

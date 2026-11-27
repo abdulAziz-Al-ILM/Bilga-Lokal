@@ -1,3 +1,5 @@
+import 'rich_note_widgets.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../core/strings.dart';
@@ -157,7 +159,8 @@ class _NoteHistoryPageState extends State<NoteHistoryPage> {
               final next = <int>{};
               final seen = <String>{};
               for (final v in versions!) {
-                final signature = '${v.title.length}:${v.title}${v.body}';
+                final signature =
+                    '${v.title.length}:${v.title}${v.body.length}:${v.body}${v.richBody}';
                 final duplicate = !seen.add(signature);
                 if (!protected.contains(v.versionId) &&
                     (key == 'selectAll' || duplicate)) {
@@ -212,11 +215,21 @@ class _NoteHistoryPageState extends State<NoteHistoryPage> {
                                   ? context.tr('untitled')
                                   : v.title,
                             ),
-                            subtitle: Text(
-                              v.body,
-                              maxLines: 6,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            subtitle: v.richBody == null
+                                ? Text(
+                                    v.body,
+                                    maxLines: 6,
+                                    overflow: TextOverflow.ellipsis,
+                                  )
+                                : SizedBox(
+                                    height: 140,
+                                    child: SingleChildScrollView(
+                                      child: RichNoteReader(
+                                        body: v.body,
+                                        richBody: v.richBody,
+                                      ),
+                                    ),
+                                  ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),

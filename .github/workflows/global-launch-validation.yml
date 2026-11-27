@@ -1,0 +1,120 @@
+name: Global launch development validation
+
+on:
+  push:
+    branches: [development/global-launch]
+  workflow_dispatch:
+    inputs:
+      upload_debug_artifact:
+        description: 'Upload the verified debug APK (requires available artifact storage)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bilga-global-launch-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    if: >-
+      github.repository == 'abdulAziz-Al-ILM/Bilga-Lokal' &&
+      github.event.repository.private == true &&
+      github.ref == 'refs/heads/development/global-launch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      DART_SUPPRESS_ANALYTICS: 'true'
+      GRADLE_OPTS: -Dorg.gradle.daemon=false
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up pinned official Flutter
+        run: |
+          bilga_flutter="$RUNNER_TEMP/bilga-flutter"
+          git clone --depth 1 --branch 3.47.8 https://github.com/flutter/flutter.git "$bilga_flutter"
+          test "$(git -C "$bilga_flutter" rev-parse HEAD)" = '737ba8f885dc774b53b442759999a312c9461e4e'
+          echo "$bilga_flutter/bin" >> "$GITHUB_PATH"
+          "$bilga_flutter/bin/flutter" config --no-analytics --jdk-dir "$JAVA_HOME" --android-sdk "$ANDROID_HOME"
+          "$bilga_flutter/bin/flutter" --version
+      - name: Install matching Android build tools
+        run: |
+          # Reuse installed runner libraries; avoid an unrelated mirror outage
+          # blocking verification. Missing libraries still require a successful
+          # index refresh and package install (no ignored setup errors).
+          bilga_missing=()
+          # Headless flutter_tester and Android builds do not require desktop
+          # GLU. SQLite is needed by the host FFI database tests.
+          for bilga_package in libsqlite3-0; do
+            if [ "$(dpkg-query -W -f='${db:Status-Status}' "$bilga_package" 2>/dev/null)" != installed ]; then
+              bilga_missing+=("$bilga_package")
+            fi
+          done
+          # pdfrx builds a small native PDFium gate during host tests.
+          if ! command -v clang >/dev/null 2>&1; then
+            bilga_missing+=(clang)
+          fi
+          if [ "${#bilga_missing[@]}" -gt 0 ]; then
+            sudo apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any update -qq
+            sudo apt-get -o Acquire::Retries=3 install --yes --no-install-recommends "${bilga_missing[@]}"
+          fi
+          bilga_sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$bilga_sdkmanager" --licenses < <(yes) > /dev/null
+          "$bilga_sdkmanager" 'platform-tools' 'platforms;android-34' 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test test_driver
+      - run: python3 tool/check_catalogs.py
+      - run: python3 tool/check_non_voice.py
+      - run: python3 tool/test_play_manifest.py
+      - name: Verify purchase backend protocol and failure handling
+        run: |
+          python3 -m venv "$RUNNER_TEMP/bilga-verifier"
+          "$RUNNER_TEMP/bilga-verifier/bin/pip" install -r backend/purchase_verifier/requirements.txt
+          "$RUNNER_TEMP/bilga-verifier/bin/python" -m unittest discover -s backend/purchase_verifier/tests -v
+      - run: flutter analyze --no-pub
+      - name: Verify calendar recurrence across DST in both runtimes
+        run: |
+          TZ=America/New_York dart tool/check_recurrence_timezones.dart
+          mkdir -p "$RUNNER_TEMP/bilga-recurrence-java"
+          javac -d "$RUNNER_TEMP/bilga-recurrence-java" android/app/src/main/java/com/ilmmizan/bilga/TaskRecurrence.java tool/java/TaskRecurrenceCheck.java
+          java -cp "$RUNNER_TEMP/bilga-recurrence-java" TaskRecurrenceCheck
+      - run: python3 tool/test_module_reminder_math.py
+      - run: flutter test --no-pub --concurrency=2 --reporter expanded
+      - run: flutter build apk --debug --no-pub
+      - name: Verify debug artifact
+        run: |
+          bash tool/verify_android_apk.sh
+          "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest print build/app/outputs/flutter-apk/app-debug.apk > "$RUNNER_TEMP/bilga-manifest.xml"
+          python3 tool/verify_play_manifest.py "$RUNNER_TEMP/bilga-manifest.xml"
+          sha256sum build/app/outputs/flutter-apk/app-debug.apk
+          python3 - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          apk = Path('build/app/outputs/flutter-apk/app-debug.apk')
+          digest = hashlib.sha256(apk.read_bytes()).hexdigest()
+          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:
+              summary.write(f'Android debug APK built and verified. SHA-256: `{digest}`.\n\n')
+              summary.write('Cloud APK upload is optional: use the manual workflow input '
+                            '`upload_debug_artifact` when artifact storage is available. '
+                            'Automatic pushes still run every validation step.\n')
+          PY
+      - name: Save debug artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_debug_artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: bilga-development-debug-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1

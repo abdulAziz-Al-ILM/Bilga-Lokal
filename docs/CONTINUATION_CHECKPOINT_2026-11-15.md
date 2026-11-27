@@ -1,0 +1,45 @@
+> **Current priority:** the owner subsequently requested a complete offline Books reader. The historical catalog/guidance checkpoint below is preserved as previous evidence. Current architecture, compatibility limits and pending acceptance work are in [BOOKS_OFFLINE_READER.md](BOOKS_OFFLINE_READER.md); the authoritative request is [BOOKS_READER_DIRECTIVE_2026-11-15.md](BOOKS_READER_DIRECTIVE_2026-11-15.md). Current source migrates Notes to **17**, Tasks stays **13**, and reading backups use portable Notes content schema **15**. Do not install an older database-16 binary after opening database 17. New reader host verification: **285 PASS in 307s**, `/tmp/bilga-reader-full-host2.log`, with only analyzer brace fixes afterward. New reader device verification and ordinary APK handoff are still pending at this note. Previous CI correction run **43688930874** at `91408f0` is confirmed successful; it does not verify the new reader source.
+
+# Continuation checkpoint — 2026-11-15
+
+The owner resumed through `PROFESSIONAL_PRODUCT_COMPLETION_2026-11-15.md` and asked to inspect `Bilga_references_qayta.zip`. This supersedes the historical Nov 11 pause. No automatic schedule or active Codex goal was created. Work remains on `development/global-launch`, draft PR #1; no merge, publication, paid activation or voice authorization.
+
+## References and implemented increment
+
+ZIP contained four text files. They are extracted into `references/`; all seven linked images were downloaded and visually inspected. Local gallery works offline. Attribution/official pattern verification is in `references/README.md`; raw third-party images are ignored by Git and not shipped. Preserve the original owner ZIP, which remains untracked.
+
+Books metadata/status/shelves/search/filter/paging/editor/reader/export/backup foundation is now wired and verified. Preserve all earlier uncommitted Book work in this checkpoint. Data model is `BOOK_LIBRARY_DATA_MODEL.md`. No new schema or dependency: Notes 16, Tasks 13; portable Notes 13 normally/14 for Finance accounts, Tasks 11. Legacy chapters/history/bookmark remain intact; stable chapter/bookmark IDs are still required.
+
+Habits has 22 independent editable template drafts, searchable category gallery, preview/cancel/customize and explicit Save. The reusable deterministic engine under `lib/features/guidance/` now powers the real six-step Habit creation journey with live anchors, real route navigation, text readiness/Next, Save success event, irreversible-save boundary, Back/Skip/Exit, safe local versioned progress/resume, responsive/dark/RTL and missing-target fallback. Shared form hooks and eager field anchors preserve draft/validation/private IME behavior. Fresh Core authorization is checked before Habit writes. Other module tours/shared searchable Help Hub are not implemented yet. See `GUIDANCE_SYSTEM.md` and `INTERACTION_MATRIX.md`.
+
+## Verification
+
+Full host suite: **268 PASS**, 127s, `/tmp/bilga-guidance-full-tests-2.log`. Final app runtime source has not changed since that pass; later changes are test helpers/report metadata only. Four supplementary Book UI cases pass in 46s (`/tmp/bilga-books-ui-refocus-tests.log`). Analyzer/format clean, 43×568 catalogs, nine manifest guards and no-voice guard pass. Current native/API31 results and failed attempts are preserved in `docs/evidence/books-guidance-*` and `book-editor-*`.
+
+Focused Book-editor target passes **3 scenarios / 5 with hooks in 160s**, `/tmp/bilga-book-editor-tablet-tests-2.log`; APK `build/review/bilga-book-editor-tests-v2.apk`, SHA256 `25bb843596ac36068ed223ea1817b62dfc600c3585f3499c5c3127bbf321917a`. This includes correcting an invalid ISBN, save/open/filter/search, failed-save legacy preservation and delayed-filter/query race.
+
+Earlier combined target passed **13/14 scenarios**, 16 runner cases with hooks, 251s; its single Book failure is fixed by the focused run, not by weakening validation. Its passing cases include startup/all ten routes/14 themes/Arabic RTL, six encrypted Book data/backup fixtures, three Habit creation/template/retry/skip UI cases and screenshots. **No new single all-pass combined run or native rotation/manual keyboard acceptance is asserted.** Runtime product source is identical across those runs; only fixture input/reporting changed.
+
+Important test helper correction: Flutter's live binding retains `focusedEditable` after native unfocus, so `showKeyboard`/`enterText` on the identical field can skip reopening its client. Host input clear resets that cache. `book_library_ui_cases.dart` now taps the actual EditableText before fixture input, and asserts text before/after blur. Waiting alone and direct platform-state synchronization did not fix it; these failed attempts remain documented. Do not reintroduce the focus-cache problem or claim manual native keyboard acceptance from injected test text.
+
+Four actual native screenshots (only encrypted temporary DEMO fixtures, no owner data) are under `docs/evidence/screenshots/2026-11-15/`; capture briefly clears only the synthetic Review window's secure flag and restores it in finally, without changing persistent settings. Raw reference screenshots are different and not committed.
+
+## Artifact and source handoff
+
+The ordinary owner-usable Books/guidance Review APK is the next handoff action after preserving the tested source commit. Build default `lib/main.dart` with `tool/build_tablet_review.sh --target-platform android-arm64`, verify kernel includes BookLibraryStore/GuideController but no integration runners, then use `tool/check_tablet_review_install.py <authorized-device> <apk> --install` and launch Review only. Record actual source commit/hash/install/launch evidence; never hand off a test APK as the ordinary app. Artifact evidence appended below takes precedence once produced.
+
+Stable local Review signer remains `c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0`; use existing ignored `.bilga-tools/review-signing/debug.keystore`. Production `com.ilmmizan.bilga` is preserved. USB was already approved. Use one expensive Flutter/Gradle/device test at a time with `.bilga-tools/build.lock`; never edit a running Bash build/test script. No emulator is needed.
+
+Finance reports source e520971 has green CI 43064321644 and the previously installed ordinary Finance report APK; its pending evidence files are included now. Standalone 13 Notes widget/46 task native checks belong to source 6270268, not a new run. Current checkpoint CI must be verified separately after push.
+
+## Next product work
+
+Continue Habits professional dashboard/search/custom categories, correct advanced schedules and historical target/statistics semantics, reminders/export/backup, and extend the reusable help system. Then Finance categories/hierarchies/budgets/goals/recurrence/debt deadlines/reminders/onboarding, Experiences template-driven timeline/calendar/history/tags/favorites/follow-up, Books covers/reading sessions/statistics/typed knowledge cards/flashcards/review scheduling. Complete other five module tours/shared Help Hub, durable cross-module links and full interaction/localization/accessibility/performance acceptance. New en/uz/ru text is draft; other catalogs use English fallback. No complete-product or release-ready claim is justified.
+
+Ordinary owner-usable Review APK at **9528234** is built, signer-checked, installed in place and launched successfully (COLD, 5295 ms debug Activity; not a release benchmark). Artifact: `build/review/bilga-books-guidance-review-app.apk`, SHA-256 `d524a0bb28fb60561fbb38cd67c055ed679a1c44901a8572788187c27025737d`. Its kernel contains Books/guidance/Finance reports and excludes integration runners and research images. Metadata: `docs/evidence/books-guidance-review-apk-2026-11-15.json`. Production is preserved. Current hosted CI remains pending until push.
+
+## Hosted verification and artifact storage — 2026-11-15
+
+Run **43687503754** at **4ac793c** passes **268 Flutter tests in 196s**, backend, analyzer, format, catalogs, non-voice/manifest guards, DST, Android debug build and APK verification. Hosted debug APK SHA-256 is `e9bd6caae23e32939142569e7bebf40c503c9ab0271c15147e32c90fdeec55ff`. Its final **upload fails because GitHub artifact storage quota is full**, so the overall run is failure and no hosted artifact/download is claimed. The separately built ordinary Review APK is already installed and available locally at source 9528234. Evidence: `evidence/books-guidance-ci-2026-11-15.json`.
+
+CI now keeps every automatic test/build/verification step, writes a verified digest to the job summary, and offers cloud APK upload only through the explicit manual `upload_debug_artifact` boolean (default false, one-day retention). An opted-in upload remains strict and can fail if storage is unavailable. No existing artifact was deleted and no paid service was activated. Local YAML/conditional checks and an executed summary-digest fixture pass; hosted verification of this workflow-only correction is pending its push. Do not describe a skipped optional upload as a successful upload.

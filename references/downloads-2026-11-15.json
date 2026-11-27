@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-15",
+  "scope": "Local research only; screenshots ignored by Git and not bundled in the application.",
+  "downloads": [
+    {
+      "file": "habits/01-habitify-templates.png",
+      "source": "https://assets-global.website-files.com/5d3aa41f4e11727a27d4e25c/5f4e031609129b671abd8c77_rE5KKFFeN8N7BrkVJoBZNvYzZ8PTEwX7QUZYU0BTii8dI0LFFRRTPwWjmEyeE4sq8VQzgQdy_y33iX1pJxFam2GKtou9F9FUOkT6HHIUB83iglxsptIXL4sau9phXSYPDjTwhna9.png",
+      "bytes": 520365,
+      "sha256": "9414df3980839c59bfc24c0f2ad12914aa7779595e233e89387de4fb615de0ff",
+      "reviewedVisually": true
+    },
+    {
+      "file": "habits/02-loop-stats.jpg",
+      "source": "https://i.blogs.es/441979/loop/1366_2000.jpg",
+      "bytes": 158908,
+      "sha256": "3cb72f063493c374de8a3067e2015732e8855d8f2ade9a043620c2ac39853c2d",
+      "reviewedVisually": true
+    },
+    {
+      "file": "finance/01-money-manager-budget",
+      "source": "https://help.realbyteapps.com/hc/article_attachments/32825812009881",
+      "bytes": 394158,
+      "sha256": "ad7db4eb7b96f2db710f39cbcc35d9e4c151b66ba5cc6af6c712f123c775648a",
+      "reviewedVisually": true
+    },
+    {
+      "file": "experiences/01-dayone-templates.jpg",
+      "source": "https://miro.medium.com/v2/1%2AqOBevj19DD6JjV2vOaNbfg.jpeg",
+      "bytes": 486944,
+      "sha256": "571415d92faf91c1a31a6ccb9110865b11b9fdac4282949065db9c1f3bab49aa",
+      "reviewedVisually": true
+    },
+    {
+      "file": "experiences/02-daylio-trends.png",
+      "source": "https://web.uri.edu/wp-content/uploads/sites/1592/daylio.png",
+      "bytes": 99347,
+      "sha256": "32830d57715aa0fde52eeda3823e01ff901b615d1fd50549932fbcd30f7147cc",
+      "reviewedVisually": true
+    },
+    {
+      "file": "books/01-bookmory-overview.png",
+      "source": "https://itsallwidgets.com/screenshots/app-1802.png?updated_at=2026-02-15+01%3A02%3A25",
+      "bytes": 1039464,
+      "sha256": "ef31182030072e5a6b208f0582be2a2d0ab86dc2f4c3602eed83d1598bceb421",
+      "reviewedVisually": true
+    },
+    {
+      "file": "books/02-readwise-review.jpg",
+      "source": "https://catherinepope.com/images/readwise-daily-review.jpg",
+      "bytes": 44300,
+      "sha256": "adea9dd5b691cf1230f58234f6a657798a73d74dddd34d2088825f96601c9c48",
+      "reviewedVisually": true
+    }
+  ]
+}

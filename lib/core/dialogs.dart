@@ -31,6 +31,7 @@ Future<String?> askText(
   String title, {
   String initial = '',
   bool allowEmpty = false,
+  int maxLength = 150,
 }) async {
   final controller = TextEditingController(text: initial);
   final result = await showDialog<String>(
@@ -40,7 +41,10 @@ Future<String?> askText(
       content: TextField(
         controller: controller,
         autofocus: true,
-        maxLength: 150,
+        maxLength: maxLength,
+        autocorrect: false,
+        enableSuggestions: false,
+        enableIMEPersonalizedLearning: false,
         onSubmitted: (v) {
           if (allowEmpty || v.trim().isNotEmpty) Navigator.pop(c, v.trim());
         },

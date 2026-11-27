@@ -1,4 +1,11 @@
+import '../organization/organization_store.dart';
+import '../modules/module_data.dart';
+import '../search/search_index.dart';
+import '../books/reading/reading_data.dart';
 import '../../core/private_database.dart';
+import 'note_tag_store.dart';
+import 'note_widget_permission_store.dart';
+import 'widget/notes_widget_loading.dart';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -26,14 +33,24 @@ class NoteDatabase {
     return PrivateDatabase.open(
       path,
       secure: secure,
-      version: 11,
+      verifyOnOpen: true,
+      diagnostic: NotesWidgetLoading.trace,
+      // v20 protects versioned Finance planning; v19 protects advanced Habit payloads from older binaries.
+      // v18 adds Experience history; v17 adds independently revisioned reading data; v16 added finance accounts. PrivateDatabase refuses a lower
+      // configured version; older binaries without that guard remain unsafe to
+      // install over this database. Existing Notes rows need no rewrite.
+      version: 21,
 
       onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
         await db.rawQuery('PRAGMA journal_mode = DELETE');
         await db.execute('PRAGMA synchronous = FULL');
       },
       onCreate: (db, version) async {
         await createRecords(db);
+        await ReadingData.createSchema(db);
+        await ModuleData.createSchema(db);
+        await OrganizationStore.upgrade(db);
         await createHabits(db);
         await db.execute(
           "ALTER TABLE habits ADD COLUMN details TEXT NOT NULL DEFAULT '{}'",
@@ -43,6 +60,7 @@ class NoteDatabase {
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             body TEXT NOT NULL,
+            rich_body TEXT,
             folder_id TEXT,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
@@ -60,6 +78,7 @@ class NoteDatabase {
             note_id TEXT NOT NULL,
             title TEXT NOT NULL,
             body TEXT NOT NULL,
+            rich_body TEXT,
             created_at TEXT NOT NULL
           )
           ''');
@@ -75,12 +94,18 @@ class NoteDatabase {
             trash_batch TEXT
           )
           ''');
+        await NoteTagStore.createSchema(db);
+        await NoteWidgetPermissionStore.createSchema(db);
+        await SearchIndex.create(db, notes: true);
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 10) {
           await createRecords(db);
         }
+        if (oldVersion < 17) await ReadingData.createSchema(db);
+        if (oldVersion < 18) await ModuleData.createSchema(db);
+        if (oldVersion < 21) await OrganizationStore.upgrade(db);
         if (oldVersion < 9) {
           await createHabits(db);
         }
@@ -147,6 +172,22 @@ class NoteDatabase {
           );
           await db.execute(
             "ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'",
+          );
+        }
+        if (oldVersion < 12) {
+          await NoteTagStore.createSchema(db);
+          await NoteTagStore.migrateLegacy(db);
+        }
+        if (oldVersion < 13) {
+          await NoteWidgetPermissionStore.createSchema(db);
+        }
+        if (oldVersion < 14) {
+          await SearchIndex.create(db, notes: true);
+        }
+        if (oldVersion < 15) {
+          await db.execute('ALTER TABLE notes ADD COLUMN rich_body TEXT');
+          await db.execute(
+            'ALTER TABLE note_versions ADD COLUMN rich_body TEXT',
           );
         }
       },

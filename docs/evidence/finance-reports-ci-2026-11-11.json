@@ -1,0 +1,17 @@
+{
+  "runId": 43064321644,
+  "url": "https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/43064321644",
+  "headSha": "e5209713743253a368eb9088462c6c5571716f61",
+  "status": "completed",
+  "conclusion": "success",
+  "applicationTestsStarted": true,
+  "flutterTestsAtCommit": 241,
+  "stepsVerified": [
+    "flutter test",
+    "flutter build apk --debug",
+    "Verify debug artifact",
+    "Save debug artifact"
+  ],
+  "bookLibraryCheckpointIncluded": false,
+  "productionAppInstalled": false
+}

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'strings.dart';
 
+/// A user cancelled a confirmation; keep the draft without a storage error.
+class EditorSaveCancelled implements Exception {
+  const EditorSaveCancelled();
+}
+
 void failure(BuildContext c) {
   ScaffoldMessenger.of(c)
       .showSnackBar(SnackBar(content: Text(c.tr('saveError'))));
@@ -36,20 +41,40 @@ Future<Map<String, String>?> editFields(
   Set<String> weekdayFields = const {},
   Set<String> dateFields = const {},
   Set<String> numberFields = const {},
+  Set<String> signedNumberFields = const {},
+  Map<String, GlobalKey> fieldKeys = const {},
+  GlobalKey? saveKey,
+  void Function(String field, String value)? onChanged,
+  Widget Function(Widget child)? pageWrapper,
+  WidgetBuilder? extra,
+  Set<String> advancedFields = const {},
+  Map<String, Widget Function(BuildContext, TextEditingController, bool)>
+      customFields =
+      const {},
 }) => Navigator.push(
   c,
   MaterialPageRoute(
-    builder: (_) => _FormPage(
-      title,
-      labels,
-      initial,
-      multiline,
-      onSave,
-      requiredFields,
-      weekdayFields,
-      dateFields,
-      numberFields,
-    ),
+    builder: (_) {
+      final page = _FormPage(
+        title,
+        labels,
+        initial,
+        multiline,
+        onSave,
+        requiredFields,
+        weekdayFields,
+        dateFields,
+        numberFields,
+        signedNumberFields,
+        fieldKeys,
+        saveKey,
+        onChanged,
+        extra,
+        advancedFields,
+        customFields,
+      );
+      return pageWrapper?.call(page) ?? page;
+    },
   ),
 );
 
@@ -59,6 +84,14 @@ class _FormPage extends StatefulWidget {
   final Set<String> multiline;
   final Future<void> Function(Map<String, String>)? onSave;
   final Set<String> requiredFields, weekdayFields, dateFields, numberFields;
+  final Set<String> signedNumberFields;
+  final Map<String, GlobalKey> fieldKeys;
+  final GlobalKey? saveKey;
+  final void Function(String field, String value)? onChanged;
+  final WidgetBuilder? extra;
+  final Set<String> advancedFields;
+  final Map<String, Widget Function(BuildContext, TextEditingController, bool)>
+  customFields;
   const _FormPage(
     this.title,
     this.labels,
@@ -69,6 +102,13 @@ class _FormPage extends StatefulWidget {
     this.weekdayFields,
     this.dateFields,
     this.numberFields,
+    this.signedNumberFields,
+    this.fieldKeys,
+    this.saveKey,
+    this.onChanged,
+    this.extra,
+    this.advancedFields,
+    this.customFields,
   );
   @override
   State<_FormPage> createState() => _FormState();
@@ -79,7 +119,7 @@ class _FormState extends State<_FormPage> {
     for (final k in widget.labels.keys)
       k: TextEditingController(text: widget.initial[k] ?? ''),
   };
-  bool leaving = false, saving = false;
+  bool leaving = false, saving = false, expanded = false;
   String? error;
   bool get dirty => controllers.entries.any(
     (e) => e.value.text != (widget.initial[e.key] ?? ''),
@@ -111,6 +151,7 @@ class _FormState extends State<_FormPage> {
         title: Text(widget.title),
         actions: [
           TextButton(
+            key: widget.saveKey,
             onPressed: saving
                 ? null
                 : () async {
@@ -123,17 +164,20 @@ class _FormState extends State<_FormPage> {
                       failure(context);
                       return;
                     }
+                    FocusManager.instance.primaryFocus?.unfocus();
                     setState(() {
                       saving = true;
                       error = null;
                     });
                     try {
                       await widget.onSave?.call(values);
-                    } catch (_) {
+                    } catch (failure) {
                       if (mounted) {
                         setState(() {
                           saving = false;
-                          error = context.tr('saveError');
+                          error = failure is EditorSaveCancelled
+                              ? null
+                              : context.tr('saveError');
                         });
                       }
                       return;
@@ -151,101 +195,129 @@ class _FormState extends State<_FormPage> {
           ),
         ],
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        children: [
-          if (saving) const LinearProgressIndicator(),
-          if (error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (saving) const LinearProgressIndicator(),
+            if (error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ),
-            ),
-          for (final e in controllers.entries)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: widget.weekdayFields.contains(e.key)
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(widget.labels[e.key]!),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          children: List.generate(7, (i) {
-                            final days = e.value.text
-                                .split(',')
-                                .map(int.tryParse)
-                                .whereType<int>()
-                                .toSet();
-                            return FilterChip(
-                              label: Text(
-                                MaterialLocalizations.of(context)
-                                    .narrowWeekdays[(i + 1) % 7],
-                              ),
-                              selected: days.contains(i + 1),
-                              onSelected: saving
-                                  ? null
-                                  : (selected) {
-                                      if (selected) {
-                                        days.add(i + 1);
-                                      } else if (days.length > 1) {
-                                        days.remove(i + 1);
-                                      }
-                                      setState(
-                                        () => e.value.text =
-                                            (days.toList()..sort()).join(','),
-                                      );
-                                    },
-                            );
-                          }),
-                        ),
-                      ],
-                    )
-                  : TextField(
-                      controller: e.value,
-                      keyboardType: widget.numberFields.contains(e.key)
-                          ? const TextInputType.numberWithOptions(decimal: true)
-                          : null,
-                      readOnly: widget.dateFields.contains(e.key),
-                      onTap: !widget.dateFields.contains(e.key)
-                          ? null
-                          : () async {
-                              final date = await showDatePicker(
-                                context: context,
-                                initialDate:
-                                    DateTime.tryParse(e.value.text) ??
-                                    DateTime.now(),
-                                firstDate: DateTime(1900),
-                                lastDate: DateTime(2200),
+            for (final e in controllers.entries.where(
+              (e) => !widget.advancedFields.contains(e.key) || expanded,
+            ))
+              Padding(
+                key: widget.fieldKeys[e.key],
+                padding: const EdgeInsets.only(bottom: 20),
+                child: widget.customFields.containsKey(e.key)
+                    ? widget.customFields[e.key]!(context, e.value, saving)
+                    : widget.weekdayFields.contains(e.key)
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.labels[e.key]!),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: List.generate(7, (i) {
+                              final days = e.value.text
+                                  .split(',')
+                                  .map(int.tryParse)
+                                  .whereType<int>()
+                                  .toSet();
+                              return FilterChip(
+                                label: Text(
+                                  MaterialLocalizations.of(context)
+                                      .narrowWeekdays[(i + 1) % 7],
+                                ),
+                                selected: days.contains(i + 1),
+                                onSelected: saving
+                                    ? null
+                                    : (selected) {
+                                        if (selected) {
+                                          days.add(i + 1);
+                                        } else if (days.length > 1) {
+                                          days.remove(i + 1);
+                                        }
+                                        setState(
+                                          () => e.value.text =
+                                              (days.toList()..sort()).join(','),
+                                        );
+                                        widget.onChanged?.call(
+                                          e.key,
+                                          e.value.text,
+                                        );
+                                      },
                               );
-                              if (date != null && mounted) {
-                                setState(
-                                  () => e.value.text = date
-                                      .toIso8601String()
-                                      .substring(0, 10),
+                            }),
+                          ),
+                        ],
+                      )
+                    : TextField(
+                        key: ValueKey('editor-field-${e.key}'),
+                        controller: e.value,
+                        keyboardType: widget.numberFields.contains(e.key)
+                            ? TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: widget.signedNumberFields.contains(
+                                  e.key,
+                                ),
+                              )
+                            : null,
+                        readOnly: widget.dateFields.contains(e.key),
+                        onTap: !widget.dateFields.contains(e.key)
+                            ? null
+                            : () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate:
+                                      DateTime.tryParse(e.value.text) ??
+                                      DateTime.now(),
+                                  firstDate: DateTime(1),
+                                  lastDate: DateTime(9999, 12, 31),
                                 );
-                              }
-                            },
-                      enabled: !saving,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      enableIMEPersonalizedLearning: false,
-                      onChanged: (_) => setState(() {}),
-                      minLines: widget.multiline.contains(e.key) ? 6 : 1,
-                      maxLines: widget.multiline.contains(e.key) ? null : 1,
-                      maxLength: widget.multiline.contains(e.key)
-                          ? 100000
-                          : 200,
-                      decoration: InputDecoration(
-                        labelText: widget.labels[e.key],
-                        border: const OutlineInputBorder(),
+                                if (date != null && mounted) {
+                                  setState(
+                                    () => e.value.text = date
+                                        .toIso8601String()
+                                        .substring(0, 10),
+                                  );
+                                }
+                              },
+                        enabled: !saving,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        enableIMEPersonalizedLearning: false,
+                        onChanged: (value) {
+                          setState(() {});
+                          widget.onChanged?.call(e.key, value);
+                        },
+                        minLines: widget.multiline.contains(e.key) ? 6 : 1,
+                        maxLines: widget.multiline.contains(e.key) ? null : 1,
+                        maxLength: widget.multiline.contains(e.key)
+                            ? 100000
+                            : 200,
+                        decoration: InputDecoration(
+                          labelText: widget.labels[e.key],
+                          border: const OutlineInputBorder(),
+                        ),
                       ),
-                    ),
-            ),
-        ],
+              ),
+            if (widget.extra != null) widget.extra!(context),
+            if (widget.advancedFields.isNotEmpty)
+              TextButton.icon(
+                onPressed: () => setState(() => expanded = !expanded),
+                icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+                label: Text(context.tr('orgAdvanced')),
+              ),
+          ],
+        ),
       ),
     ),
   );

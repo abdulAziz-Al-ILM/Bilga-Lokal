@@ -1,0 +1,73 @@
+{
+  "date": "2026-11-16",
+  "sourceCommit": "2cb48a627df02d47774a67e2e68e380111369909",
+  "apk": "build/review/bilga-experiences-review-app.apk",
+  "sha256": "36c02559f9f4d53a06704986cb43c7a86dc70cb7a52581e0afc4e5b326033a0c",
+  "bytes": 217902184,
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "signerSha256": "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0",
+  "type": "ordinary default lib/main.dart development debug app; no test runner",
+  "installedInPlace": true,
+  "launchStatus": "ok",
+  "launchState": "COLD",
+  "debugActivityLaunchTotalMillis": 5831,
+  "releasePerformanceAcceptance": false,
+  "kernelChecks": {
+    "ExperiencesPage": true,
+    "ExperienceStore": true,
+    "ExperienceEditor": true,
+    "ExperienceLinks": true,
+    "BookReadingPage": true,
+    "FinanceReportsPage": true,
+    "integrationTestRunnersPresent": false
+  },
+  "ordinaryRoute": {
+    "package": "com.ilmmizan.bilga.review",
+    "source": "2cb48a627df02d47774a67e2e68e380111369909",
+    "physical_home_carousel_navigation": true,
+    "recognized_catalog_controls": {
+      "xExperience": "Tajribalar",
+      "ePurpose": "Kunlaringizdan saboq oling. Nima bo‘lgani, nimani o‘rganganingiz va keyingi foydali qadamni yozing.",
+      "eNew": "Yangi tajriba",
+      "eTemplates": "Amaliy shablonlar",
+      "eCalendar": "Kalendar",
+      "eAddCategory": "Toifa qo‘shish",
+      "gHelp": "Yordam · Qanday ishlaydi?"
+    },
+    "production_metadata_identical": true,
+    "record_creation_or_mutation": false
+  },
+  "notesSchemaCapability": 18,
+  "tasksSchemaCapability": 13,
+  "portableModuleContent": 16,
+  "productionBefore": {
+    "userId": "11022",
+    "versionCode": "9 minSdk=26 targetSdk=36",
+    "versionName": "1.4.0",
+    "firstInstallTime": "2026-10-06 07:57:29",
+    "lastUpdateTime": "2026-10-23 20:00:52"
+  },
+  "productionAfter": {
+    "userId": "11022",
+    "versionCode": "9 minSdk=26 targetSdk=36",
+    "versionName": "1.4.0",
+    "firstInstallTime": "2026-10-06 07:57:29",
+    "lastUpdateTime": "2026-10-23 20:00:52"
+  },
+  "productionMetadataIdentical": true,
+  "productionDataReadOrModified": false,
+  "uninstallOrClearUsed": false,
+  "nativeExperienceActualCases": 9,
+  "nativeCasesIncludingHooks": 11,
+  "nativeElapsedSeconds": 172,
+  "fullHostBase": "6d04577:301pass/375s; final text-only fix followed by4focused UI passes and complete9-case native rerun",
+  "overallProductComplete": false,
+  "advancedHabitsIncluded": false,
+  "remainingPriorities": [
+    "finish Habit schedules/categories/goals/statistics/reminders/UI",
+    "Finance planning/categories/budgets/goals/recurrence/debts",
+    "Help Hub/all-module tutorials",
+    "final integration/owner review"
+  ]
+}

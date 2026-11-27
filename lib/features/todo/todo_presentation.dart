@@ -11,8 +11,15 @@ const todoPriorityColors = <Color>[
   Color(0xFFE45458), // critical
 ];
 
-Color todoColor(Map<String, Object?> row, DateTime now) {
-  if (row['is_done'] == 1) return todoPriorityColors.first;
-  if (todoIsOverdue(row, now)) return const Color(0xFF17191C);
-  return todoPriorityColors[(row['priority'] as int? ?? 0).clamp(0, 3)];
-}
+Color todoColor(Map<String, Object?> row, DateTime now, {bool dark = false}) =>
+    switch (todoTimeState(row, now)) {
+      TodoTimeState.green => const Color(0xFF32A66A),
+      TodoTimeState.yellow => const Color(0xFFE5B82F),
+      TodoTimeState.red => const Color(0xFFE45458),
+      TodoTimeState.overdue =>
+        dark ? const Color(0xFF6B727E) : const Color(0xFF17191C),
+      TodoTimeState.completed =>
+        dark ? const Color(0xFFC5CBD3) : const Color(0xFF9AA2AD),
+      TodoTimeState.neutral =>
+        dark ? const Color(0xFF89919C) : const Color(0xFF9AA2AD),
+    };

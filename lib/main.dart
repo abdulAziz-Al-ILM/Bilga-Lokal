@@ -1,6 +1,5 @@
+import 'core/review_performance.dart';
 import 'features/attachments/attachment_store.dart';
-
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 
@@ -13,6 +12,7 @@ import 'core/strings.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   PaintingBinding.instance.imageCache.maximumSizeBytes = 48 * 1024 * 1024;
+  ReviewPerformance.start();
   runApp(const _Startup());
 }
 
@@ -26,15 +26,20 @@ class _StartupState extends State<_Startup> {
   late Future<void> loading;
   Future<void> load() async {
     await AppSettings.instance.load();
-    await Strings.load(code: AppSettings.instance.language);
-    await Attachments.clearPreviews();
-    unawaited(AgentAccess.instance.init());
+    await Future.wait([
+      ReviewPerformance.measure(
+        'catalog.load',
+        () => Strings.load(code: AppSettings.instance.language),
+      ),
+      ReviewPerformance.measure('preview.cleanup', Attachments.clearPreviews),
+      ReviewPerformance.measure('access.init', AgentAccess.instance.init),
+    ]);
   }
 
   @override
   void initState() {
     super.initState();
-    loading = load();
+    loading = ReviewPerformance.measure('startup.ready', load);
   }
 
   @override
@@ -46,6 +51,7 @@ class _StartupState extends State<_Startup> {
         return const BilgaApp();
       }
       return MaterialApp(
+        debugShowCheckedModeBanner: false,
         home: Scaffold(
           body: Center(
             child: snapshot.hasError

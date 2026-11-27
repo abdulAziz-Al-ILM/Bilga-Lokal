@@ -1,0 +1,17 @@
+{
+  "source": "ff59d5bf12a9f080e2270fdb5f2e3f06b4a62c77",
+  "apk": "build/review/bilga-reader-saf-tests-v3.apk",
+  "sha256": "fe53c46cdfd939a21cec225677e1da888a79696fe1cb0d2310175673b98caf88",
+  "log": "/tmp/bilga-reader-saf-tablet5.log",
+  "log_sha256": "ad6913fc72160b9726799142c85ab99d72e3d2218eac0c5a0f9107892f964a57",
+  "result": "partial; not accepted as complete",
+  "passed": [
+    "11 encrypted data/parser/recovery/migration cases",
+    "actual SAF PDF and EPUB managed import/read",
+    "actual SAF TXT persistent reference import/read and assertions"
+  ],
+  "failure": "Test attempted to find the recycled top import sliver while the library retained its advanced-section scroll position; no duplicate/corrupt/restart assertion executed. Fix uses real scrolling rather than relying on instantiated off-screen widgets.",
+  "cancellation": "Native DocumentsUI was cancelled with extra guarded Back keys by the operator because Back first traversed folders. Coordinator now waits for DocumentsUI and verifies dismissal.",
+  "product_runtime_changed": false,
+  "production_touched": false
+}

@@ -9,4 +9,8 @@ for path in catalogs:
  assert set(data)==set(base),path.name
  assert all(isinstance(v,str) and v.strip() for v in data.values()),path.name
  assert not any(re.match(r'^\d{3}:',v) for v in data.values()),path.name
+# Literal control labels must resolve; otherwise a raw internal key reaches users.
+for source in (root/'lib').rglob('*.dart'):
+ for match in re.finditer(r"\.tr\('([^'$]+)'\)",source.read_text()):
+  assert match.group(1) in base,f'{source.relative_to(root)}: missing {match.group(1)}'
 print(f'PASS {len(catalogs)} languages × {len(base)} strings; {sum(p.stat().st_size for p in catalogs)} bytes')

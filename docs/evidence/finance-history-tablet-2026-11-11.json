@@ -1,0 +1,72 @@
+{
+  "deviceSuite": "isolated Bilga Review",
+  "visitedModules": [
+    "notes",
+    "todos",
+    "xHabits",
+    "textAssistant",
+    "xFinance",
+    "xExperience",
+    "xBooks",
+    "today",
+    "search",
+    "settings"
+  ],
+  "themeVariants": 14,
+  "rtl": "Arabic",
+  "realEditorRotation": "portrait-landscape-portrait",
+  "notification": {
+    "realDelivery": true,
+    "snoozeDelivery": true,
+    "nativePendingIntentCompletion": true,
+    "exactPermission": true,
+    "sound": false
+  },
+  "recurrence": {
+    "nativeAdvance": true,
+    "checklistHistoryPreservedAndSuccessorReset": true,
+    "nextReminderDeliveredWithoutDartRefresh": true,
+    "futureWidgetConsentInherited": false
+  },
+  "checklist": {
+    "encryptedFixtures": true,
+    "realEditorReorderAndCompletion": true,
+    "listProgress": true,
+    "independentDuplication": true
+  },
+  "taskTemplates": {
+    "encryptedFixtures": true,
+    "realCreatePreviewApplyEditSnapshotDelete": true
+  },
+  "projects": {
+    "encryptedFixtures": true,
+    "realNestedListsAndTaskProgress": true,
+    "statusEditAndConvertPreserveTasks": true
+  },
+  "financeAccounts": {
+    "encryptedFixtures": true,
+    "createTransferReconcileArchiveRestore": true,
+    "immutableAuditAndConservedTransferTotal": true,
+    "syntheticEntitlementOnly": true
+  },
+  "financeTransactionHistory": {
+    "encryptedFixtures": true,
+    "realEditRestoreVoidRestore": true,
+    "otherTransactionsPreserved": true,
+    "syntheticEntitlementOnly": true
+  },
+  "date": "2026-11-11",
+  "deviceModel": "Blackview Tab16",
+  "androidApi": 31,
+  "scenarioCasesPassed": 50,
+  "runnerCountIncludingHooks": 56,
+  "durationSeconds": 391,
+  "productionPackageModified": false,
+  "testApkSha256": "3a6de680d4951fa47933257441bd12068a004244fc3ac37f0cd58f73798a3d5e",
+  "notesDatabaseSchema": 16,
+  "tasksDatabaseSchema": 13,
+  "notesPortableContentWithAccounts": 14,
+  "tasksPortableContentSchema": 11,
+  "source": "Finance transaction history milestone; see containing commit history",
+  "localLog": "/tmp/bilga-finance-history-tablet-tests-1.log"
+}

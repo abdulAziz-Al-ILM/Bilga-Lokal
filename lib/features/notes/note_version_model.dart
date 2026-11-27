@@ -3,6 +3,7 @@ class NoteVersion {
   final String noteId;
   final String title;
   final String body;
+  final String? richBody;
   final DateTime createdAt;
 
   const NoteVersion({
@@ -10,6 +11,7 @@ class NoteVersion {
     required this.noteId,
     required this.title,
     required this.body,
+    this.richBody,
     required this.createdAt,
   });
 
@@ -19,6 +21,7 @@ class NoteVersion {
       'note_id': noteId,
       'title': title,
       'body': body,
+      'rich_body': richBody,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -29,6 +32,7 @@ class NoteVersion {
       noteId: map['note_id'] as String,
       title: map['title'] as String,
       body: map['body'] as String,
+      richBody: map['rich_body'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }

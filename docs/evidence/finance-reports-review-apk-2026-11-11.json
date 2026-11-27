@@ -1,0 +1,23 @@
+{
+  "sourceCommit": "e5209713743253a368eb9088462c6c5571716f61",
+  "apk": "build/review/bilga-finance-reports-review-app.apk",
+  "sha256": "2cd17f7ad849d5e6f2cc36a073f93ad0e2e3d1af6ea9b7a6053873e502650432",
+  "bytes": 217901916,
+  "package": "com.ilmmizan.bilga.review",
+  "label": "Bilga Review",
+  "signerSha256": [
+    "c3e5f6408f14cc0281d46f74f057fd31c548b4b6d3b80e18011d872306aeadd0"
+  ],
+  "installedInPlace": true,
+  "launchStatus": "ok",
+  "launchState": "COLD",
+  "debugColdActivityMillis": 5273,
+  "tasksDatabaseSchema": 13,
+  "notesDatabaseSchema": 16,
+  "type": "ordinary debug development app; six-module completion and owner acceptance pending",
+  "productionPackageModified": false,
+  "binaryScope": {
+    "financeReports": true,
+    "unverifiedBookLibraryStore": false
+  }
+}

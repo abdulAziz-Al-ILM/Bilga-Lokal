@@ -1,3 +1,8 @@
+import '../todo/todo_changes.dart';
+import '../todo/todo_series_store.dart';
+import '../todo/todo_checklist_store.dart';
+import '../todo/todo_project_store.dart';
+
 import 'dart:math';
 
 import 'package:sqflite/sqflite.dart';
@@ -5,6 +10,11 @@ import 'package:sqflite/sqflite.dart';
 import '../templates/template_catalog.dart';
 
 import '../notes/note_database.dart';
+import '../notes/note_tag_store.dart';
+import '../notes/notes_changes.dart';
+
+import 'dart:convert';
+
 import '../todo/todo_database.dart';
 
 enum CollectionKind { notes, todos }
@@ -12,7 +22,16 @@ enum CollectionKind { notes, todos }
 class CollectionRows {
   final List<Map<String, Object?>> folders;
   final List<Map<String, Object?>> items;
-  CollectionRows(this.folders, this.items);
+  final Map<String, ({int total, int done})> checklistProgress;
+  final Map<String, TodoProject> projects;
+  final Map<String, ({int total, int done, int overdue})> projectProgress;
+  CollectionRows(
+    this.folders,
+    this.items, {
+    this.checklistProgress = const {},
+    this.projects = const {},
+    this.projectProgress = const {},
+  });
 }
 
 class CollectionRepository {
@@ -25,12 +44,15 @@ class CollectionRepository {
   Future<Database> get database async =>
       provided ?? await (notes ? NoteDatabase.database : TodoDatabase.database);
   String get now => DateTime.now().toIso8601String();
+  Future<T> _changed<T>(Future<T> write) =>
+      notes ? NotesChanges.after(write) : TodoChanges.after(write);
 
   Future<CollectionRows> load({
     String? folderId,
     bool trash = false,
     String query = '',
     String filter = 'all',
+    String? tagId,
   }) async {
     final db = await database;
     final args = <Object?>[trash ? 1 : 0];
@@ -41,9 +63,16 @@ class CollectionRepository {
           .replaceAll('%', '\\%')
           .replaceAll('_', '\\_');
       where += notes
-          ? " AND (i.title LIKE ? ESCAPE '\\' OR i.body LIKE ? ESCAPE '\\' OR i.tags LIKE ? ESCAPE '\\')"
-          : " AND (i.title LIKE ? ESCAPE '\\' OR i.description LIKE ? ESCAPE '\\')";
-      args.addAll(List.filled(notes ? 3 : 2, '%$escaped%'));
+          ? " AND (i.title LIKE ? ESCAPE '\\' OR i.body LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM note_tag_links l JOIN note_tags t ON t.id=l.tag_id WHERE l.note_id=i.id AND t.normalized_name LIKE ? ESCAPE '\\'))"
+          : " AND (i.title LIKE ? ESCAPE '\\' OR i.description LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM todo_checklist c WHERE c.todo_id=i.id AND c.title LIKE ? ESCAPE '\\'))";
+      args.addAll(List.filled(notes ? 2 : 3, '%$escaped%'));
+      if (notes) {
+        args.add(
+          '%${escaped.toLowerCase().replaceAll(RegExp('[‘’ʻʼ]'), "'")}%',
+        );
+      }
+    } else if (notes && tagId != null) {
+      // Tag filters always span every folder, including nested folders.
     } else if (!notes && !trash && filter != 'all') {
       // Smart folders search all active tasks, including nested folders.
     } else if (folderId != null) {
@@ -55,10 +84,16 @@ class CollectionRepository {
       where += ' AND i.folder_id IS NULL';
     }
     if (notes && !trash) {
-      where += filter == 'archive'
-          ? ' AND i.is_archived = 1'
-          : ' AND i.is_archived = 0';
+      if (filter != 'all' || tagId == null) {
+        where += filter == 'archive'
+            ? ' AND i.is_archived = 1'
+            : ' AND i.is_archived = 0';
+      }
       if (filter == 'favorites') where += ' AND i.is_favorite = 1';
+    }
+    if (notes && tagId != null) {
+      where += ' AND EXISTS (SELECT 1 FROM note_tag_links l WHERE l.note_id=i.id AND l.tag_id=?)';
+      args.add(tagId);
     }
     final rows = await db.rawQuery(
       'SELECT i.* FROM $items i LEFT JOIN $folders f ON i.folder_id=f.id WHERE $where ORDER BY ${notes ? 'i.updated_at DESC' : 'i.is_done ASC, i.priority DESC, i.created_at DESC'}',
@@ -75,6 +110,7 @@ class CollectionRepository {
         .where(
           (f) =>
               query.isEmpty &&
+              (!notes || tagId == null) &&
               filter == 'all' &&
               (folderId != null
                   ? f['parent_id'] == folderId
@@ -83,7 +119,24 @@ class CollectionRepository {
                   : f['parent_id'] == null),
         )
         .toList();
-    return CollectionRows(visible, rows);
+    return CollectionRows(
+      visible,
+      notes ? await NoteTagStore.hydrate(db, rows) : rows,
+      projects: notes ? const {} : await TodoProjectStore(db).all(),
+      projectProgress: notes
+          ? const {}
+          : await TodoProjectStore.progress(db, DateTime.now()),
+      checklistProgress: {
+        if (!notes)
+          for (final row in await db.rawQuery(
+            'SELECT todo_id,count(*) AS total,sum(is_done) AS done FROM todo_checklist GROUP BY todo_id',
+          ))
+            row['todo_id'] as String: (
+              total: row['total'] as int,
+              done: row['done'] as int,
+            ),
+      },
+    );
   }
 
   Future<List<Map<String, Object?>>> activeFolders() async => (await database)
@@ -109,64 +162,66 @@ class CollectionRepository {
   ) async {
     if (template.todo == notes) throw ArgumentError('template_kind');
     final db = await database;
-    return db.transaction((txn) async {
-      if (parentId != null) {
-        final parent = await txn.query(
-          folders,
-          where: 'id = ? AND is_deleted = 0',
-          whereArgs: [parentId],
-        );
-        if (parent.isEmpty) throw StateError('folder_missing');
-      }
-      final random = Random.secure();
-      final id =
-          'tpl-${DateTime.now().microsecondsSinceEpoch}-${random.nextInt(1 << 32)}';
-      final timestamp = now;
-      if (notes) {
-        final row = <String, Object?>{
+    return _changed(
+      db.transaction((txn) async {
+        if (parentId != null) {
+          final parent = await txn.query(
+            folders,
+            where: 'id = ? AND is_deleted = 0',
+            whereArgs: [parentId],
+          );
+          if (parent.isEmpty) throw StateError('folder_missing');
+        }
+        final random = Random.secure();
+        final id =
+            'tpl-${DateTime.now().microsecondsSinceEpoch}-${random.nextInt(1 << 32)}';
+        final timestamp = now;
+        if (notes) {
+          final row = <String, Object?>{
+            'id': id,
+            'title': template.title(language),
+            'body': template.body(language),
+            'folder_id': parentId,
+            'created_at': timestamp,
+            'updated_at': timestamp,
+            'is_deleted': 0,
+            'is_favorite': 0,
+            'is_archived': 0,
+            'tags': '[]',
+          };
+          await txn.insert(items, row);
+          return row;
+        }
+        final folder = <String, Object?>{
           'id': id,
-          'title': template.title(language),
-          'body': template.body(language),
-          'folder_id': parentId,
+          'name': template.title(language),
+          'parent_id': parentId,
           'created_at': timestamp,
           'updated_at': timestamp,
           'is_deleted': 0,
-          'is_favorite': 0,
-          'is_archived': 0,
-          'tags': '[]',
         };
-        await txn.insert(items, row);
-        return row;
-      }
-      final folder = <String, Object?>{
-        'id': id,
-        'name': template.title(language),
-        'parent_id': parentId,
-        'created_at': timestamp,
-        'updated_at': timestamp,
-        'is_deleted': 0,
-      };
-      await txn.insert(folders, folder);
-      final lines = template.lines(language);
-      for (var i = 0; i < lines.length; i++) {
-        await txn.insert(items, {
-          'id': '$id-$i',
-          'title': lines[i],
-          'description': '',
-          'folder_id': id,
-          'priority': 0,
-          'is_done': 0,
-          'is_deleted': 0,
-          'due_at': null,
-          'completed_at': null,
-          'created_at': DateTime.parse(timestamp)
-              .subtract(Duration(microseconds: i))
-              .toIso8601String(),
-          'updated_at': timestamp,
-        });
-      }
-      return folder;
-    });
+        await txn.insert(folders, folder);
+        final lines = template.lines(language);
+        for (var i = 0; i < lines.length; i++) {
+          await txn.insert(items, {
+            'id': '$id-$i',
+            'title': lines[i],
+            'description': '',
+            'folder_id': id,
+            'priority': 0,
+            'is_done': 0,
+            'is_deleted': 0,
+            'due_at': null,
+            'completed_at': null,
+            'created_at': DateTime.parse(timestamp)
+                .subtract(Duration(microseconds: i))
+                .toIso8601String(),
+            'updated_at': timestamp,
+          });
+        }
+        return folder;
+      }),
+    );
   }
 
   Future<void> renameFolder(String id, String name) async {
@@ -175,6 +230,43 @@ class CollectionRepository {
       {'name': name, 'updated_at': now},
       where: 'id = ?',
       whereArgs: [id],
+    );
+  }
+
+  /// A copy is independent: no repeated series, notifications, media ownership
+  /// or private widget consent is silently transferred to a new task.
+  Future<String> duplicateTask(String id) async {
+    if (notes) throw StateError('task_required');
+    final db = await database;
+    return _changed(
+      db.transaction((txn) async {
+        final original = (await txn.query(
+          'todos',
+          where: 'id=? AND is_deleted=0',
+          whereArgs: [id],
+        )).single;
+        final next =
+            'copy:${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 32)}';
+        final stamp = now;
+        await txn.insert('todos', {
+          ...original,
+          'id': next,
+          'is_done': 0,
+          'completed_at': null,
+          'trash_batch': null,
+          'created_at': stamp,
+          'updated_at': stamp,
+        });
+        await TodoChecklistStore.fromTitles(
+          txn,
+          next,
+          (await TodoChecklistStore.load(
+            txn,
+            id,
+          )).map((item) => item.title).toList(),
+        );
+        return next;
+      }),
     );
   }
 
@@ -204,6 +296,11 @@ class CollectionRepository {
         whereArgs: [id],
       );
     });
+    if (notes) {
+      NotesChanges.committed();
+    } else {
+      TodoChanges.committed();
+    }
   }
 
   Future<void> setField(String id, String key, Object? value) async {
@@ -211,6 +308,26 @@ class CollectionRepository {
         ? {'is_favorite', 'is_archived', 'tags'}
         : {'is_done'};
     if (!allowed.contains(key)) throw ArgumentError('field');
+    if (!notes && key == 'is_done') {
+      if (value != 0 && value != 1) throw ArgumentError('completion');
+      await TodoSeriesStore(await database).setCompleted(id, value == 1);
+      return;
+    }
+    if (notes && key == 'tags') {
+      final names = List<String>.from(jsonDecode(value as String) as List);
+      final db = await database;
+      await db.transaction((txn) async {
+        await NoteTagStore.assign(txn, id, names: names);
+        await txn.update(
+          'notes',
+          {'updated_at': now},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      });
+      NotesChanges.committed();
+      return;
+    }
     await (await database).update(
       items,
       {
@@ -221,6 +338,11 @@ class CollectionRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+    if (notes) {
+      NotesChanges.committed();
+    } else {
+      TodoChanges.committed();
+    }
   }
 
   Set<String> _tree(
@@ -280,6 +402,11 @@ class CollectionRepository {
         );
       }
     });
+    if (notes) {
+      NotesChanges.committed();
+    } else {
+      TodoChanges.committed();
+    }
   }
 
   Future<void> restore(String id, {bool folder = false}) async {
@@ -319,6 +446,11 @@ class CollectionRepository {
         }
       }
     });
+    if (notes) {
+      NotesChanges.committed();
+    } else {
+      TodoChanges.committed();
+    }
   }
 
   Future<void> removeForever(String id, {bool folder = false}) async {
@@ -354,5 +486,10 @@ class CollectionRepository {
         await txn.delete(folders, where: 'id = ?', whereArgs: [f]);
       }
     });
+    if (notes) {
+      NotesChanges.committed();
+    } else {
+      TodoChanges.committed();
+    }
   }
 }

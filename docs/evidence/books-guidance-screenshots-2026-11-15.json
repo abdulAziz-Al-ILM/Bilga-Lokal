@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-15",
+  "source": "Actual native screenshots of synthetic Review fixtures; see screenshot README",
+  "screenshots": [
+    {
+      "path": "docs/evidence/screenshots/2026-11-15/habits-first-run.png",
+      "sha256": "643caeebd812dd393a13c288a58157f9347d9a199ceff1f87412d946c30d706e",
+      "bytes": 98329
+    },
+    {
+      "path": "docs/evidence/screenshots/2026-11-15/habits-template-preview.png",
+      "sha256": "a83ec39f934721cdc76b824daa8de0067135f04d0645ad43e5a2e4b4ee9d9fb4",
+      "bytes": 235251
+    },
+    {
+      "path": "docs/evidence/screenshots/2026-11-15/habit-guided-create.png",
+      "sha256": "607e99ba9c3a080a5fe7c55266503acfab15b72330d7da1c5f997a3fb34aa5ae",
+      "bytes": 95495
+    },
+    {
+      "path": "docs/evidence/screenshots/2026-11-15/books-library.png",
+      "sha256": "2a31e88a6b9fc74cd726bd6640c3efe83f6700c2f0afdacf6b325d05be980ca1",
+      "bytes": 107743
+    }
+  ]
+}

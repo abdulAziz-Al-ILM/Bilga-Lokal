@@ -1,29 +1,23 @@
-# Bilga 1.0.0+5
+# Bilga
 
-Avval SHABLONLAR.md ni o‘qing: 10 ta shablon, o‘rnatish, joriy tekshiruvlar va Play oldidan qolgan ishlar.
+Offline-first Flutter/Android productivity app by ILM Mizan.
 
-# Bilga — bepul Notes va To Do
+Current authoritative scope: [final product specification](docs/FINAL_PRODUCT_SPEC.md).
+Business model: **40 days free, then one lifetime purchase. No subscription or ads.**
+Existing data remains readable and exportable after trial expiry. The same features apply in all purchase regions; the app displays the localized price returned by Google Play.
 
-Flutter / Android ilovasi. Asosiy bo‘limlar akkauntsiz, internetsiz ishlaydi. Google hisobi faqat foydalanuvchi tanlagan Drive zaxirasi uchun kerak.
+**Development in progress; not release ready.** [Feature status](docs/FEATURE_MATRIX.md), [test evidence](docs/TEST_REPORT.md), [limitations](docs/KNOWN_LIMITATIONS.md), [continuation checkpoint](docs/IMPLEMENTATION_STATUS.md), [source recovery](docs/SOURCE_RECOVERY.md), [release requirements](docs/RELEASE_READINESS.md).
 
-- O‘rnatish va nashr: **CHIQARISH.md**.
-- Google Drive sozlash: **GOOGLE_SETUP.md**.
-- Sinov natijalari va cheklovlar: **TEKSHIRUV.md**.
-
-```bash
-bash tool/check_free_release.sh
-flutter test integration_test/data_safety_test.dart -d emulator-5554
-flutter run -d emulator-5554
+```sh
+flutter pub get
+dart format lib test
+flutter analyze
+flutter test --concurrency=2
+flutter build apk --debug
 ```
 
-Google ulangan build uchun `flutter run` buyrug‘iga `--dart-define-from-file=google_config.json` qo‘shiladi.
+Flutter 3.47.8, Dart >=3.13.1; Android min API 26. Preserve `com.ilmmizan.bilga`, `bilga.db`, `bilga_todo.db` and existing signing identity. Migrations are additive. Never delete databases to fix a schema error. Release builds require existing signing configuration in ignored `android/key.properties`; no debug-key fallback.
 
-`lib/core`: til, mavzu, sozlamalar va ilova qulfi.
-`lib/features/collections`: Notes va To Do ro‘yxatlari, papkalar va savat.
-`lib/features/notes`, `lib/features/todo`: model, SQLite migratsiyalari, tahrirlagichlar.
-`lib/features/backup`: shifrlash, import, Google Drive.
-`assets/i18n`: 43 tilning matnlari.
+43 locale catalogs and seven palettes are retained. Translation coverage does not imply native-language validation. Google account is optional and used only for explicitly requested Drive backups. Text assistance uses local search with source references; speech features are outside this release scope.
 
-Notes schema 8, To Do schema 6. Package ID va baza fayl nomlarini almashtirmang. Migratsiyasiz bazani o‘chirib yaratish mumkin emas. Eski ma’lumotni saqlash sinovlari keyingi o‘zgarishlarda ham ishlatiladi.
-
-43 til AI/mashina yordamida tayyorlangan; barcha tillar ona tili mutaxassisi tomonidan tekshirilmagan. Tajriba, AI agent va pullik bo‘limlar keyingi bosqichga qoldirilgan.
+Root historical handoffs describe earlier prototypes/decisions; the master spec and current docs above take precedence.

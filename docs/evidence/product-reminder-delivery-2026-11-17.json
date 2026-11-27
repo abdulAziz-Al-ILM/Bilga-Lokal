@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-17",
+  "result": "PASS",
+  "scope": "Actual native calendar policy in isolated ordinary Review; encrypted mirrors restored; reserved synthetic fixtures only, no personal DB records",
+  "kinds": {
+    "habit": {
+      "device": "Tab16NEU0045423",
+      "package": "com.ilmmizan.bilga.review",
+      "result": "PASS",
+      "actual_native_calendar_alarm": true,
+      "kind": "habit",
+      "app_sha256": "6fdbfebc08c8b20f78ca917a3ffcd6a60e3c5401af131ee2838eeac233c0b7e7",
+      "process_before_kill": "",
+      "process_after_kill": "",
+      "force_stop_used": false,
+      "flutter_activity_required_for_delivery": false,
+      "production_touched": false,
+      "original_mirror_restored": true,
+      "scheduled_at_millis": 1794927600000,
+      "fixture": "bilga-review-module-1794927560396919191",
+      "log_sha256": "6af5fc4dfd8a744f882c44e936a6dac36fe00c1e6b4acd773054384198310c0b"
+    },
+    "finance": {
+      "device": "Tab16NEU0045423",
+      "package": "com.ilmmizan.bilga.review",
+      "result": "PASS",
+      "actual_native_calendar_alarm": true,
+      "kind": "finance",
+      "app_sha256": "6fdbfebc08c8b20f78ca917a3ffcd6a60e3c5401af131ee2838eeac233c0b7e7",
+      "process_before_kill": "",
+      "process_after_kill": "",
+      "force_stop_used": false,
+      "flutter_activity_required_for_delivery": false,
+      "production_touched": false,
+      "original_mirror_restored": true,
+      "scheduled_at_millis": 1794927720000,
+      "fixture": "bilga-review-module-1794927638596989188",
+      "log_sha256": "9751b9ae14c9ef46a3f1106ab7be6507e82cf50e0a07d138d852da366036e73f"
+    }
+  },
+  "reboot_doze_second_device_certified": false
+}

@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-15",
+  "suite": "integration_test/book_editor_review_test.dart",
+  "package": "com.ilmmizan.bilga.review",
+  "device": "Blackview Tab16 / Android 12 API31 / arm64",
+  "apkSha256": "625f8695e465e42c03651747172da0db17e698f982234e70f0a0bd30a812b9b4",
+  "durationSeconds": 108,
+  "scenarioCases": 3,
+  "scenariosPassed": 2,
+  "scenariosFailed": 1,
+  "runnerCasesIncludingHooks": 5,
+  "result": "FAIL",
+  "failure": {
+    "case": "Book library creates validated metadata, filters reading/favorites and searches author without losing details",
+    "assertion": "Expected corrected ISBN '978-0-306-40615-7'; actual earlier invalid ISBN '9780306406158'",
+    "location": "test/support/book_library_ui_cases.dart:72",
+    "rootCause": "Direct native editing-state synchronization did not fix this. Framework inspection identifies a retained focusedEditable cache in the live test binding: after unfocus, showKeyboard called for the identical field skips requestKeyboard, leaving injected text without an active client. Host text-input clear resets this cache; the live native binding does not. Current helper explicitly taps the actual EditableText before injection and asserts the corrected text before/after blur. No product validation was weakened."
+  },
+  "passedScope": [
+    "Book failed-save/legacy preservation UI journey",
+    "Delayed initial library load/query/filter race"
+  ],
+  "log": "/tmp/bilga-book-editor-tablet-tests-1.log",
+  "nativeRotationVerified": false,
+  "metadataCorrection": "This binary no longer emits an unexecuted rotation marker in the focused suite.",
+  "productionPackageModified": false,
+  "clearOrUninstallUsed": false,
+  "overallProductComplete": false
+}

@@ -1,0 +1,16 @@
+Navoiy TTS
+Copyright 2026 Aisha AI
+
+This product includes software and model components derived from:
+
+CosyVoice and CosyVoice2-0.5B, Copyright FunAudioLLM contributors,
+licensed under the Apache License, Version 2.0.
+
+https://github.com/FunAudioLLM/CosyVoice
+https://huggingface.co/FunAudioLLM/CosyVoice2-0.5B
+
+Modifications include Uzbek LLM fine-tuning, emotion-conditioning
+configuration, and Uzbek text normalization.
+
+Sample: aisha-org/navoiy-tts, revision 9445f41, demo/warm_agent.wav.
+Source: https://huggingface.co/aisha-org/navoiy-tts/tree/9445f41/demo

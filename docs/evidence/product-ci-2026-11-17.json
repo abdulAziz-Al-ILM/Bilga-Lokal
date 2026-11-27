@@ -1,0 +1,28 @@
+{
+  "source": "359496e4ce62cdb344e6853bbde3335d10878ce1",
+  "runtime_unchanged_since": "9a6b121ebc2cb4a3818f6502baae10b6a54dcb74",
+  "run": 44104409723,
+  "attempt": 2,
+  "job": 134114802314,
+  "url": "https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/44104409723/attempts/2",
+  "result": "SUCCESS",
+  "flutter_tests": 339,
+  "flutter_seconds": 458,
+  "backend_tests": 17,
+  "manifest_tests": 12,
+  "catalogs": {
+    "languages": 43,
+    "keys": 1056
+  },
+  "analyzer": "No issues found",
+  "dart_format": "PASS",
+  "dst_dart_java": "PASS",
+  "native_calendar_math": "PASS",
+  "voice_boundaries": "PASS",
+  "android_debug_build": "PASS",
+  "android_manifest_crc_signature": "PASS",
+  "cloud_apk_sha256": "e15fbcebb383a74fc02b61487a6c4a06c379309541f421277c3b0cec0163fa26",
+  "cloud_apk_installed_on_tablet": false,
+  "attempt1": "NDK archive download failure before tests; rerun setup succeeded",
+  "log_sha256": "220223ebd5f462e9b3b5625932b0133934bcbd329b559a51346d425b9c0540f7"
+}

@@ -1,0 +1,12 @@
+{
+  "runId": 43047300447,
+  "url": "https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/43047300447",
+  "headSha": "c1f7e482b5edc94f558ffae6be6c5934bf5dc5ef",
+  "conclusion": "failure",
+  "stage": "Install matching Android build tools",
+  "applicationTestsStarted": false,
+  "reason": "Ubuntu apt index refresh could not resolve azure.archive.ubuntu.com, including after bounded retries; exit 100",
+  "localLog": "/tmp/bilga-project-ci-failure.log",
+  "change": "Check installed required runner libraries first; refresh apt and install only actually missing packages. Missing dependency failures remain fatal.",
+  "changeVerifiedOnHostedRunner": false
+}

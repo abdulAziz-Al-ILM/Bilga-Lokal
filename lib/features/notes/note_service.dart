@@ -1,14 +1,23 @@
+import 'rich_note_codec.dart';
+
 import 'package:sqflite/sqflite.dart';
 
 import 'note_database.dart';
 import 'note_model.dart';
 import 'note_version_model.dart';
+import 'note_tag_store.dart';
+import 'notes_changes.dart';
 
 class NoteService {
   final Database? _providedDatabase;
   NoteService({Database? database}) : _providedDatabase = database;
   Future<Database> get _db async =>
       _providedDatabase ?? await NoteDatabase.database;
+  Future<NoteTagStore> get tagStore async => NoteTagStore(await _db);
+  Future<List<Note>> _notes(
+    DatabaseExecutor db,
+    List<Map<String, Object?>> rows,
+  ) async => (await NoteTagStore.hydrate(db, rows)).map(Note.fromMap).toList();
 
   Future<List<Note>> getNotes() async {
     final db = await _db;
@@ -20,7 +29,7 @@ class NoteService {
       orderBy: 'updated_at DESC',
     );
 
-    return maps.map((map) => Note.fromMap(map)).toList();
+    return _notes(db, maps);
   }
 
   Future<List<Note>> getAllActiveNotes() async {
@@ -33,7 +42,7 @@ class NoteService {
       orderBy: 'updated_at DESC',
     );
 
-    return maps.map((map) => Note.fromMap(map)).toList();
+    return _notes(db, maps);
   }
 
   Future<List<Note>> getNotesByFolder(String folderId) async {
@@ -46,7 +55,7 @@ class NoteService {
       orderBy: 'updated_at DESC',
     );
 
-    return maps.map((map) => Note.fromMap(map)).toList();
+    return _notes(db, maps);
   }
 
   Future<List<Note>> getDeletedNotes() async {
@@ -66,16 +75,27 @@ class NoteService {
       ORDER BY notes.updated_at DESC
       ''');
 
-    return maps.map((map) => Note.fromMap(map)).toList();
+    return _notes(db, maps);
   }
 
   Future<void> addNote(Note note) async {
+    RichNoteCodec.validate(note.richBody, note.body);
     final db = await _db;
 
-    await db.insert('notes', note.toMap());
+    await db.transaction((txn) async {
+      await txn.insert('notes', note.toMap());
+      await NoteTagStore.assign(
+        txn,
+        note.id,
+        ids: note.tagIds,
+        names: note.tags,
+      );
+    });
+    NotesChanges.committed();
   }
 
   Future<void> updateNote(Note note, {bool recordHistory = true}) async {
+    RichNoteCodec.validate(note.richBody, note.body);
     final db = await _db;
     await db.transaction((txn) async {
       final rows = await txn.query(
@@ -85,7 +105,10 @@ class NoteService {
       );
       if (rows.isEmpty) throw StateError('Yozuv topilmadi');
       final old = Note.fromMap(rows.single);
-      if (recordHistory && (old.title != note.title || old.body != note.body)) {
+      if (recordHistory &&
+          (old.title != note.title ||
+              old.body != note.body ||
+              old.richBody != note.richBody)) {
         await _saveVersion(txn, old);
       }
       await txn.update(
@@ -94,7 +117,14 @@ class NoteService {
         where: 'id = ?',
         whereArgs: [note.id],
       );
+      await NoteTagStore.assign(
+        txn,
+        note.id,
+        ids: note.tagIds,
+        names: note.tags,
+      );
     });
+    NotesChanges.committed();
   }
 
   Future<void> _saveVersion(DatabaseExecutor db, Note note) async {
@@ -107,7 +137,8 @@ class NoteService {
     );
     if (latest.isNotEmpty &&
         latest.first['title'] == note.title &&
-        latest.first['body'] == note.body) {
+        latest.first['body'] == note.body &&
+        latest.first['rich_body'] == note.richBody) {
       return;
     }
     await db.insert(
@@ -116,6 +147,7 @@ class NoteService {
         noteId: note.id,
         title: note.title,
         body: note.body,
+        richBody: note.richBody,
         createdAt: DateTime.now(),
       ).toMap(),
     );
@@ -135,37 +167,42 @@ class NoteService {
   }
 
   Future<Note> restoreVersion(Note currentNote, NoteVersion version) async {
+    RichNoteCodec.validate(version.richBody, version.body);
     if (version.noteId != currentNote.id) {
       throw ArgumentError('Tarix boshqa yozuvga tegishli');
     }
     final db = await _db;
-    return db.transaction((txn) async {
-      final rows = await txn.query(
-        'notes',
-        where: 'id = ?',
-        whereArgs: [currentNote.id],
-      );
-      if (rows.isEmpty) throw StateError('Yozuv topilmadi');
-      final stored = Note.fromMap(rows.single);
-      // Preserve both the durable version and any editor draft.
-      await _saveVersion(txn, stored);
-      if (stored.title != currentNote.title ||
-          stored.body != currentNote.body) {
-        await _saveVersion(txn, currentNote);
-      }
-      final restored = stored.copyWith(
-        title: version.title,
-        body: version.body,
-        updatedAt: DateTime.now(),
-      );
-      await txn.update(
-        'notes',
-        restored.toMap(),
-        where: 'id = ?',
-        whereArgs: [stored.id],
-      );
-      return restored;
-    });
+    return NotesChanges.after(
+      db.transaction((txn) async {
+        final rows = await txn.query(
+          'notes',
+          where: 'id = ?',
+          whereArgs: [currentNote.id],
+        );
+        if (rows.isEmpty) throw StateError('Yozuv topilmadi');
+        final stored = (await _notes(txn, rows)).single;
+        // Preserve both the durable version and any editor draft.
+        await _saveVersion(txn, stored);
+        if (stored.title != currentNote.title ||
+            stored.body != currentNote.body ||
+            stored.richBody != currentNote.richBody) {
+          await _saveVersion(txn, currentNote);
+        }
+        final restored = stored.copyWith(
+          title: version.title,
+          body: version.body,
+          richBody: version.richBody,
+          updatedAt: DateTime.now(),
+        );
+        await txn.update(
+          'notes',
+          restored.toMap(),
+          where: 'id = ?',
+          whereArgs: [stored.id],
+        );
+        return restored;
+      }),
+    );
   }
 
   Future<int> deleteSelectedVersions({
@@ -236,6 +273,7 @@ class NoteService {
         whereArgs: [note.id],
       );
     });
+    NotesChanges.committed();
   }
 
   Future<void> deleteForever(String id) async {
@@ -246,5 +284,6 @@ class NoteService {
 
       await txn.delete('notes', where: 'id = ?', whereArgs: [id]);
     });
+    NotesChanges.committed();
   }
 }

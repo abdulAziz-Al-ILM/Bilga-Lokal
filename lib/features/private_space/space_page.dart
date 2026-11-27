@@ -1,3 +1,7 @@
+import '../experiences/experiences_page.dart';
+import '../experiences/experience_page.dart';
+import '../experiences/experience_store.dart';
+
 import 'dart:convert';
 
 import 'package:archive/archive.dart';
@@ -9,16 +13,34 @@ import '../attachments/attachment_store.dart';
 import '../attachments/attachments_page.dart';
 import 'record_store.dart';
 import 'book_reader.dart';
+import '../agent/agent_access.dart';
+import '../agent/purchase_panel.dart';
+import '../books/book_library.dart';
+import '../books/book_details_editor.dart';
+import '../books/book_library_page.dart';
+
+Future<bool> _recordAccess(BuildContext context, AgentAccess access) async {
+  if (access.has(AgentAccess.core)) return true;
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => PurchasePanel(product: AgentAccess.core, access: access),
+  );
+  return access.has(AgentAccess.core);
+}
 
 class SpacePage extends StatefulWidget {
   final String kind;
-  const SpacePage({super.key, required this.kind});
+  final RecordStore? store;
+  final AgentAccess? access;
+  const SpacePage({super.key, required this.kind, this.store, this.access});
   @override
   State<SpacePage> createState() => _SpaceState();
 }
 
 class _SpaceState extends State<SpacePage> {
-  final store = RecordStore();
+  late final store = widget.store ?? RecordStore();
+  AgentAccess get access => widget.access ?? AgentAccess.instance;
   List<PrivateRecord> records = [];
   String query = '', category = '';
   int shown = 50;
@@ -26,7 +48,7 @@ class _SpaceState extends State<SpacePage> {
   @override
   void initState() {
     super.initState();
-    load();
+    if (!{'book', 'experience'}.contains(widget.kind)) load();
   }
 
   Future<void> load() async {
@@ -39,7 +61,7 @@ class _SpaceState extends State<SpacePage> {
   }
 
   Future<void> create() async {
-    if (busy) return;
+    if (busy || !await _recordAccess(context, access) || !mounted) return;
     setState(() => busy = true);
     PrivateRecord? created;
     try {
@@ -56,6 +78,7 @@ class _SpaceState extends State<SpacePage> {
         multiline: {'body', 'feelings', 'lesson', 'next'},
         requiredFields: {'title'},
         onSave: (v) async {
+          if (!access.has(AgentAccess.core)) throw StateError('access_expired');
           created = await store.save(widget.kind, {
             ...v,
             'title': v['title']!.trim(),
@@ -68,7 +91,9 @@ class _SpaceState extends State<SpacePage> {
       if (created != null && mounted) {
         await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => RecordPage(created!)),
+          MaterialPageRoute(
+            builder: (_) => RecordPage(created!, store: store, access: access),
+          ),
         );
       }
       await load();
@@ -78,92 +103,107 @@ class _SpaceState extends State<SpacePage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(context.tr(widget.kind == 'book' ? 'xBooks' : 'xExperience')),
-    ),
-    floatingActionButton: FloatingActionButton(
-      onPressed: busy ? null : create,
-      child: const Icon(Icons.add),
-    ),
-    body: ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        TextField(
-          decoration: InputDecoration(
-            labelText: context.tr('search'),
-            prefixIcon: const Icon(Icons.search),
+  Widget build(BuildContext context) => widget.kind == 'experience'
+      ? ExperiencesPage(records: store, access: access)
+      : _legacy(context);
+
+  Widget _legacy(BuildContext context) => widget.kind == 'book'
+      ? BookLibraryPage(records: store, access: access)
+      : Scaffold(
+          appBar: AppBar(
+            title: Text(
+              context.tr(widget.kind == 'book' ? 'xBooks' : 'xExperience'),
+            ),
           ),
-          onChanged: (s) => setState(() => query = s.toLowerCase()),
-        ),
-        if (widget.kind == 'experience')
-          Wrap(
-            spacing: 6,
+          floatingActionButton: FloatingActionButton(
+            onPressed: busy ? null : create,
+            child: const Icon(Icons.add),
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
             children: [
-              ChoiceChip(
-                label: Text(context.tr('xExperience')),
-                selected: category.isEmpty,
-                onSelected: (_) => setState(() => category = ''),
-              ),
-              for (final key in [
-                'work',
-                'life',
-                'feelings',
-                'gratitude',
-                'spiritual',
-                'lesson',
-              ])
-                ChoiceChip(
-                  label: Text(context.tr('x$key')),
-                  selected: category == key,
-                  onSelected: (_) => setState(() => category = key),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: context.tr('search'),
+                  prefixIcon: const Icon(Icons.search),
                 ),
+                onChanged: (s) => setState(() => query = s.toLowerCase()),
+              ),
+              if (widget.kind == 'experience')
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    ChoiceChip(
+                      label: Text(context.tr('xExperience')),
+                      selected: category.isEmpty,
+                      onSelected: (_) => setState(() => category = ''),
+                    ),
+                    for (final key in [
+                      'work',
+                      'life',
+                      'feelings',
+                      'gratitude',
+                      'spiritual',
+                      'lesson',
+                    ])
+                      ChoiceChip(
+                        label: Text(context.tr('x$key')),
+                        selected: category == key,
+                        onSelected: (_) => setState(() => category = key),
+                      ),
+                  ],
+                ),
+              for (final r
+                  in records
+                      .where(
+                        (r) =>
+                            (category.isEmpty ||
+                                r.data['category'] == category) &&
+                            jsonEncode(r.data).toLowerCase().contains(query),
+                      )
+                      .take(shown))
+                ListTile(
+                  title: Text(r.data['title']),
+                  subtitle: Text(
+                    widget.kind == 'book'
+                        ? '${(r.data['chapters'] as List).length} ${context.tr('xChapters')}'
+                        : context.tr('x${r.data['category']}'),
+                  ),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            RecordPage(r, store: store, access: access),
+                      ),
+                    );
+                    await load();
+                  },
+                ),
+              if (records.length > shown)
+                TextButton(
+                  onPressed: () => setState(() => shown += 50),
+                  child: Text(context.tr('continue')),
+                ),
+              const SizedBox(height: 80),
             ],
           ),
-        for (final r
-            in records
-                .where(
-                  (r) =>
-                      (category.isEmpty || r.data['category'] == category) &&
-                      jsonEncode(r.data).toLowerCase().contains(query),
-                )
-                .take(shown))
-          ListTile(
-            title: Text(r.data['title']),
-            subtitle: Text(
-              widget.kind == 'book'
-                  ? '${(r.data['chapters'] as List).length} ${context.tr('xChapters')}'
-                  : context.tr('x${r.data['category']}'),
-            ),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => RecordPage(r)),
-              );
-              await load();
-            },
-          ),
-        if (records.length > shown)
-          TextButton(
-            onPressed: () => setState(() => shown += 50),
-            child: Text(context.tr('continue')),
-          ),
-        const SizedBox(height: 80),
-      ],
-    ),
-  );
+        );
 }
 
 class RecordPage extends StatefulWidget {
   final PrivateRecord record;
-  const RecordPage(this.record, {super.key});
+  final RecordStore? store;
+  final AgentAccess? access;
+  const RecordPage(this.record, {super.key, this.store, this.access});
   @override
   State<RecordPage> createState() => _RecordState();
 }
 
 class _RecordState extends State<RecordPage> {
   late PrivateRecord r = widget.record;
-  final store = RecordStore();
+  late final store = widget.store ?? RecordStore();
+  AgentAccess get access => widget.access ?? AgentAccess.instance;
   bool busy = false;
   bool get book => r.kind == 'book';
   Future<void> run(Future<void> Function() f) async {
@@ -178,11 +218,34 @@ class _RecordState extends State<RecordPage> {
     }
   }
 
-  Future<void> save(Map<String, dynamic> data) async {
-    r = await store.save(r.kind, data, previous: r);
+  Future<void> save(
+    Map<String, dynamic> data, {
+    PrivateRecord? expected,
+  }) async {
+    if (!access.has(AgentAccess.core)) throw StateError('access_expired');
+    final saved = await store.save(r.kind, data, previous: expected ?? r);
+    if (mounted) setState(() => r = saved);
   }
 
+  Future<void> details() async {
+    if (!await _recordAccess(context, access) || !mounted) return;
+    final original = r;
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookDetailsEditor(
+          initial: original.data,
+          onSave: (data) => save(data, expected: original),
+        ),
+      ),
+    );
+  }
+
+  String bookDate(String value) =>
+      MaterialLocalizations.of(context).formatFullDate(DateTime.parse(value));
+
   Future<void> edit([int? index]) async {
+    if (!await _recordAccess(context, access) || !mounted) return;
     final chapters = List<Map<String, dynamic>>.from(
       (r.data['chapters'] as List? ?? []).map(
         (e) => Map<String, dynamic>.from(e),
@@ -236,7 +299,7 @@ class _RecordState extends State<RecordPage> {
   }
 
   String text() => book
-      ? '${r.data['title']}\n\n${[for (final c in r.data['chapters']) '${c['title']}\n${c['body']}'].join('\n\n')}'
+      ? BookLibrary.readable(r.data, label: context.tr, date: bookDate)
       : '${r.data['title']}\n\n${r.data['body'] ?? ''}\n\n${r.data['feelings'] ?? ''}\n${r.data['lesson'] ?? ''}\n${r.data['next'] ?? ''}';
   Future<void> export(String type) async {
     if (!await consent(context, context.tr('xPlainExport'))) return;
@@ -277,7 +340,15 @@ class _RecordState extends State<RecordPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => r.kind == 'experience'
+      ? ExperiencePage(
+          record: r,
+          store: ExperienceStore(records: store),
+          access: access,
+        )
+      : _legacy(context);
+
+  Widget _legacy(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: Text(r.data['title']),
       actions: [
@@ -290,6 +361,7 @@ class _RecordState extends State<RecordPage> {
                 kind: r.kind,
                 owner: r.id,
                 title: r.data['title'],
+                store: store,
               ),
             ),
           ),
@@ -334,10 +406,20 @@ class _RecordState extends State<RecordPage> {
                 });
               }
             } else if (action == 'delete') {
+              if (!await _recordAccess(context, access) || !context.mounted) {
+                return;
+              }
               if (await consent(context, context.tr('deleteForever'))) {
+                if (!access.has(AgentAccess.core)) {
+                  throw StateError('access_expired');
+                }
                 await store.remove(r);
-                for (final attachment in await Attachments.all(r.kind, r.id)) {
-                  await Attachments.remove(attachment);
+                for (final attachment in await Attachments.all(
+                  r.kind,
+                  r.id,
+                  store: store,
+                )) {
+                  await Attachments.remove(attachment, store: store);
                 }
                 if (context.mounted) Navigator.pop(context);
               }
@@ -444,8 +526,46 @@ class _RecordState extends State<RecordPage> {
             child: Text(context.tr('xBooks')),
           ),
         ] else ...[
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if ((BookLibrary.metadata(r.data)['author'] as String)
+                      .isNotEmpty)
+                    Text(
+                      BookLibrary.metadata(r.data)['author'] as String,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  Text(
+                    context.tr(
+                      'bStatus${BookLibrary.metadata(r.data)['status']}',
+                    ),
+                  ),
+                  if (BookLibrary.metadata(r.data)['pages'] != null ||
+                      BookLibrary.metadata(r.data)['currentPage'] != 0)
+                    Text(
+                      '${context.tr('bCurrentPage')}: ${BookLibrary.metadata(r.data)['currentPage']}${BookLibrary.metadata(r.data)['pages'] == null ? '' : ' / ${BookLibrary.metadata(r.data)['pages']}'}',
+                    ),
+                  if (BookLibrary.metadata(r.data)['rating'] != null)
+                    Text(
+                      '${context.tr('bRating')}: ${BookLibrary.metadata(r.data)['rating']} / 5',
+                    ),
+                  if (BookLibrary.metadata(r.data)['favorite'] == true)
+                    Text(context.tr('favorites')),
+                  OutlinedButton.icon(
+                    key: const Key('book-details-open'),
+                    onPressed: busy ? null : () => run(details),
+                    icon: const Icon(Icons.info_outline),
+                    label: Text(context.tr('bDetails')),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Text(
-            '${text().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).length} ${context.tr('xWords')}',
+            '${[r.data['title'], for (final chapter in r.data['chapters']) '${chapter['title']} ${chapter['body']}'].join(' ').split(RegExp(r'\s+')).where((s) => s.isNotEmpty).length} ${context.tr('xWords')}',
           ),
           OutlinedButton(
             onPressed: busy

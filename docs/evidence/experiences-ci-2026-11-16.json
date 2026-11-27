@@ -1,0 +1,18 @@
+{
+  "source": "2cb48a627df02d47774a67e2e68e380111369909",
+  "run": 43863555340,
+  "job": 133286374051,
+  "url": "https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/43863555340",
+  "conclusion": "success",
+  "flutter_tests": 301,
+  "purchase_backend_tests": 17,
+  "manifest_tests": 9,
+  "catalog_languages": 43,
+  "catalog_keys": 826,
+  "analyzer": "No issues found",
+  "calendar_recurrence_dst": "passed in Dart and Java",
+  "debug_apk_build_and_manifest_verification": "passed",
+  "artifact_upload": "skipped by workflow",
+  "review_installed_apk_is_separately_signed_and_tested": true,
+  "raw_log_local": "/tmp/bilga-experiences-ci-43863555340.log"
+}

@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AppSettings extends ChangeNotifier {
+class AppSettings extends ChangeNotifier with WidgetsBindingObserver {
   static final instance = AppSettings();
   SharedPreferences? _prefs;
   String language = 'uz';
@@ -12,10 +14,50 @@ class AppSettings extends ChangeNotifier {
   String avatar = '🌿';
   bool appLock = false;
   bool screenPrivacy = true;
+  bool voiceScreenControls = false;
+  String voiceLanguage = 'uz-UZ';
   String? backupOwner;
   String? lastBackup;
+  bool _observing = false;
+
+  Brightness get brightness => mode == ThemeMode.system
+      ? WidgetsBinding.instance.platformDispatcher.platformBrightness
+      : mode == ThemeMode.light
+      ? Brightness.light
+      : Brightness.dark;
+  @override
+  void didChangePlatformBrightness() {
+    unawaited(_widgetTheme());
+    notifyListeners();
+  }
+
+  Future<void> _widgetTheme() async {
+    final s = bilgaTheme(palette, brightness).colorScheme;
+    try {
+      await const MethodChannel('bilga/widget_theme')
+          .invokeMethod<void>('publish', {
+            'background': s.surface.toARGB32(),
+            'foreground': s.onSurface.toARGB32(),
+            'accent': s.primary.toARGB32(),
+            'onAccent': s.onPrimary.toARGB32(),
+            'container': s.surfaceContainerHigh.toARGB32(),
+            'outline': s.outline.toARGB32(),
+          });
+    } on MissingPluginException {
+      /* No Android widget. */
+    }
+  }
 
   Future<void> load() async {
+    // audio_service may start Dart before MainActivity binds native channels.
+    const MethodChannel('bilga/widget_theme')
+        .setMethodCallHandler((call) async {
+          if (call.method == 'refresh') await _widgetTheme();
+        });
+    if (!_observing) {
+      WidgetsBinding.instance.addObserver(this);
+      _observing = true;
+    }
     _prefs = await SharedPreferences.getInstance();
     language = _prefs!.getString('bilga.language') ?? 'uz';
     palette = _prefs!.getString('bilga.palette') ?? 'forest';
@@ -27,9 +69,15 @@ class AppSettings extends ChangeNotifier {
     avatar = _prefs!.getString('bilga.avatar') ?? '🌿';
     appLock = _prefs!.getBool('bilga.appLock') ?? false;
     screenPrivacy = _prefs!.getBool('bilga.screenPrivacy') ?? true;
+    voiceScreenControls = _prefs!.getBool('bilga.voiceScreenControls') ?? false;
+    final speech = _prefs!.getString('bilga.voiceLanguage');
+    voiceLanguage = const {'uz-UZ', 'en-US', 'ru-RU'}.contains(speech)
+        ? speech!
+        : 'uz-UZ';
     backupOwner = _prefs!.getString('bilga.backupOwner');
     lastBackup = _prefs!.getString('bilga.lastBackup');
     await _secureWindow();
+    await _widgetTheme();
     notifyListeners();
   }
 
@@ -52,12 +100,15 @@ class AppSettings extends ChangeNotifier {
       prefs.setString('bilga.avatar', avatar),
       prefs.setBool('bilga.appLock', appLock),
       prefs.setBool('bilga.screenPrivacy', screenPrivacy),
+      prefs.setBool('bilga.voiceScreenControls', voiceScreenControls),
+      prefs.setString('bilga.voiceLanguage', voiceLanguage),
       if (backupOwner != null)
         prefs.setString('bilga.backupOwner', backupOwner!),
       if (lastBackup != null) prefs.setString('bilga.lastBackup', lastBackup!),
     ]);
     if (results.any((ok) => !ok)) throw StateError('settings_write');
     await _secureWindow();
+    await _widgetTheme();
     notifyListeners();
   }
 }

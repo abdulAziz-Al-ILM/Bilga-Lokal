@@ -1,8 +1,15 @@
+import '../reminders/module_reminder_changes.dart';
+
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:sqflite/sqflite.dart';
+
 import '../notes/note_database.dart';
+import '../experiences/experience_model.dart';
+import '../modules/module_data.dart';
 import '../finance/ledger.dart';
+import '../books/book_library.dart';
 
 String localId() => List.generate(
   24,
@@ -23,6 +30,9 @@ class PrivateRecord {
 }
 
 class RecordStore {
+  final Database? database;
+  RecordStore({this.database});
+  Future<Database> get _db async => database ?? await NoteDatabase.database;
   static const kinds = {'experience', 'book', 'finance', 'attachment'};
   static void validate(String kind, Map<String, dynamic> data) {
     if (!kinds.contains(kind) ||
@@ -33,25 +43,9 @@ class RecordStore {
       throw const FormatException('record');
     }
     if (kind == 'finance') Ledger.validate(data);
-    if (kind == 'experience') {
-      if (!{
-        'work',
-        'life',
-        'feelings',
-        'gratitude',
-        'spiritual',
-        'lesson',
-      }.contains(data['category'] ?? 'life')) {
-        throw const FormatException('category');
-      }
-      for (final k in ['body', 'feelings', 'lesson', 'next']) {
-        if (data[k] != null &&
-            (data[k] is! String || (data[k] as String).length > 100000)) {
-          throw const FormatException('experience');
-        }
-      }
-    }
+    if (kind == 'experience') ExperienceModel.validate(data);
     if (kind == 'book') {
+      BookLibrary.validate(data);
       if (data['bookmark'] != null &&
           (data['bookmark'] is! int || data['bookmark'] < 0)) {
         throw const FormatException('bookmark');
@@ -109,12 +103,38 @@ class RecordStore {
   }
 
   Future<List<PrivateRecord>> all(String kind) async =>
-      (await (await NoteDatabase.database).query(
+      (await (await _db).query(
         'private_records',
         where: 'kind = ?',
         whereArgs: [kind],
         orderBy: 'updated_at DESC',
       )).map(PrivateRecord.row).toList();
+  Future<PrivateRecord> get(String id) async {
+    final rows = await (await _db).query(
+      'private_records',
+      where: 'id=?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) throw StateError('record_missing');
+    final record = PrivateRecord.row(rows.single);
+    validate(record.kind, record.data);
+    return record;
+  }
+
+  Future<List<PrivateRecord>> attachments(String kind, String owner) async =>
+      (await (await _db).query(
+        'private_records',
+        where: "kind = ? AND json_extract(payload, '\$.ownerKind') = ? AND json_extract(payload, '\$.owner') = ?",
+        whereArgs: ['attachment', kind, owner],
+      )).map(PrivateRecord.row).toList();
+
+  Future<bool> hasAttachmentBlob(String blob) async =>
+      (await (await _db).rawQuery(
+        "SELECT 1 FROM private_records WHERE kind = 'attachment' AND json_extract(payload, '\$.blob') = ? LIMIT 1",
+        [blob],
+      )).isNotEmpty;
+
   Future<PrivateRecord> save(
     String kind,
     Map<String, dynamic> data, {
@@ -124,8 +144,7 @@ class RecordStore {
     if (previous != null && previous.kind != kind) {
       throw StateError('record_kind');
     }
-    final db = await NoteDatabase.database,
-        stamp = DateTime.now().toUtc().toIso8601String();
+    final db = await _db, stamp = DateTime.now().toUtc().toIso8601String();
     final id = previous?.id ?? localId(), rev = (previous?.revision ?? 0) + 1;
     final row = {
       'id': id,
@@ -134,30 +153,84 @@ class RecordStore {
       'revision': rev,
       'updated_at': stamp,
     };
-    if (previous == null) {
-      await db.insert('private_records', {...row, 'created_at': stamp});
-    } else {
-      if (await db.update(
-            'private_records',
-            row,
-            where: 'id = ? AND revision = ?',
-            whereArgs: [id, previous.revision],
-          ) !=
-          1) {
-        throw StateError('record_changed');
+    Future<void> write(DatabaseExecutor executor) async {
+      if (kind == 'experience' && previous != null) {
+        final rows = await executor.query(
+          'private_records',
+          where: 'id=? AND kind=? AND revision=?',
+          whereArgs: [id, kind, previous.revision],
+          limit: 1,
+        );
+        if (rows.isEmpty) throw StateError('record_changed');
+        final actual = PrivateRecord.row(rows.single);
+        await ModuleData.history(
+          executor,
+          id,
+          actual.revision,
+          actual.data,
+          rows.single['updated_at'] as String,
+          existing: true,
+        );
+      }
+      if (previous == null) {
+        await executor.insert('private_records', {...row, 'created_at': stamp});
+      } else {
+        if (await executor.update(
+              'private_records',
+              row,
+              where: 'id = ? AND revision = ?',
+              whereArgs: [id, previous.revision],
+            ) !=
+            1) {
+          throw StateError('record_changed');
+        }
+      }
+      if (kind == 'experience') {
+        await ModuleData.history(executor, id, rev, data, stamp);
       }
     }
+
+    if (kind == 'experience') {
+      await db.transaction(write);
+    } else {
+      await write(db);
+    }
+    if (kind == 'finance') ModuleReminderChanges.committed();
     return PrivateRecord(id, kind, rev, Map.from(data));
   }
 
   Future<void> remove(PrivateRecord r) async {
-    if (await (await NoteDatabase.database).delete(
+    await (await _db).transaction((txn) async {
+      if (await txn.delete(
+            'private_records',
+            where: 'id=? AND revision=?',
+            whereArgs: [r.id, r.revision],
+          ) !=
+          1) {
+        throw StateError('record_changed');
+      }
+      await txn.delete(
+        'module_data',
+        where: "module=? AND kind='folder_item' AND owner=?",
+        whereArgs: [r.kind, r.id],
+      );
+      if (r.kind == 'experience') {
+        await txn.delete(
+          'module_data',
+          where: "module='experience' AND owner=?",
+          whereArgs: [r.id],
+        );
+      }
+      if (r.kind == 'book') {
+        // Remove owned metadata with the book. Content-addressed encrypted files
+        // can be shared by other records, so their physical deletion is deferred.
+        await txn.delete(
           'private_records',
-          where: 'id = ? AND revision = ?',
-          whereArgs: [r.id, r.revision],
-        ) !=
-        1) {
-      throw StateError('record_changed');
-    }
+          where: "kind='attachment' AND json_extract(payload,'\$.ownerKind')='book' AND json_extract(payload,'\$.owner')=?",
+          whereArgs: [r.id],
+        );
+      }
+    });
+    if (r.kind == 'finance') ModuleReminderChanges.committed();
   }
 }

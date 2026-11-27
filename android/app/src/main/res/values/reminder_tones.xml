@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminder_tone_important">Important task reminders</string>
+    <string name="reminder_tone_very_important">Very important task reminders</string>
+    <string name="reminder_tone_critical">Critical task reminders</string>
+</resources>

@@ -1,3 +1,5 @@
+import 'todo_changes.dart';
+
 import 'package:sqflite/sqflite.dart';
 
 import 'todo_database.dart';
@@ -54,6 +56,7 @@ class TodoFolderService {
       folder.toMap(),
       conflictAlgorithm: ConflictAlgorithm.abort,
     );
+    TodoChanges.committed();
   }
 
   Future<void> renameFolder(TodoFolder folder, String newName) async {
@@ -65,6 +68,7 @@ class TodoFolderService {
       where: 'id = ?',
       whereArgs: [folder.id],
     );
+    TodoChanges.committed();
   }
 
   Future<void> moveFolder(TodoFolder folder, String? newParentId) async {
@@ -96,6 +100,7 @@ class TodoFolderService {
       where: 'id = ?',
       whereArgs: [folder.id],
     );
+    TodoChanges.committed();
   }
 
   Future<void> deleteFolder(String folderId) async {
@@ -119,5 +124,6 @@ class TodoFolderService {
       }
       await txn.delete('todo_folders', where: 'id = ?', whereArgs: [folderId]);
     });
+    TodoChanges.committed();
   }
 }

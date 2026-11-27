@@ -73,3 +73,11 @@ GoogleService-Info.plist
 build/
 .dart_tool/
 .gradle/
+.cxx/
+
+# Local Play/verifier build configuration
+/billing_config.json
+
+# Persistent local SDKs and dependency caches (never source artifacts)
+/.bilga-tools/
+/android/.kotlin/

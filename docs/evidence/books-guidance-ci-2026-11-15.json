@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-15",
+  "runId": 43687503754,
+  "jobId": 132730943367,
+  "url": "https://github.com/abdulAziz-Al-ILM/Bilga-Lokal/actions/runs/43687503754",
+  "headSha": "4ac793c634b75e8b368a227e1df08a5389b3e2d9",
+  "status": "completed",
+  "conclusion": "failure",
+  "verifiedSuccessfulSteps": [
+    "pinned Flutter/Android setup",
+    "format",
+    "43 catalogs",
+    "non-voice guard",
+    "nine manifest guards",
+    "purchase backend tests",
+    "analyzer",
+    "Dart and Java DST/calendar checks",
+    "full Flutter tests",
+    "Android debug build",
+    "Verify debug artifact"
+  ],
+  "ordinaryLocalReviewAlreadyInstalled": true,
+  "scope": "Current source checkpoint; hosted test success is verified but build success must not be inferred.",
+  "flutterTestsPassed": 268,
+  "flutterTestDurationSeconds": 196,
+  "androidBuild": "success",
+  "apkVerification": "success",
+  "hostedArtifactUpload": "failure",
+  "hostedArtifactUploaded": false,
+  "hostedApkSha256": "e9bd6caae23e32939142569e7bebf40c503c9ab0271c15147e32c90fdeec55ff",
+  "failure": {
+    "step": "Save debug artifact",
+    "reason": "Artifact storage quota has been hit; GitHub says usage is recalculated every 6–12 hours. No hosted artifact was created."
+  },
+  "correction": "Keep every automatic validation/build/hash check unconditional. Offer cloud upload only via explicit manual upload_debug_artifact input, default false, one-day retention; no continue-on-error, no artifact deletion or billing activation.",
+  "correctionLocalValidation": "PASS YAML parsing, manual-input/conditional semantics, unconditional test/build/verify steps, strict upload failures and executed digest summary fixture",
+  "correctionHostedValidation": "Pending new push; application code unchanged from this validated source"
+}

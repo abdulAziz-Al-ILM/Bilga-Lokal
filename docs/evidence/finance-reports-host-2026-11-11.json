@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-11",
+  "source": "Finance reports milestone; see containing commit history",
+  "flutterTestsPassed": 241,
+  "durationSeconds": 97,
+  "flutterLog": "/tmp/bilga-finance-reports-full-tests-1.log",
+  "analyzer": "No issues found",
+  "catalogLanguages": 43,
+  "catalogKeys": 452,
+  "manifestGuardsPassed": 9,
+  "voiceSourceGuard": "PASS",
+  "newCoverage": [
+    "period opening/closing invariant with debt, transfers, adjustments and recognized account openings",
+    "daily/weekly/monthly zero-filled calendar groups, leap days, DST dates and year boundaries",
+    "exact large minor units and signed openings",
+    "future openings/voided/future entries excluded by selected current-period boundaries",
+    "invalid and excessive report range rejection",
+    "real main Finance \u2192 report \u2192 presets/grouping/chart selection/refresh without writes",
+    "compact 2x text RTL/dark large amounts and negative balance readability",
+    "read-only library \u2192 report after trial without edit controls or mutation"
+  ],
+  "deviceAcceptance": "recorded separately after physical run",
+  "schemaChange": false,
+  "newDependencies": false
+}
